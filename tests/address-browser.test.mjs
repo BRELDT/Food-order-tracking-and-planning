@@ -29,6 +29,19 @@ async function check(name, fn) {
   });
   console.log("PASS " + name);
 }
+// Public production referrals intentionally defer Google review to admins.
+// Mount the shared address component explicitly only for these isolated fixture
+// tests; do not imply that the production public form enables Google services.
+async function attachFixture(page) {
+  await page.evaluate(() => {
+    MealAddresses.attach(document.querySelector('[name="address"]'), async (action, payload) => {
+      const response = await fetch('/api', { method: 'POST', body: JSON.stringify({action, ...payload}) });
+      const result = await response.json();
+      if (!result.ok) throw new Error(result.error.message);
+      return result.data;
+    }, () => ({eventId: document.getElementById('eventSelect').value}));
+  });
+}
 try {
   browser = await chromium.launch({
     headless: true,
@@ -55,6 +68,7 @@ try {
     .first()
     .waitFor({ state: "attached" });
   const input = page.locator('[name="address"]');
+  await attachFixture(page);
   await check(
     "mobile autocomplete selection fills the address and equivalent validation skips confirmation",
     async () => {
@@ -185,6 +199,7 @@ try {
       const race = await page.context().newPage();
       await race.setViewportSize({ width: 390, height: 844 });
       await race.goto("http://127.0.0.1:4175/");
+      await attachFixture(race);
       await race
         .locator("#eventSelect option")
         .first()

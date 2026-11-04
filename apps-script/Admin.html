@@ -58,9 +58,11 @@
         <div id="requestCards"></div>
       </section>
       <section id="routeView" hidden>
+        <p class="print-verification-warning">Delivery sheet unavailable. Return to the dashboard and use Print Delivery Sheet to verify the current saved route.</p>
         <div class="route-header">
           <h2 id="routeTitle">Delivery Route</h2>
           <p id="routeDate"></p>
+          <p id="routePickup"></p>
           <p id="routeSummary"></p>
           <p id="routeStatus" class="route-status warning"></p>
           <p id="routingAvailability" class="hint no-print"></p>
@@ -106,7 +108,6 @@
             ><label class="full"
               >Starting / pickup address<input
                 name="startAddress"
-                required
                 maxlength="500"
             /></label>
           </div>
@@ -218,7 +219,6 @@
           ><label class="full"
             >Starting / pickup address<input
               name="startAddress"
-              required
               maxlength="500"
           /></label>
         </div>

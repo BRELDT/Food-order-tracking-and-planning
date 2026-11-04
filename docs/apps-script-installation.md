@@ -133,12 +133,12 @@ Installation is a manual action by the user. No script source was uploaded or we
 
 ## File 1: Code.gs
 
-SHA-256: e8e00ed6b88eac46aa1a5025a4cdba100c2bb3604c20641e53c3307fdea8c2bb
+SHA-256: 7c5b217ddab463b23d27188539b74c1ddc502b4755b8327d9330c13dc1246ae7
 
 Copy only the contents of this code box into the matching Apps Script file.
 
 ```javascript
-const MEALS_BACKEND_VERSION = "2026-10-13-integrity-recovery-v1";
+const MEALS_BACKEND_VERSION = "2026-11-04-thanksgiving-readiness-v1";
 function include_(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
@@ -243,6 +243,12 @@ function adminCall(action, p) {
     if (action === "route") return route_(auth.state, id_(p.eventId));
     if (action === "reports") return reports_(auth.state, p);
     if (action === "createReferral") return submit_(p, auth.email);
+    if (action === "submissionReceipt") {
+      const record = auth.state.SUBMISSIONS.find(r => r.SubmissionID === submissionId_(p.submissionId));
+      if (!record) return { receipt: null };
+      const parent = submissionReferral_(auth.state, record);
+      return { receipt: parent.SubmittedByAdmin === true ? savedSubmissionReceipt_(auth.state, record) : null };
+    }
     if (action === "verifyAddress") return verifyAddress_(p);
     if (action === "optimize") return optimize_(p);
     return locked_((s) => {
@@ -281,7 +287,7 @@ function publicFormLink_() {
 
 ## File 2: Validation.gs
 
-SHA-256: 86388ebb396e7ca9d6181585d41b2f7dda47b92e697f6a305a97bd9ba3cd6971
+SHA-256: cee868dd6061acecbc32f0bafa1d720ec383ff1c98188b619a484884101cecfb
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -393,6 +399,11 @@ function recipients_(list, admin) {
   )
     fail_("INVALID", "Enter between 1 and 100 recipients.");
   return list.map((p) => {
+    if (!p || typeof p !== "object")
+      fail_("INVALID", "Please check the recipient information.");
+    const address = text_(p.address, "street address", 500, true);
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))
+      fail_("INVALID", "Enter the recipient's street address, not an email address.");
     const door = text_(
       p.doorPreference || "Front",
       "door preference",
@@ -405,8 +416,8 @@ function recipients_(list, admin) {
       fail_("INVALID", "Internal notes are administrator-only.");
     return {
       RecipientName: text_(p.recipientName, "recipient name", 160, true),
-      Address: text_(p.address, "street address", 500, true),
-      NormalizedAddress: addressKey_(p.address),
+      Address: address,
+      NormalizedAddress: addressKey_(address),
       Phone: text_(p.phone, "recipient phone", 40, false),
       MealCount: integer_(p.mealCount, "number of meals", 1, MEAL_LIMITS.meals),
       DietaryRestrictions: text_(
@@ -805,12 +816,26 @@ function testAdminIdentity() {
 
 ## File 5: Audit.gs
 
-SHA-256: ba29f0d2c01c201536cc6baa3065dbdb5ad0491bc9173acabc72569a2c63df5b
+SHA-256: 806c6adce23eacae6eb9c5665389d98713b3f117a8412dd3b9f0949a0023d22d
 
 Copy only the contents of this code box into the matching Apps Script file.
 
 ```javascript
 function audit_(s, admin, action, type, id, oldValue, newValue) {
+  // Keep operational history without copying private contact details, dietary
+  // information or internal notes into a second long-lived record.
+  const summary = value => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+    const keys = type === "Recipient"
+      ? ["MealCount", "AddressStatus", "DuplicateFlag", "RoutePosition", "Version"]
+      : type === "Referral"
+        ? ["Status", "meals", "recipients", "Version"]
+        : type === "Event"
+          ? ["EventName", "DeliveryDate", "Capacity", "Status", "Archived"]
+          : [];
+    return Object.fromEntries(keys.filter(k => Object.prototype.hasOwnProperty.call(value, k))
+      .map(k => [k, value[k]]));
+  };
   s.AUDITLOG.push({
     AuditID: uuid_(),
     Timestamp: now_(),
@@ -818,15 +843,15 @@ function audit_(s, admin, action, type, id, oldValue, newValue) {
     Action: action,
     EntityType: type,
     EntityID: id,
-    OldValue: JSON.stringify(oldValue == null ? null : oldValue),
-    NewValue: JSON.stringify(newValue == null ? null : newValue),
+    OldValue: JSON.stringify(oldValue == null ? null : summary(oldValue)),
+    NewValue: JSON.stringify(newValue == null ? null : summary(newValue)),
   });
 }
 ```
 
 ## File 6: Events.gs
 
-SHA-256: 9067a37ad135792545968270a4a1f1ea4d0a5e50798d0e4335ead681cce78b89
+SHA-256: 7c9754a252a7675653b894aef81b98e7686d78150c48cf902429f8c07b9b73ec
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -864,19 +889,30 @@ function eventInput_(p) {
   const status = p.status || "Draft";
   if (!["Draft", "Open", "Closed", "Completed"].includes(status))
     fail_("INVALID", "Please check event status.");
+  const capacity = integer_(p.capacity, "meal capacity", 0, 100000);
+  const startAddress = text_(p.startAddress, "pickup address", 500, status === "Open");
+  if (status === "Open" && capacity < 1)
+    fail_("INVALID", "Set a positive meal capacity before opening referrals.");
   return {
     EventName: text_(p.eventName, "event name", 160, true),
     DeliveryDate: date,
-    Capacity: integer_(p.capacity, "meal capacity", 0, 100000),
-    StartAddress: text_(p.startAddress, "pickup address", 500, true),
+    Capacity: capacity,
+    StartAddress: startAddress,
     Status: status,
   };
 }
 function eventWrite_(s, p, admin) {
   const input = eventInput_(p);
   if (!p.eventId) {
+    const creationId = p.creationId ? submissionId_(p.creationId) : uuid_();
+    const prior = s.EVENTS.find(e => e.EventID === creationId);
+    if (prior) {
+      if (Object.keys(input).some(k => input[k] !== prior[k]))
+        fail_("IDEMPOTENCY", "This event creation was already saved with different settings. Refresh the event list before continuing.");
+      return prior;
+    }
     const e = Object.assign(input, {
-      EventID: uuid_(),
+      EventID: creationId,
       Archived: false,
       ArchivedDate: "",
       CreatedAt: now_(),
@@ -1251,7 +1287,7 @@ function matchesFor_(s, r) {
 
 ## File 9: Reports.gs
 
-SHA-256: 7f75e9012787ae439d8ffc11b52bf3cea2209ed8aabfac01818ce9271c8cec59
+SHA-256: 8db2098acb16face56115f17624c3f60bba27f30849df23d4850d277c3d9978f
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -1277,11 +1313,15 @@ function reports_(s, p) {
     recipientRecords: rows.length,
     approvedStops: 0,
     organizations: 0,
+    capacity: events.reduce((n, e) => n + Number(e.Capacity), 0),
+    pendingReferrals: refs.filter(r => r.Status === "Pending").length,
+    approvedReferrals: refs.filter(r => r.Status === "Approved").length,
+    rejectedReferrals: refs.filter(r => r.Status === "Rejected").length,
   };
-  const organizations = {};
+  const organizations = Object.create(null);
   refs.forEach((r) => {
     const meals = referralMeals_(s, r.ReferralID);
-    if (r.Status !== "Rejected") totals.currentlyReservedMeals += meals;
+    if (["Pending", "Approved"].includes(r.Status)) totals.currentlyReservedMeals += meals;
     if (r.Status === "Approved") {
       totals.approvedMeals += meals;
       totals.approvedStops += rows.filter(
@@ -1304,6 +1344,7 @@ function reports_(s, p) {
     organizations[key].currentMeals += meals;
   });
   totals.organizations = Object.keys(organizations).length;
+  totals.remainingCapacity = totals.capacity - totals.currentlyReservedMeals;
   return {
     totals,
     integrity: relationshipIssues_(s, [...ids]),
@@ -2185,7 +2226,7 @@ function legacyMigrationPlan_() {
 
 ## File 14: Admin.html
 
-SHA-256: 5f344864ea7c3809c50d4d9069c3b90f4a8ac1ef0ae45f84850f209242a8da30
+SHA-256: 0280481634fb4b96d4968eb2842e858b947513749a41a6c07032542286bfcaf3
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -2250,9 +2291,11 @@ Copy only the contents of this code box into the matching Apps Script file.
         <div id="requestCards"></div>
       </section>
       <section id="routeView" hidden>
+        <p class="print-verification-warning">Delivery sheet unavailable. Return to the dashboard and use Print Delivery Sheet to verify the current saved route.</p>
         <div class="route-header">
           <h2 id="routeTitle">Delivery Route</h2>
           <p id="routeDate"></p>
+          <p id="routePickup"></p>
           <p id="routeSummary"></p>
           <p id="routeStatus" class="route-status warning"></p>
           <p id="routingAvailability" class="hint no-print"></p>
@@ -2298,7 +2341,6 @@ Copy only the contents of this code box into the matching Apps Script file.
             ><label class="full"
               >Starting / pickup address<input
                 name="startAddress"
-                required
                 maxlength="500"
             /></label>
           </div>
@@ -2410,7 +2452,6 @@ Copy only the contents of this code box into the matching Apps Script file.
           ><label class="full"
             >Starting / pickup address<input
               name="startAddress"
-              required
               maxlength="500"
           /></label>
         </div>
@@ -2439,7 +2480,7 @@ Copy only the contents of this code box into the matching Apps Script file.
 
 ## File 15: AdminClient.html
 
-SHA-256: 61eabc3ceb1c796b483f3c5725efa168ad502d7f3c6d6cba91140082f772255c
+SHA-256: ac81c03d1b04f5d53da921dafdaaad84637060d461ce21ec88f5fe7f737dba0c
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -2492,10 +2533,10 @@ Copy only the contents of this code box into the matching Apps Script file.
           r.ok
             ? resolve(r.data)
             : reject(
-                new Error(
+                Object.assign(new Error(
                   r.error?.message ||
                     "Your changes were not saved. Please try again.",
-                ),
+                ), { code: r.error?.code }),
               ),
         )
         .withFailureHandler(() =>
@@ -2507,6 +2548,50 @@ Copy only the contents of this code box into the matching Apps Script file.
         )
         .adminCall(action, p),
     );
+  }
+  const pendingCreates = new Map();
+  for (const action of ["createReferral", "saveEvent"]) {
+    try {
+      const pending = JSON.parse(sessionStorage.getItem("community-meals-admin-" + action) || "null");
+      if (pending) pendingCreates.set(action, pending);
+    } catch (_) { /* Storage may be unavailable; this tab still deduplicates. */ }
+  }
+  function retainCreate(action, pending) {
+    if (pending) pendingCreates.set(action, pending);
+    else pendingCreates.delete(action);
+    try {
+      const key = "community-meals-admin-" + action;
+      if (pending) sessionStorage.setItem(key, JSON.stringify(pending));
+      else sessionStorage.removeItem(key);
+    } catch (_) { /* No recipient details are stored in browser storage. */ }
+  }
+  async function createOnce(action, payload) {
+    const canonical = { ...payload };
+    delete canonical.submissionId;
+    delete canonical.creationId;
+    delete canonical.addressReceipt;
+    if (canonical.recipients)
+      canonical.recipients = canonical.recipients.map(({ addressReceipt, ...r }) => r);
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(canonical)));
+    const fingerprint = [...new Uint8Array(digest)].map(n => n.toString(16).padStart(2, "0")).join("");
+    let pending = pendingCreates.get(action);
+    const wasPending = Boolean(pending);
+    if (pending && pending.fingerprint !== fingerprint)
+      throw new Error("A previous save is unconfirmed. Restore the same information and retry before creating a different record. Refresh the dashboard to check whether it was saved.");
+    if (!pending) pending = { id: crypto.randomUUID(), fingerprint, eventId: payload.eventId || "" };
+    retainCreate(action, pending);
+    try {
+      const result = await rpc(action, { ...payload,
+        [action === "createReferral" ? "submissionId" : "creationId"]: pending.id });
+      retainCreate(action, null);
+      return result;
+    } catch (error) {
+      // A later authentication/validation failure cannot disprove an earlier
+      // lost response. Keep that original operation identity until reconciled.
+      if (!wasPending && ["INVALID", "CAPACITY", "CLOSED", "READ_ONLY", "AUTH", "FORBIDDEN"].includes(error.code))
+        retainCreate(action, null);
+      throw error;
+    }
   }
   async function task(fn, trigger = MealButtonFeedback.current()) {
     if (busy) return;
@@ -2561,6 +2646,9 @@ Copy only the contents of this code box into the matching Apps Script file.
   }
   async function refreshEvents(preferred) {
     events = await rpc("events");
+    const pendingEvent = pendingCreates.get("saveEvent");
+    if (pendingEvent && events.some(e => e.EventID === pendingEvent.id))
+      retainCreate("saveEvent", null);
     if (preferred) {
       dashboard = null;
       $("adminEvents").value = preferred;
@@ -2578,6 +2666,7 @@ Copy only the contents of this code box into the matching Apps Script file.
     await refresh();
   }
   async function refresh() {
+    document.body.classList.remove("route-print-ready");
     const id = $("adminEvents").value;
     if (!id) {
       dashboard = null;
@@ -2589,6 +2678,7 @@ Copy only the contents of this code box into the matching Apps Script file.
       $("routeStops").replaceChildren();
       $("routeTitle").textContent = "Delivery Route";
       $("routeDate").textContent = "";
+      $("routePickup").textContent = "";
       $("routeSummary").textContent = "";
       $("routeStatus").textContent = "No event selected.";
       $("archiveEvent").disabled = true;
@@ -3022,6 +3112,7 @@ Copy only the contents of this code box into the matching Apps Script file.
     route.totalMeals = n;
   }
   function move(id, delta) {
+    document.body.classList.remove("route-print-ready");
     const i = route.stops.findIndex((s) => s.recipientId === id),
       j = i + delta;
     if (j < 0 || j >= route.stops.length) return;
@@ -3034,6 +3125,7 @@ Copy only the contents of this code box into the matching Apps Script file.
     if (!route) return;
     $("routeTitle").textContent = route.eventName + " Delivery Route";
     $("routeDate").textContent = dateLabel(route.deliveryDate);
+    $("routePickup").textContent = "Pickup: " + (route.startAddress || "Not configured");
     $("routeSummary").textContent =
       route.stops.length + " Stops · " + route.totalMeals + " Meals";
     const addressesReady = !route.unresolved.length && addressReviewed(route.startAddressStatus);
@@ -3118,6 +3210,7 @@ Copy only the contents of this code box into the matching Apps Script file.
           const i = route.stops.findIndex((x) => x.recipientId === dragId),
             j = route.stops.findIndex((x) => x.recipientId === r.recipientId);
           if (i < 0 || j < 0 || i === j) return;
+          document.body.classList.remove("route-print-ready");
           const [row] = route.stops.splice(i, 1);
           route.stops.splice(j, 0, row);
           routeUnsaved = true;
@@ -3202,6 +3295,11 @@ Copy only the contents of this code box into the matching Apps Script file.
       ["Recipient Records", r.totals.recipientRecords],
       ["Approved Stops", r.totals.approvedStops],
       ["Organizations", r.totals.organizations],
+      ["Capacity", r.totals.capacity],
+      ["Remaining Capacity", r.totals.remainingCapacity],
+      ["Pending Referrals", r.totals.pendingReferrals],
+      ["Approved Referrals", r.totals.approvedReferrals],
+      ["Rejected Referrals", r.totals.rejectedReferrals],
     ]);
     $("organizationReports").replaceChildren(
       ...r.organizations.map((o) =>
@@ -3278,7 +3376,20 @@ Copy only the contents of this code box into the matching Apps Script file.
   $("closeReferral").addEventListener("click", () =>
     $("referralDialog").close(),
   );
-  $("addReferral").addEventListener("click", () => openReferral(null, false));
+  $("addReferral").addEventListener("click", () => task(async () => {
+    const pending = pendingCreates.get("createReferral");
+    if (pending) {
+      const { receipt } = await rpc("submissionReceipt", { submissionId: pending.id });
+      if (receipt) {
+        retainCreate("createReferral", null);
+        await refreshEvents(pending.eventId);
+        alert("Your previous referral was saved once. Referral ID: " + receipt.referralId);
+        return;
+      }
+    }
+    openReferral(null, false);
+    if (pending) $("editorMessage").textContent = "Previous save unconfirmed. Re-enter the same information to retry safely. Recipient details were not stored in this browser.";
+  }));
   $("editorAddRecipient").addEventListener("click", () => {
     if ($("editorRecipients").children.length < 100) recipientEditor();
   });
@@ -3306,7 +3417,8 @@ Copy only the contents of this code box into the matching Apps Script file.
       if (!(await MealAddresses.prepareAll($("referralEditor")))) return;
       const payload = editorPayload();
       try {
-        await rpc(editing ? "editReferral" : "createReferral", payload);
+        if (editing) await rpc("editReferral", payload);
+        else await createOnce("createReferral", payload);
         $("referralDialog").close();
         await refresh();
       } catch (err) {
@@ -3320,7 +3432,7 @@ Copy only the contents of this code box into the matching Apps Script file.
     task(async () => {
       try {
         if (!(await MealAddresses.prepareAll($("eventEditor")))) return;
-        const event = await rpc("saveEvent", eventPayload($("eventEditor")));
+        const event = await createOnce("saveEvent", eventPayload($("eventEditor")));
         $("eventDialog").close();
         await refreshEvents(event.EventID);
       } catch (err) {
@@ -3418,9 +3530,22 @@ Copy only the contents of this code box into the matching Apps Script file.
       renderRoute();
     }),
   );
-  $("printRoute").addEventListener("click", () => {
-    if (!routeUnsaved && route.isFinal) window.print();
-  });
+  $("printRoute").addEventListener("click", () => task(async () => {
+    if (!route || routeUnsaved || !route.isFinal) return;
+    // Another administrator may have changed quantities, addresses or approval
+    // since this page loaded. Never print a cached route without a live read.
+    const current = await rpc("route", { eventId: route.eventId });
+    if (current.version !== route.version || !current.isFinal) {
+      route = current;
+      renderRoute();
+      throw new Error("The delivery route changed. Review the current route and save its order before printing.");
+    }
+    route = current;
+    renderRoute();
+    document.body.classList.add("route-print-ready");
+    window.print();
+  }));
+  window.addEventListener("afterprint", () => document.body.classList.remove("route-print-ready"));
   ["reportEvent", "reportYear"].forEach((id) =>
     $(id).addEventListener("change", () => task(reports)),
   );
@@ -3850,7 +3975,7 @@ window.MealAddresses = (() => {
 
 ## File 17: AdminStyles.html
 
-SHA-256: cc0abcb2ae347e3adc03932c5c5c7cc2a800204d5bb56e1a27cdeb7db2010bf5
+SHA-256: e4d7e970bd0bc5a3d03df8a121192cda94e588c750d74d6e6c91609dc7347acf
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -4339,6 +4464,13 @@ button[aria-busy="true"]::before {
 button[aria-busy="true"]::after { content: " — Loading…"; }
 @keyframes meal-button-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { button[aria-busy="true"]::before { animation: none; } }
+
+/* Printing uses a freshly verified saved route. Direct browser print is safe. */
+.print-verification-warning { display: none; }
+@media print {
+  body:not(.route-print-ready) #routeView > :not(.print-verification-warning) { display: none !important; }
+  body:not(.route-print-ready) .print-verification-warning { display: block !important; }
+}
 ```
 
 ## File 18: appsscript.json

@@ -19,11 +19,15 @@ function reports_(s, p) {
     recipientRecords: rows.length,
     approvedStops: 0,
     organizations: 0,
+    capacity: events.reduce((n, e) => n + Number(e.Capacity), 0),
+    pendingReferrals: refs.filter(r => r.Status === "Pending").length,
+    approvedReferrals: refs.filter(r => r.Status === "Approved").length,
+    rejectedReferrals: refs.filter(r => r.Status === "Rejected").length,
   };
-  const organizations = {};
+  const organizations = Object.create(null);
   refs.forEach((r) => {
     const meals = referralMeals_(s, r.ReferralID);
-    if (r.Status !== "Rejected") totals.currentlyReservedMeals += meals;
+    if (["Pending", "Approved"].includes(r.Status)) totals.currentlyReservedMeals += meals;
     if (r.Status === "Approved") {
       totals.approvedMeals += meals;
       totals.approvedStops += rows.filter(
@@ -46,6 +50,7 @@ function reports_(s, p) {
     organizations[key].currentMeals += meals;
   });
   totals.organizations = Object.keys(organizations).length;
+  totals.remainingCapacity = totals.capacity - totals.currentlyReservedMeals;
   return {
     totals,
     integrity: relationshipIssues_(s, [...ids]),
