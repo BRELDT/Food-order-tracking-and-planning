@@ -104,6 +104,8 @@
       : "";
     $("eventMessage").textContent = !selected
       ? "There are no open meal events right now."
+      : selected.unavailable
+        ? "This event is no longer accepting requests. Your entered information has been kept. Choose another event explicitly if appropriate."
       : selected.remaining === 0
         ? "Sorry, all available meals for this event have been requested."
         : "";
@@ -167,7 +169,10 @@
         pending.event &&
         !events.some((e) => e.eventId === pending.event.eventId)
       )
-        events.push({ ...pending.event, remaining: 0 });
+        events.push({ ...pending.event, remaining: 0, unavailable: true });
+      // Refresh must never move an existing draft to a different meal event.
+      if (selected && !events.some((e) => e.eventId === selected.eventId))
+        events.push({ ...selected, remaining: 0, unavailable: true });
       const keep =
         preferred ||
         selected?.eventId ||

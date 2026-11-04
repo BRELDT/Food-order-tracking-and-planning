@@ -645,6 +645,30 @@ try {
       await publicPage.locator("#successPanel").waitFor({ state: "visible" });
     },
   );
+  await check("Closed-event refresh preserves the draft and requires explicit event selection", async () => {
+    const page = await desktop.newPage();
+    let closed = false, writes = 0;
+    await page.route("**/api?*", async route => {
+      if (route.request().method() !== "GET") {writes++; return route.abort();}
+      await route.fulfill({contentType: "application/json", body: JSON.stringify({ok: true, data: [
+        ...(!closed ? [{eventId: "original-event", eventName: "Original event", deliveryDate: "2026-11-26", remaining: 5}] : []),
+        {eventId: "other-event", eventName: "Other event", deliveryDate: "2026-11-27", remaining: 10},
+      ]})});
+    });
+    await page.goto("http://127.0.0.1:4174/");
+    await page.waitForFunction(() => document.getElementById("eventSelect").value === "original-event");
+    await page.getByLabel("Organization name", {exact: true}).fill("Synthetic retained draft");
+    closed = true;
+    await page.getByRole("button", {name: "Refresh Availability", exact: true}).click();
+    await page.waitForFunction(() => document.getElementById("eventMessage").textContent.includes("no longer accepting"));
+    assert.equal(await page.locator("#eventSelect").inputValue(), "original-event");
+    assert.equal(await page.getByLabel("Organization name", {exact: true}).inputValue(), "Synthetic retained draft");
+    assert.equal(await page.locator("#submitRequest").isEnabled(), false);
+    await page.selectOption("#eventSelect", "other-event");
+    await page.waitForFunction(() => !document.getElementById("submitRequest").disabled);
+    assert.equal(writes, 0);
+    await page.close();
+  });
   await check("No browser script errors", async () => {
     assert.deepEqual(errors, []);
   });
