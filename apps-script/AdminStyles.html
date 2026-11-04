@@ -482,3 +482,10 @@ button[aria-busy="true"]::before {
 button[aria-busy="true"]::after { content: " — Loading…"; }
 @keyframes meal-button-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { button[aria-busy="true"]::before { animation: none; } }
+
+/* Printing uses a freshly verified saved route. Direct browser print is safe. */
+.print-verification-warning { display: none; }
+@media print {
+  body:not(.route-print-ready) #routeView > :not(.print-verification-warning) { display: none !important; }
+  body:not(.route-print-ready) .print-verification-warning { display: block !important; }
+}

@@ -331,6 +331,20 @@ test("duplicate warnings within and across referrals; units are preserved; never
   ok(h.public(another));
   assert.equal(h.get("RECIPIENTS")[3].DuplicateFlag, true);
 });
+test("hyphenated apartment identifiers do not produce false duplicate warnings", () => {
+  const h = harness(), e = createEvent(h), p = payload(e.EventID, [1, 1]);
+  p.recipients.forEach((r, i) => {
+    r.recipientName = "Synthetic Unit Recipient " + i;
+    r.phone = "";
+    r.address = "65 West Church Street, Unit QA-" + (i + 1) + ", Martinsville, VA 24112";
+  });
+  ok(h.public(p));
+  assert.ok(h.get("RECIPIENTS").every(r => !r.DuplicateFlag));
+  const q = payload(e.EventID, [1]);
+  q.recipients[0].address = p.recipients[0].address.replace("Unit", "Apt");
+  ok(h.public(q));
+  assert.equal(h.get("RECIPIENTS")[2].DuplicateFlag, true);
+});
 test("unauthorized admin dispatch and public direct admin calls fail closed", () => {
   const h = harness(),
     e = createEvent(h);

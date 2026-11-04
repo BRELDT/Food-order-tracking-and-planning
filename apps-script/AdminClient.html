@@ -46,10 +46,10 @@
           r.ok
             ? resolve(r.data)
             : reject(
-                new Error(
+                Object.assign(new Error(
                   r.error?.message ||
                     "Your changes were not saved. Please try again.",
-                ),
+                ), { code: r.error?.code }),
               ),
         )
         .withFailureHandler(() =>
@@ -61,6 +61,50 @@
         )
         .adminCall(action, p),
     );
+  }
+  const pendingCreates = new Map();
+  for (const action of ["createReferral", "saveEvent"]) {
+    try {
+      const pending = JSON.parse(sessionStorage.getItem("community-meals-admin-" + action) || "null");
+      if (pending) pendingCreates.set(action, pending);
+    } catch (_) { /* Storage may be unavailable; this tab still deduplicates. */ }
+  }
+  function retainCreate(action, pending) {
+    if (pending) pendingCreates.set(action, pending);
+    else pendingCreates.delete(action);
+    try {
+      const key = "community-meals-admin-" + action;
+      if (pending) sessionStorage.setItem(key, JSON.stringify(pending));
+      else sessionStorage.removeItem(key);
+    } catch (_) { /* No recipient details are stored in browser storage. */ }
+  }
+  async function createOnce(action, payload) {
+    const canonical = { ...payload };
+    delete canonical.submissionId;
+    delete canonical.creationId;
+    delete canonical.addressReceipt;
+    if (canonical.recipients)
+      canonical.recipients = canonical.recipients.map(({ addressReceipt, ...r }) => r);
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(canonical)));
+    const fingerprint = [...new Uint8Array(digest)].map(n => n.toString(16).padStart(2, "0")).join("");
+    let pending = pendingCreates.get(action);
+    const wasPending = Boolean(pending);
+    if (pending && pending.fingerprint !== fingerprint)
+      throw new Error("A previous save is unconfirmed. Restore the same information and retry before creating a different record. Refresh the dashboard to check whether it was saved.");
+    if (!pending) pending = { id: crypto.randomUUID(), fingerprint, eventId: payload.eventId || "" };
+    retainCreate(action, pending);
+    try {
+      const result = await rpc(action, { ...payload,
+        [action === "createReferral" ? "submissionId" : "creationId"]: pending.id });
+      retainCreate(action, null);
+      return result;
+    } catch (error) {
+      // A later authentication/validation failure cannot disprove an earlier
+      // lost response. Keep that original operation identity until reconciled.
+      if (!wasPending && ["INVALID", "CAPACITY", "CLOSED", "READ_ONLY", "AUTH", "FORBIDDEN"].includes(error.code))
+        retainCreate(action, null);
+      throw error;
+    }
   }
   async function task(fn, trigger = MealButtonFeedback.current()) {
     if (busy) return;
@@ -115,6 +159,9 @@
   }
   async function refreshEvents(preferred) {
     events = await rpc("events");
+    const pendingEvent = pendingCreates.get("saveEvent");
+    if (pendingEvent && events.some(e => e.EventID === pendingEvent.id))
+      retainCreate("saveEvent", null);
     if (preferred) {
       dashboard = null;
       $("adminEvents").value = preferred;
@@ -132,6 +179,7 @@
     await refresh();
   }
   async function refresh() {
+    document.body.classList.remove("route-print-ready");
     const id = $("adminEvents").value;
     if (!id) {
       dashboard = null;
@@ -143,6 +191,7 @@
       $("routeStops").replaceChildren();
       $("routeTitle").textContent = "Delivery Route";
       $("routeDate").textContent = "";
+      $("routePickup").textContent = "";
       $("routeSummary").textContent = "";
       $("routeStatus").textContent = "No event selected.";
       $("archiveEvent").disabled = true;
@@ -576,6 +625,7 @@
     route.totalMeals = n;
   }
   function move(id, delta) {
+    document.body.classList.remove("route-print-ready");
     const i = route.stops.findIndex((s) => s.recipientId === id),
       j = i + delta;
     if (j < 0 || j >= route.stops.length) return;
@@ -588,6 +638,7 @@
     if (!route) return;
     $("routeTitle").textContent = route.eventName + " Delivery Route";
     $("routeDate").textContent = dateLabel(route.deliveryDate);
+    $("routePickup").textContent = "Pickup: " + (route.startAddress || "Not configured");
     $("routeSummary").textContent =
       route.stops.length + " Stops · " + route.totalMeals + " Meals";
     const addressesReady = !route.unresolved.length && addressReviewed(route.startAddressStatus);
@@ -672,6 +723,7 @@
           const i = route.stops.findIndex((x) => x.recipientId === dragId),
             j = route.stops.findIndex((x) => x.recipientId === r.recipientId);
           if (i < 0 || j < 0 || i === j) return;
+          document.body.classList.remove("route-print-ready");
           const [row] = route.stops.splice(i, 1);
           route.stops.splice(j, 0, row);
           routeUnsaved = true;
@@ -756,6 +808,11 @@
       ["Recipient Records", r.totals.recipientRecords],
       ["Approved Stops", r.totals.approvedStops],
       ["Organizations", r.totals.organizations],
+      ["Capacity", r.totals.capacity],
+      ["Remaining Capacity", r.totals.remainingCapacity],
+      ["Pending Referrals", r.totals.pendingReferrals],
+      ["Approved Referrals", r.totals.approvedReferrals],
+      ["Rejected Referrals", r.totals.rejectedReferrals],
     ]);
     $("organizationReports").replaceChildren(
       ...r.organizations.map((o) =>
@@ -832,7 +889,20 @@
   $("closeReferral").addEventListener("click", () =>
     $("referralDialog").close(),
   );
-  $("addReferral").addEventListener("click", () => openReferral(null, false));
+  $("addReferral").addEventListener("click", () => task(async () => {
+    const pending = pendingCreates.get("createReferral");
+    if (pending) {
+      const { receipt } = await rpc("submissionReceipt", { submissionId: pending.id });
+      if (receipt) {
+        retainCreate("createReferral", null);
+        await refreshEvents(pending.eventId);
+        alert("Your previous referral was saved once. Referral ID: " + receipt.referralId);
+        return;
+      }
+    }
+    openReferral(null, false);
+    if (pending) $("editorMessage").textContent = "Previous save unconfirmed. Re-enter the same information to retry safely. Recipient details were not stored in this browser.";
+  }));
   $("editorAddRecipient").addEventListener("click", () => {
     if ($("editorRecipients").children.length < 100) recipientEditor();
   });
@@ -860,7 +930,8 @@
       if (!(await MealAddresses.prepareAll($("referralEditor")))) return;
       const payload = editorPayload();
       try {
-        await rpc(editing ? "editReferral" : "createReferral", payload);
+        if (editing) await rpc("editReferral", payload);
+        else await createOnce("createReferral", payload);
         $("referralDialog").close();
         await refresh();
       } catch (err) {
@@ -874,7 +945,7 @@
     task(async () => {
       try {
         if (!(await MealAddresses.prepareAll($("eventEditor")))) return;
-        const event = await rpc("saveEvent", eventPayload($("eventEditor")));
+        const event = await createOnce("saveEvent", eventPayload($("eventEditor")));
         $("eventDialog").close();
         await refreshEvents(event.EventID);
       } catch (err) {
@@ -972,9 +1043,22 @@
       renderRoute();
     }),
   );
-  $("printRoute").addEventListener("click", () => {
-    if (!routeUnsaved && route.isFinal) window.print();
-  });
+  $("printRoute").addEventListener("click", () => task(async () => {
+    if (!route || routeUnsaved || !route.isFinal) return;
+    // Another administrator may have changed quantities, addresses or approval
+    // since this page loaded. Never print a cached route without a live read.
+    const current = await rpc("route", { eventId: route.eventId });
+    if (current.version !== route.version || !current.isFinal) {
+      route = current;
+      renderRoute();
+      throw new Error("The delivery route changed. Review the current route and save its order before printing.");
+    }
+    route = current;
+    renderRoute();
+    document.body.classList.add("route-print-ready");
+    window.print();
+  }));
+  window.addEventListener("afterprint", () => document.body.classList.remove("route-print-ready"));
   ["reportEvent", "reportYear"].forEach((id) =>
     $(id).addEventListener("change", () => task(reports)),
   );

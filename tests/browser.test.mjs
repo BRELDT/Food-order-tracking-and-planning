@@ -450,6 +450,14 @@ try {
       await admin.waitForFunction(
         () => !document.getElementById("printRoute").disabled,
       );
+      // Direct Ctrl+P must not print an unverified cached delivery sheet.
+      await admin.emulateMedia({ media: "print" });
+      assert.equal(await admin.locator(".stop").first().isVisible(), false);
+      assert.equal(await admin.locator(".print-verification-warning").isVisible(), true);
+      await admin.emulateMedia({ media: "screen" });
+      await admin.evaluate(() => { window.print = () => {}; });
+      await admin.locator("#printRoute").click();
+      await admin.waitForFunction(() => document.body.classList.contains("route-print-ready"));
       await admin.emulateMedia({ media: "print" });
       assert.equal(await admin.locator(".print-check").count(), 30);
       assert.equal(
@@ -591,48 +599,38 @@ try {
         await publicPage.locator('[name="mealCount"]').fill("2");
       };
       await fill();
-      let lost = false;
-      await publicPage.route("**/api", async (r) => {
-        if (
-          r.request().method() === "POST" &&
-          r.request().postDataJSON()?.action === "submit" &&
-          !lost
-        ) {
-          lost = true;
-          await r.fetch();
-          await r.abort("failed");
-        } else await r.continue();
+      let lost = false, posts = 0;
+      await publicPage.route("**/api?**", async (r) => {
+        if (r.request().method() === "POST" && r.request().postDataJSON()?.action === "submit") {
+          posts++;
+          if (!lost) {
+            lost = true;
+            await r.fetch(); // Commit once, then lose only the response.
+            await r.abort("failed");
+            return;
+          }
+        }
+        await r.continue();
       });
       await publicPage
         .getByRole("button", { name: "Submit Meal Request", exact: true })
         .click();
-      await publicPage.waitForFunction(() =>
-        document
-          .getElementById("submissionMessage")
-          .textContent.includes("uncertain"),
-      );
-      await publicPage.reload();
-      await publicPage.waitForFunction(
-        () => document.getElementById("remaining").textContent === "0",
-      );
-      await fill();
-      assert.equal(
-        await publicPage.locator("#submitRequest").isDisabled(),
-        false,
-      );
       await publicPage.evaluate(() => {
-        document
-          .getElementById("referralForm")
-          .dispatchEvent(
-            new Event("submit", { bubbles: true, cancelable: true }),
-          );
-        document
-          .getElementById("referralForm")
-          .dispatchEvent(
-            new Event("submit", { bubbles: true, cancelable: true }),
-          );
+        const form = document.getElementById("referralForm");
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
       });
       await publicPage.locator("#successPanel").waitFor({ state: "visible" });
+      assert.equal(lost, true);
+      assert.equal(posts, 1);
+      const savedId = await publicPage.locator("#receiptId").textContent();
+      await publicPage.reload();
+      await publicPage.locator("#successPanel").waitFor({ state: "visible" });
+      await publicPage.waitForFunction(() => !document.getElementById("eventSelect").disabled);
+      await publicPage.selectOption("#eventSelect", id);
+      await publicPage.waitForFunction(() => document.getElementById("remaining").textContent === "0");
+      assert.equal(await publicPage.locator("#receiptId").textContent(), savedId);
+      assert.equal(posts, 1);
       await admin.getByRole("button", { name: "Refresh", exact: true }).click();
       await admin.waitForFunction(() =>
         document
@@ -647,6 +645,30 @@ try {
       await publicPage.locator("#successPanel").waitFor({ state: "visible" });
     },
   );
+  await check("Closed-event refresh preserves the draft and requires explicit event selection", async () => {
+    const page = await desktop.newPage();
+    let closed = false, writes = 0;
+    await page.route("**/api?*", async route => {
+      if (route.request().method() !== "GET") {writes++; return route.abort();}
+      await route.fulfill({contentType: "application/json", body: JSON.stringify({ok: true, data: [
+        ...(!closed ? [{eventId: "original-event", eventName: "Original event", deliveryDate: "2026-11-26", remaining: 5}] : []),
+        {eventId: "other-event", eventName: "Other event", deliveryDate: "2026-11-27", remaining: 10},
+      ]})});
+    });
+    await page.goto("http://127.0.0.1:4174/");
+    await page.waitForFunction(() => document.getElementById("eventSelect").value === "original-event");
+    await page.getByLabel("Organization name", {exact: true}).fill("Synthetic retained draft");
+    closed = true;
+    await page.getByRole("button", {name: "Refresh Availability", exact: true}).click();
+    await page.waitForFunction(() => document.getElementById("eventMessage").textContent.includes("no longer accepting"));
+    assert.equal(await page.locator("#eventSelect").inputValue(), "original-event");
+    assert.equal(await page.getByLabel("Organization name", {exact: true}).inputValue(), "Synthetic retained draft");
+    assert.equal(await page.locator("#submitRequest").isEnabled(), false);
+    await page.selectOption("#eventSelect", "other-event");
+    await page.waitForFunction(() => !document.getElementById("submitRequest").disabled);
+    assert.equal(writes, 0);
+    await page.close();
+  });
   await check("No browser script errors", async () => {
     assert.deepEqual(errors, []);
   });

@@ -1,8 +1,18 @@
+# Thanksgiving readiness work — November 4, 2026
+
+Current repair branch: `thanksgiving/readiness-20261104`, based on main
+`8110ca5da221b390233edfd42b8d7a42cf33e5a6`. This is a release candidate,
+not proof of a production deployment. See `docs/thanksgiving-readiness-2026-11-04.md`.
+Do not open Thanksgiving ordering until the launch blockers in that report are resolved.
+The October 16 archive-reuse/two-driver feature branch was inspected and is not included.
+
+---
+
 # Community Meal Referral & Delivery System
 
 Implementation-only development branch: `development/community-meals-v1-20261001`.
 
-**Not deployed. Do not merge to main or update the current production Apps Script deployment.**
+**Original October 1 implementation notes follow; deployment statements below describe that historical stage.**
 The production repository baseline is `b004cf872a1e81357af55f78b4aa5141c7e9c10d`.
 
 ## Architecture

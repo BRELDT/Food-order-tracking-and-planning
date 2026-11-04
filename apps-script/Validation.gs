@@ -105,6 +105,11 @@ function recipients_(list, admin) {
   )
     fail_("INVALID", "Enter between 1 and 100 recipients.");
   return list.map((p) => {
+    if (!p || typeof p !== "object")
+      fail_("INVALID", "Please check the recipient information.");
+    const address = text_(p.address, "street address", 500, true);
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))
+      fail_("INVALID", "Enter the recipient's street address, not an email address.");
     const door = text_(
       p.doorPreference || "Front",
       "door preference",
@@ -117,8 +122,8 @@ function recipients_(list, admin) {
       fail_("INVALID", "Internal notes are administrator-only.");
     return {
       RecipientName: text_(p.recipientName, "recipient name", 160, true),
-      Address: text_(p.address, "street address", 500, true),
-      NormalizedAddress: addressKey_(p.address),
+      Address: address,
+      NormalizedAddress: addressKey_(address),
       Phone: text_(p.phone, "recipient phone", 40, false),
       MealCount: integer_(p.mealCount, "number of meals", 1, MEAL_LIMITS.meals),
       DietaryRestrictions: text_(

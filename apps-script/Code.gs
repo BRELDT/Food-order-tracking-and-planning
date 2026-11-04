@@ -1,4 +1,4 @@
-const MEALS_BACKEND_VERSION = "2026-10-13-integrity-recovery-v1";
+const MEALS_BACKEND_VERSION = "2026-11-04-thanksgiving-readiness-v1";
 function include_(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
@@ -103,6 +103,12 @@ function adminCall(action, p) {
     if (action === "route") return route_(auth.state, id_(p.eventId));
     if (action === "reports") return reports_(auth.state, p);
     if (action === "createReferral") return submit_(p, auth.email);
+    if (action === "submissionReceipt") {
+      const record = auth.state.SUBMISSIONS.find(r => r.SubmissionID === submissionId_(p.submissionId));
+      if (!record) return { receipt: null };
+      const parent = submissionReferral_(auth.state, record);
+      return { receipt: parent.SubmittedByAdmin === true ? savedSubmissionReceipt_(auth.state, record) : null };
+    }
     if (action === "verifyAddress") return verifyAddress_(p);
     if (action === "optimize") return optimize_(p);
     return locked_((s) => {

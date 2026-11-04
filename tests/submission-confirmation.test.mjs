@@ -13,6 +13,25 @@ test("successful POST returns immediately without recovery reads", async () => {
   assert.equal(await c.confirm({send: async () => receipt, check: async () => { checks++; }}), receipt);
   assert.equal(checks, 0);
 });
+test("availability refresh keeps a closed selected event instead of retargeting a draft", async () => {
+  const source = fs.readFileSync("app.js", "utf8");
+  const original = {eventId: "closed-event", eventName: "Original event", deliveryDate: "2026-11-26", remaining: 5};
+  const selectNode = {value: "", replaceChildren(...options) {this.options = options;}};
+  const nodes = new Map([["eventSelect", selectNode], ["availabilityChecked", {textContent: ""}]]);
+  const ctx = vm.createContext({loading: false, events: [], selected: original, pending: null,
+    $: id => nodes.get(id), totals: () => {}, utcLocalDate: () => "2026-11-04", Date,
+    document: {createElement: () => ({})},
+    api: async () => [{eventId: "different-event", eventName: "Different event", deliveryDate: "2026-11-27", remaining: 10}],
+    select: id => {ctx.selected = ctx.events.find(e => e.eventId === id);}});
+  vm.runInContext(source.slice(source.indexOf("  async function load("), source.indexOf("  async function hash(")), ctx);
+  await ctx.load();
+  assert.equal(selectNode.value, original.eventId);
+  assert.equal(ctx.selected.remaining, 0);
+  assert.equal(ctx.selected.unavailable, true);
+  await ctx.load("different-event");
+  assert.equal(selectNode.value, "different-event");
+  assert.equal(ctx.selected.remaining, 10);
+});
 test("lost POST response is confirmed by a read without submitting again", async () => {
   const c = controller(); let posts = 0, checks = 0, messages = 0;
   const result = await c.confirm({ send: async () => { posts++; throw Object.assign(new Error("network"), { uncertain: true }); },

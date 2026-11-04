@@ -31,19 +31,30 @@ function eventInput_(p) {
   const status = p.status || "Draft";
   if (!["Draft", "Open", "Closed", "Completed"].includes(status))
     fail_("INVALID", "Please check event status.");
+  const capacity = integer_(p.capacity, "meal capacity", 0, 100000);
+  const startAddress = text_(p.startAddress, "pickup address", 500, status === "Open");
+  if (status === "Open" && capacity < 1)
+    fail_("INVALID", "Set a positive meal capacity before opening referrals.");
   return {
     EventName: text_(p.eventName, "event name", 160, true),
     DeliveryDate: date,
-    Capacity: integer_(p.capacity, "meal capacity", 0, 100000),
-    StartAddress: text_(p.startAddress, "pickup address", 500, true),
+    Capacity: capacity,
+    StartAddress: startAddress,
     Status: status,
   };
 }
 function eventWrite_(s, p, admin) {
   const input = eventInput_(p);
   if (!p.eventId) {
+    const creationId = p.creationId ? submissionId_(p.creationId) : uuid_();
+    const prior = s.EVENTS.find(e => e.EventID === creationId);
+    if (prior) {
+      if (Object.keys(input).some(k => input[k] !== prior[k]))
+        fail_("IDEMPOTENCY", "This event creation was already saved with different settings. Refresh the event list before continuing.");
+      return prior;
+    }
     const e = Object.assign(input, {
-      EventID: uuid_(),
+      EventID: creationId,
       Archived: false,
       ArchivedDate: "",
       CreatedAt: now_(),

@@ -84,7 +84,7 @@ const server = http.createServer(async (req, res) => {
     if (u.pathname === "/api") {
       if (req.method === "GET") {
         res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ ok: true, data: h.ctx.publicEvents_() }));
+        res.end(h.ctx.doGet({ parameter: Object.fromEntries(u.searchParams) }).text);
         return;
       }
       let body = "";
@@ -151,6 +151,7 @@ const server = http.createServer(async (req, res) => {
         name === "admin.html" ||
         name === "app.js" ||
         name === "address-entry.js" ||
+        name === "submission-confirmation.js" ||
         name === "admin.js" ||
         name === "styles.css"
       )
@@ -174,5 +175,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 server.listen(port, "127.0.0.1", () =>
-  console.log("Synthetic preview ready: http://127.0.0.1:" + port),
+  console.log("Synthetic preview ready: http://127.0.0.1:" + server.address().port),
 );
