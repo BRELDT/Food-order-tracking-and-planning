@@ -715,8 +715,15 @@ function duplicateMatches_(a, b) {
     other = addressKey_(b.Address);
   const name = normalize_(a.RecipientName) === normalize_(b.RecipientName);
   const phone = phoneKey_(a.Phone);
+  // Read the complete unit token before address normalization removes hyphens.
+  // Otherwise QA-1 and QA-2 both become unit "qa" in the fuzzy comparison.
+  const unit = (value) => {
+    const match = String(value || "").match(/(?:\b(?:unit|apt\.?|apartment|suite)\s*|#\s*)([a-z0-9]+(?:[-/][a-z0-9]+)*)/i);
+    return match ? normalize_(match[1]) : "";
+  };
+  const unitsMatch = unit(a.Address) === unit(b.Address);
   return Boolean(
-    (address && similarAddress_(address, other)) ||
+    (address && unitsMatch && similarAddress_(address, other)) ||
     (name && phone && phone === phoneKey_(b.Phone)),
   );
 }
