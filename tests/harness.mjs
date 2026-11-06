@@ -24,6 +24,8 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
     batchCalls: 0,
     lockAcquires: 0,
     externalDuringLock: false,
+    publicDate: "2026-11-06",
+    convertPdf: () => Buffer.from("%PDF-1.7\nSynthetic conversion stub"),
   };
   const sheetAPI = (t) => ({
     getSheetId: () => t.id,
@@ -76,6 +78,7 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
       getUuid: () => crypto.randomUUID(),
       formatDate: (date, timeZone, pattern) => {
         assertDatePattern(pattern);
+        if (timeZone === "America/New_York") return state.publicDate;
         const parts = new Intl.DateTimeFormat("en-US", {
           timeZone, year: "numeric", month: "2-digit", day: "2-digit",
         }).formatToParts(date);
@@ -91,6 +94,7 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
       computeHmacSha256Signature: (s, key) => [
         ...crypto.createHmac("sha256", key).update(s).digest(),
       ],
+      base64Encode: (bytes) => Buffer.from(bytes).toString("base64"),
       base64EncodeWebSafe: (s) =>
         Buffer.from(
           typeof s === "string"
@@ -106,6 +110,11 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
               ? s
               : new Uint8Array(s.map((x) => (x + 256) % 256)),
           ).toString(),
+      }),
+    },
+    HtmlService: {
+      createHtmlOutput: (html) => ({
+        getAs: (mimeType) => ({ getBytes: () => [...state.convertPdf(html, mimeType)] }),
       }),
     },
     SpreadsheetApp: { openById: () => db },

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { harness } from "./harness.mjs";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
@@ -455,39 +456,48 @@ try {
       assert.equal(await admin.locator(".stop").first().isVisible(), false);
       assert.equal(await admin.locator(".print-verification-warning").isVisible(), true);
       await admin.emulateMedia({ media: "screen" });
-      await admin.evaluate(() => { window.print = () => {}; });
-      await admin.locator("#printRoute").click();
-      await admin.waitForFunction(() => document.body.classList.contains("route-print-ready"));
-      await admin.emulateMedia({ media: "print" });
-      assert.equal(await admin.locator(".print-check").count(), 30);
-      assert.equal(
-        await admin.locator(".print-check").first().isVisible(),
-        true,
-      );
-      assert.equal(await admin.locator("#requestsView").isVisible(), false);
-      assert.equal(await admin.locator("#settingsView").isVisible(), false);
-      const routeText = await admin.locator("#routeView").innerText();
-      for (const str of [
-        "Synthetic allergy note",
-        "202-555-0102",
-        "Synthetic delivery instruction",
-        "Running Meal Total:",
-      ])
-        assert.ok(routeText.includes(str));
-      for (const str of [
-        "DO_NOT_PRINT_ORGANIZATION",
-        "DO_NOT_PRINT_EMAIL",
-        "DO_NOT_PRINT_INTERNAL_NOTE",
-        "202-555-0199",
-      ])
-        assert.ok(!routeText.includes(str));
-      await admin.pdf({
+      const localRoute = await admin.request.post("http://127.0.0.1:4174/admin-rpc", {
+        data: { action: "route", payload: { eventId } },
+      });
+      const { data: route } = await localRoute.json();
+      const printable = await desktop.newPage();
+      await printable.setContent(harness().ctx.deliverySheetHtml_(route));
+      const text = await printable.locator("body").innerText();
+      assert.equal(await printable.locator(".stop").count(), route.stops.length);
+      for (const value of ["Synthetic allergy note", "202-555-0102",
+        "Synthetic delivery instruction", "Running Meal Total:", "30 Stops · 73 Meals"]) {
+        assert.ok(text.includes(value), value);
+      }
+      for (const value of ["DO_NOT_PRINT_ORGANIZATION", "DO_NOT_PRINT_EMAIL",
+        "DO_NOT_PRINT_INTERNAL_NOTE", "202-555-0199"]) {
+        assert.ok(!text.includes(value), value);
+      }
+      const pdf = await printable.pdf({
         path: ".artifacts/delivery-sheet.pdf",
-        format: "Letter",
         preferCSSPageSize: true,
         printBackground: true,
       });
-      await admin.emulateMedia({ media: "screen" });
+      await printable.close();
+
+      // The local adapter verifies the server guards, then substitutes browser-rendered
+      // bytes for Google's hosted conversion so the client downloads an actual PDF.
+      await admin.route("**/admin-rpc", async (request) => {
+        if (request.request().postDataJSON().action !== "deliveryPdf") return request.fallback();
+        const response = await request.fetch();
+        const result = await response.json();
+        assert.equal(result.ok, true);
+        result.data.base64 = pdf.toString("base64");
+        await request.fulfill({json: result});
+      });
+      await admin.locator("#printRoute").click();
+      await admin.getByRole("link", {name: "Open PDF", exact: true}).waitFor();
+      const downloadLink = admin.getByRole("link", {name: "Download PDF", exact: true});
+      const [download] = await Promise.all([admin.waitForEvent("download"), downloadLink.click()]);
+      assert.equal(download.suggestedFilename(), "delivery-sheet-2026-12-24.pdf");
+      assert.deepEqual(fs.readFileSync(await download.path()), pdf);
+      await admin.getByRole("button", {name: "Refresh", exact: true}).click();
+      await downloadLink.waitFor({state: "hidden"});
+      await admin.unroute("**/admin-rpc");
     },
   );
   await check(

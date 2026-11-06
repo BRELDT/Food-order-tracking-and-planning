@@ -128,29 +128,73 @@ test('a definitive admin validation failure permits a corrected new request', as
   assert.notEqual(h.requests[0].p.creationId,h.requests[1].p.creationId);
 });
 
-function printController({version=1, final=true, networkFailure=false, unsaved=false}={}) {
-  const source = fs.readFileSync('apps-script/AdminClient.html','utf8');
-  const begin = source.indexOf('  $("printRoute").addEventListener(');
-  const end = source.indexOf('  ["reportEvent",',begin);
-  let handler, prints=0, renders=0, reads=0; const classes=new Set();
-  const ctx=vm.createContext({route:{eventId:'event-1',version:1,isFinal:true},routeUnsaved:unsaved,
-    $:()=>({addEventListener:(_,fn)=>{handler=fn;}}), task:fn=>fn(),
-    rpc:async()=>{reads++; if(networkFailure) throw new Error('offline'); return {eventId:'event-1',version,isFinal:final};},
-    renderRoute:()=>{renders++;},document:{body:{classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}}},
-    window:{print:()=>{prints++;},addEventListener:()=>{}}
+test('delivery PDF requires an approved identity and a current finalized route', () => {
+  const h = harness(), event = createEvent(h, 30);
+  const input = payload(event.EventID, [2, 5]);
+  input.recipients[0].recipientName = 'Ana <Rivera> & Family';
+  input.recipients[0].notes = 'DO_NOT_PRINT_PRIVATE_NOTE';
+  input.recipients[0].deliveryInstructions = 'Ring twice';
+  const submitted = ok(h.admin('createReferral', input));
+  ok(approve(h, [submitted.referralId]));
+  const request = () => {
+    const route = h.get('EVENTS').find(e => e.EventID === event.EventID);
+    return {eventId: event.EventID, routeVersion: route.RouteVersion};
+  };
+  assert.equal(h.admin('deliveryPdf', request()).error.code, 'CONFLICT');
+  h.seed(s => {
+    const route = s.EVENTS.find(e => e.EventID === event.EventID);
+    route.StartAddressStatus = 'Confirmed';
+    route.RouteNeedsReview = false;
+    s.RECIPIENTS.forEach((r, i) => {
+      r.AddressStatus = 'Confirmed';
+      r.RoutePosition = i + 1;
+    });
   });
-  vm.runInContext(source.slice(begin,end),ctx);
-  return {run:()=>handler(),get prints(){return prints;},get reads(){return reads;},get renders(){return renders;},classes};
-}
-test('printing rechecks the backend; changed, unreviewed, unsaved and unavailable routes cannot print', async () => {
-  for (const options of [{version:2},{final:false},{networkFailure:true}]) {
-    const h=printController(options); await assert.rejects(h.run());
-    assert.equal(h.prints,0); assert.equal(h.classes.size,0);
+  const current = request();
+  let markup = '';
+  h.state.convertPdf = (html, mime) => {
+    assert.equal(mime, 'application/pdf');
+    markup = html;
+    return Buffer.from('%PDF-1.7');
+  };
+  const before = h.snapshot();
+  assert.equal(h.admin('deliveryPdf', {...current, routeVersion: current.routeVersion - 1}).error.code, 'CONFLICT');
+  h.state.active = h.state.effective = 'unapproved@example.test';
+  for (const action of ['dashboard', 'reports', 'route', 'deliveryPdf', 'saveEvent', 'editReferral']) {
+    assert.equal(h.admin(action, current).error.code, 'FORBIDDEN');
   }
-  const unsaved=printController({unsaved:true}); await unsaved.run();
-  assert.equal(unsaved.reads,0); assert.equal(unsaved.prints,0);
-  const current=printController(); await current.run();
-  assert.equal(current.reads,1); assert.equal(current.prints,1); assert.ok(current.classes.has('route-print-ready'));
+  h.state.active = '';
+  assert.equal(h.admin('deliveryPdf', current).error.code, 'AUTH');
+  assert.equal(JSON.parse(h.ctx.doGet({parameter:{action:'deliveryPdf'}}).text).error.code, 'FORBIDDEN');
+  assert.equal(markup, '');
+  h.state.active = h.state.effective = 'admin-two@example.test';
+  const pdf = ok(h.admin('deliveryPdf', current));
+  assert.equal(pdf.filename, 'delivery-sheet-2026-11-26.pdf');
+  assert.equal(Buffer.from(pdf.base64, 'base64').toString(), '%PDF-1.7');
+  assert.match(markup, /@page \{ size: letter/);
+  assert.match(markup, /2 Stops · 7 Meals/);
+  assert.match(markup, /Ana &lt;Rivera&gt; &amp; Family/);
+  assert.match(markup, /Ring twice/);
+  assert.doesNotMatch(markup, /DO_NOT_PRINT_PRIVATE_NOTE/);
+  h.state.convertPdf = () => Buffer.from('not a PDF');
+  assert.equal(h.admin('deliveryPdf', current).error.code, 'PDF');
+  assert.equal(h.snapshot(), before);
+});
+
+test('expired public events are hidden and reject new referrals, but preserve existing receipts and admin access', () => {
+  const h = harness(), event = createEvent(h, 20);
+  h.state.publicDate = event.DeliveryDate;
+  assert.equal(h.ctx.publicEvents_()[0].eventId, event.EventID);
+  const input = payload(event.EventID, [2]);
+  const receipt = ok(h.public(input));
+  h.state.publicDate = '2026-11-27';
+  assert.equal(h.ctx.publicEvents_().length, 0);
+  const before = h.snapshot();
+  assert.equal(h.public(payload(event.EventID, [2])).error.code, 'CLOSED');
+  assert.equal(JSON.parse(h.ctx.doPost({postData:{contents:JSON.stringify({action:'addressPreview',eventId:event.EventID})}}).text).error.code, 'CLOSED');
+  assert.equal(ok(h.public(input)).referralId, receipt.referralId);
+  assert.equal(ok(h.admin('dashboard', {eventId:event.EventID})).reserved, 2);
+  assert.equal(h.snapshot(), before);
 });
 
 test('local HTTP preview serves the confirmation helper and exercises real public submission/receipt dispatch', async () => {

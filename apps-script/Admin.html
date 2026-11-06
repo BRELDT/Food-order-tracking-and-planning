@@ -58,7 +58,7 @@
         <div id="requestCards"></div>
       </section>
       <section id="routeView" hidden>
-        <p class="print-verification-warning">Delivery sheet unavailable. Return to the dashboard and use Print Delivery Sheet to verify the current saved route.</p>
+        <p class="print-verification-warning">Open the prepared delivery PDF to print the delivery sheet.</p>
         <div class="route-header">
           <h2 id="routeTitle">Delivery Route</h2>
           <p id="routeDate"></p>
@@ -70,9 +70,16 @@
         <div class="actions no-print">
           <button id="optimizeRoute">Optimize Route</button
           ><button id="saveRoute">Save Manual Order</button
-          ><button id="printRoute" class="secondary">
-            Print Delivery Sheet
+          ><button id="printRoute" class="secondary" disabled>
+            Prepare Delivery PDF
           </button>
+        </div>
+        <div id="deliveryPdf" class="no-print" hidden>
+          <p role="status">US Letter PDF ready. On iPhone, open it and use Share → Print. If the viewer does not open, download the PDF and open it in Files.</p>
+          <div class="actions">
+            <a id="openDeliveryPdf" class="button" target="_blank" rel="noopener noreferrer">Open PDF</a>
+            <a id="downloadDeliveryPdf" class="button" target="_blank" rel="noopener noreferrer">Download PDF</a>
+          </div>
         </div>
         <div id="routeStops"></div>
       </section>

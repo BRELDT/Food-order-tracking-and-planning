@@ -52,7 +52,7 @@ h.seed((s) => {
   row.StartLatitude = 1;
   row.StartLongitude = 2;
 });
-const pp = payload(printEvent.EventID, Array(30).fill(1));
+const pp = payload(printEvent.EventID, Array.from({length: 30}, (_, i) => 1 + (i % 4)));
 pp.organizationName = "DO_NOT_PRINT_ORGANIZATION";
 pp.organizationEmail = "DO_NOT_PRINT_EMAIL@example.test";
 pp.organizationPhone = "202-555-0199";
@@ -63,6 +63,8 @@ pp.recipients.forEach((r) => {
   r.dietaryRestrictions = "Synthetic allergy note";
   r.phone = "202-555-0102";
 });
+pp.recipients[5].address = "506 " + "LongAddressSegment".repeat(24) + " Apt QA-6, Example City, VA 00000";
+pp.recipients[6].recipientName = "Zoë & José Synthetic";
 const pr = h.admin("createReferral", pp).data;
 approve(h, [pr.referralId]);
 h.seed((s) => {
