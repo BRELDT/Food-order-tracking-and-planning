@@ -58,6 +58,68 @@ test("historical orphan rows are preserved and visible in admin diagnostics whil
   assert.deepEqual(ok(h.admin("dashboard", {eventId: e.EventID})).integrity, report.integrity);
   assert.equal(h.get("SUBMISSIONS").length, 2);
 });
+test("owner-confirmed orphan audit exclusions remove only known historical warnings", () => {
+  const h = harness(), e = createEvent(h), p = payload(e.EventID, [2, 3]);
+  const receipt = ok(h.public(p));
+  const orphan = h.get("RECIPIENTS").map(r => r.RecipientID);
+  const submission = h.get("SUBMISSIONS")[0].SubmissionID;
+  h.tables.get("REFERRALS").rows = h.tables.get("REFERRALS").rows.filter(
+    (r, i) => i === 0 || r[0] !== receipt.referralId,
+  );
+  const prior = ok(h.admin("reports", {}));
+  assert.deepEqual(prior.integrity, { recipientRecords: 2, mealQuantities: 5, submissionRecords: 1 });
+  const recipientsBefore = JSON.stringify(h.get("RECIPIENTS"));
+  const submissionsBefore = JSON.stringify(h.get("SUBMISSIONS"));
+  h.seed(s => s.AUDITLOG.push({
+    AuditID: crypto.randomUUID(),
+    Timestamp: "2026-11-10T20:00:00.000Z",
+    Admin: "Owner-confirmed test fixture",
+    Action: "Historical Test Orphans Reviewed",
+    EntityType: "Event",
+    EntityID: e.EventID,
+    OldValue: "null",
+    NewValue: JSON.stringify({
+      kind: "historical-test-orphan-exclusion", version: 1, eventId: e.EventID,
+      recipientIds: orphan, submissionIds: [submission],
+    }),
+  }));
+  const after = ok(h.admin("reports", {}));
+  assert.deepEqual(after.integrity, { recipientRecords: 0, mealQuantities: 0, submissionRecords: 0 });
+  assert.deepEqual(ok(h.admin("dashboard", {eventId: e.EventID})).integrity, after.integrity);
+  assert.deepEqual(after.totals, prior.totals);
+  assert.equal(JSON.stringify(h.get("RECIPIENTS")), recipientsBefore);
+  assert.equal(JSON.stringify(h.get("SUBMISSIONS")), submissionsBefore);
+  // New broken records sharing the old missing referral must still trigger alerts.
+  const rawRecipient = [...h.tables.get("RECIPIENTS").rows[1]];
+  rawRecipient[0] = crypto.randomUUID();
+  rawRecipient[7] = 1;
+  h.tables.get("RECIPIENTS").rows.push(rawRecipient);
+  const rawSubmission = [...h.tables.get("SUBMISSIONS").rows[1]];
+  rawSubmission[0] = crypto.randomUUID();
+  h.tables.get("SUBMISSIONS").rows.push(rawSubmission);
+  assert.deepEqual(ok(h.admin("dashboard", {eventId: e.EventID})).integrity,
+    { recipientRecords: 1, mealQuantities: 1, submissionRecords: 1 });
+});
+test("incorrect or malformed exclusion audit entries do not suppress genuine warnings", () => {
+  const h = harness(), e = createEvent(h), p = payload(e.EventID, [4]);
+  const receipt = ok(h.public(p));
+  h.tables.get("REFERRALS").rows = h.tables.get("REFERRALS").rows.filter(
+    (r, i) => i === 0 || r[0] !== receipt.referralId,
+  );
+  for (const value of ["not-json", JSON.stringify({
+    kind: "historical-test-orphan-exclusion", version: 1, eventId: "wrong-event",
+    recipientIds: h.get("RECIPIENTS").map(r => r.RecipientID),
+    submissionIds: h.get("SUBMISSIONS").map(r => r.SubmissionID),
+  })]) {
+    h.seed(s => s.AUDITLOG.push({
+      AuditID: crypto.randomUUID(), Timestamp: "2026-11-10T20:00:00.000Z",
+      Admin: "QA test", Action: "Historical Test Orphans Reviewed",
+      EntityType: "Event", EntityID: e.EventID, OldValue: "null", NewValue: value,
+    }));
+  }
+  assert.deepEqual(ok(h.admin("dashboard", {eventId: e.EventID})).integrity,
+    { recipientRecords: 1, mealQuantities: 4, submissionRecords: 1 });
+});
 test("mismatched event relationships and missing recipients cannot return a successful saved receipt", () => {
   for (const corruption of ["event", "recipient", "receipt"]) {
     const h = harness(), e = createEvent(h), p = payload(e.EventID, [2]);
