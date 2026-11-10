@@ -133,12 +133,12 @@ Installation is a manual action by the user. No script source was uploaded or we
 
 ## File 1: Code.gs
 
-SHA-256: 7c5b217ddab463b23d27188539b74c1ddc502b4755b8327d9330c13dc1246ae7
+SHA-256: 61d2c09a46866cda40bb5b2dfa0d5833f64c4c63a91fdca56cf603a1ba8ed501
 
 Copy only the contents of this code box into the matching Apps Script file.
 
 ```javascript
-const MEALS_BACKEND_VERSION = "2026-11-04-thanksgiving-readiness-v1";
+const MEALS_BACKEND_VERSION = "2026-11-06-delivery-pdf-v1";
 function include_(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
@@ -241,6 +241,7 @@ function adminCall(action, p) {
       );
     if (action === "dashboard") return dashboard_(auth.state, p);
     if (action === "route") return route_(auth.state, id_(p.eventId));
+    if (action === "deliveryPdf") return deliveryPdf_(auth.state, p);
     if (action === "reports") return reports_(auth.state, p);
     if (action === "createReferral") return submit_(p, auth.email);
     if (action === "submissionReceipt") {
@@ -851,7 +852,7 @@ function audit_(s, admin, action, type, id, oldValue, newValue) {
 
 ## File 6: Events.gs
 
-SHA-256: 7c9754a252a7675653b894aef81b98e7686d78150c48cf902429f8c07b9b73ec
+SHA-256: 651076f5d57f394be25e6e1137c06ac3e77c58c5461b59eeabb0b24538e1db81
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -997,9 +998,13 @@ function archiveWrite_(s, p, admin) {
   );
   return e;
 }
+function acceptsPublicReferrals_(e) {
+  return e.Status === "Open" && e.Archived !== true &&
+    e.DeliveryDate >= Utilities.formatDate(new Date(), "America/New_York", "yyyy-MM-dd");
+}
 function publicEvents_() {
   const s = load_();
-  return s.EVENTS.filter((e) => e.Status === "Open" && e.Archived !== true)
+  return s.EVENTS.filter(acceptsPublicReferrals_)
     .map((e) => ({
       eventId: e.EventID,
       eventName: e.EventName,
@@ -1012,7 +1017,7 @@ function publicEvents_() {
 
 ## File 7: Referrals.gs
 
-SHA-256: 59237690c2d3c83b32eb88c0e027f08722e59b9d0db1fbf6a03579f9191a4cf3
+SHA-256: 544f1b087edd09c075297ee7c1105281f3a444c5a0e271ac2b12020bbed7ec2d
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -1043,7 +1048,7 @@ function submit_(p, adminEmail) {
     }
     const e = byId_(s, "EVENTS", canonical.EventID);
     if (adminEmail) editable_(e);
-    else if (e.Status !== "Open" || e.Archived === true)
+    else if (!acceptsPublicReferrals_(e))
       fail_("CLOSED", "This event is no longer accepting requests.");
     const meals = canonical.recipients.reduce((n, r) => n + r.MealCount, 0),
       left = available_(s, e);
@@ -1594,7 +1599,7 @@ function manualAddressReview_(s, p, admin) {
 
 ## File 11: AddressEntry.gs
 
-SHA-256: 6e1e89907fabbb630b92413ad9efab7ba54ed771fcbbab088d3f20691e18f625
+SHA-256: efd22b8466d7fc571018b573cd88154379f689c750871f6707aa9cf92896d370
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -1832,7 +1837,7 @@ function publicAddressCall_(action, p) {
   // Public callers cannot use this interface to read saved addresses or recipients.
   const s = load_(),
     e = byId_(s, "EVENTS", id_(p.eventId));
-  if (e.Status !== "Open" || e.Archived === true || available_(s, e) <= 0)
+  if (!acceptsPublicReferrals_(e) || available_(s, e) <= 0)
     fail_("CLOSED", "This event is no longer accepting requests.");
   if (action === "addressSuggestions") return addressSuggestions_(p);
   if (action === "addressPreview") return addressPreview_(p);
@@ -1842,7 +1847,7 @@ function publicAddressCall_(action, p) {
 
 ## File 12: Routing.gs
 
-SHA-256: cd9302f3e244331da003de45afbbb57635005f2032cf69593a84fd82a050a874
+SHA-256: 098fc63ac6fc81943a968d3edad4e1bb3560f6a4d9754c8083fcb461f300a0bb
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -1899,6 +1904,59 @@ function route_(s, eventId) {
     stops,
     totalMeals: running,
   };
+}
+function deliverySheetHtml_(route) {
+  const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+  const detail = (label, value) =>
+    value ? `<p><strong>${label}</strong> ${escape(value)}</p>` : "";
+  const stops = route.stops.map((r) => `
+    <section class="stop">
+      <h2><span class="check"></span>Stop ${escape(r.stop)} — ${escape(r.recipientName)}</h2>
+      <p>${escape(r.address)}</p>
+      <p><strong>Meals:</strong> ${escape(r.meals)} &nbsp; <strong>Running Meal Total:</strong> ${escape(r.runningMeals)}</p>
+      ${detail("Phone:", r.phone)}
+      ${detail("Dietary:", r.dietaryRestrictions)}
+      ${detail("Door:", r.doorPreference)}
+      ${detail("Delivery Instructions:", r.deliveryInstructions)}
+    </section>`).join("");
+  return `<!doctype html>
+    <html lang="en"><head><meta charset="utf-8"><title>Delivery Sheet</title>
+    <style>
+      @page { size: letter; margin: 0.55in; }
+      body { margin: 0; color: #000; background: #fff; font: 11pt/1.3 Arial, sans-serif; }
+      h1, h2, p { overflow-wrap: anywhere; word-wrap: break-word; }
+      h1 { font-size: 18pt; margin: 0 0 5pt; }
+      h2 { font-size: 12pt; margin: 0 0 3pt; }
+      p { margin: 2pt 0; white-space: pre-wrap; }
+      header { margin-bottom: 10pt; break-after: avoid; page-break-after: avoid; }
+      .stop { border: 1pt solid #555; padding: 7pt; margin: 0 0 8pt;
+        break-inside: avoid; page-break-inside: avoid; }
+      .check { display: inline-block; border: 1pt solid #000;
+        width: 10pt; height: 10pt; margin-right: 6pt; vertical-align: -1pt; }
+    </style></head><body>
+    <header><h1>${escape(route.eventName)} Delivery Sheet</h1>
+      ${detail("Delivery date:", route.deliveryDate)}
+      ${detail("Pickup:", route.startAddress)}
+      <p><strong>${route.stops.length} Stops · ${escape(route.totalMeals)} Meals</strong></p>
+    </header>
+    ${stops}
+    </body></html>`;
+}
+function deliveryPdf_(s, p) {
+  const route = route_(s, id_(p.eventId));
+  if (route.version !== p.routeVersion || !route.isFinal || !route.stops.length)
+    fail_("CONFLICT", "The delivery route changed. Review the current route and save its order before preparing the PDF.");
+  try {
+    const pdf = HtmlService.createHtmlOutput(deliverySheetHtml_(route)).getAs("application/pdf");
+    const bytes = pdf.getBytes();
+    if (bytes.slice(0, 5).join(",") !== "37,80,68,70,45")
+      throw new Error("Invalid PDF output");
+    return { filename: "delivery-sheet-" + route.deliveryDate + ".pdf", base64: Utilities.base64Encode(bytes) };
+  } catch (_) {
+    fail_("PDF", "The delivery PDF could not be generated. Try Prepare Delivery PDF again.");
+  }
 }
 function routeOrder_(s, p, admin, optimized) {
   const e = byId_(s, "EVENTS", p.eventId);
@@ -2233,7 +2291,7 @@ function legacyMigrationPlan_() {
 
 ## File 14: Admin.html
 
-SHA-256: 0280481634fb4b96d4968eb2842e858b947513749a41a6c07032542286bfcaf3
+SHA-256: 12f47d7312d164246c6ba70455c7b2b69088d6b75fa658b4b4a3ed7648c1a0f2
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -2298,7 +2356,7 @@ Copy only the contents of this code box into the matching Apps Script file.
         <div id="requestCards"></div>
       </section>
       <section id="routeView" hidden>
-        <p class="print-verification-warning">Delivery sheet unavailable. Return to the dashboard and use Print Delivery Sheet to verify the current saved route.</p>
+        <p class="print-verification-warning">Open the prepared delivery PDF to print the delivery sheet.</p>
         <div class="route-header">
           <h2 id="routeTitle">Delivery Route</h2>
           <p id="routeDate"></p>
@@ -2310,9 +2368,16 @@ Copy only the contents of this code box into the matching Apps Script file.
         <div class="actions no-print">
           <button id="optimizeRoute">Optimize Route</button
           ><button id="saveRoute">Save Manual Order</button
-          ><button id="printRoute" class="secondary">
-            Print Delivery Sheet
+          ><button id="printRoute" class="secondary" disabled>
+            Prepare Delivery PDF
           </button>
+        </div>
+        <div id="deliveryPdf" class="no-print" hidden>
+          <p role="status">US Letter PDF ready. On iPhone, open it and use Share → Print. If the viewer does not open, download the PDF and open it in Files.</p>
+          <div class="actions">
+            <a id="openDeliveryPdf" class="button" target="_blank" rel="noopener noreferrer">Open PDF</a>
+            <a id="downloadDeliveryPdf" class="button" target="_blank" rel="noopener noreferrer">Download PDF</a>
+          </div>
         </div>
         <div id="routeStops"></div>
       </section>
@@ -2487,7 +2552,7 @@ Copy only the contents of this code box into the matching Apps Script file.
 
 ## File 15: AdminClient.html
 
-SHA-256: ac81c03d1b04f5d53da921dafdaaad84637060d461ce21ec88f5fe7f737dba0c
+SHA-256: c36e03348dd6b14a54b1e922610af28e959330f07aaa47196b788ba5116a816a
 
 Copy only the contents of this code box into the matching Apps Script file.
 
@@ -2505,6 +2570,7 @@ Copy only the contents of this code box into the matching Apps Script file.
     dragId = null,
     createId = null,
     routeUnsaved = false,
+    deliveryPdfUrl = null,
     referralAddressControls = [];
   const el = (tag, text, cls) => {
     const n = document.createElement(tag);
@@ -2673,7 +2739,7 @@ Copy only the contents of this code box into the matching Apps Script file.
     await refresh();
   }
   async function refresh() {
-    document.body.classList.remove("route-print-ready");
+    clearDeliveryPdf();
     const id = $("adminEvents").value;
     if (!id) {
       dashboard = null;
@@ -2688,6 +2754,7 @@ Copy only the contents of this code box into the matching Apps Script file.
       $("routePickup").textContent = "";
       $("routeSummary").textContent = "";
       $("routeStatus").textContent = "No event selected.";
+      $("printRoute").disabled = true;
       $("archiveEvent").disabled = true;
       $("reopenEvent").hidden = true;
       $("settingsForm").inert = true;
@@ -3119,7 +3186,6 @@ Copy only the contents of this code box into the matching Apps Script file.
     route.totalMeals = n;
   }
   function move(id, delta) {
-    document.body.classList.remove("route-print-ready");
     const i = route.stops.findIndex((s) => s.recipientId === id),
       j = i + delta;
     if (j < 0 || j >= route.stops.length) return;
@@ -3130,6 +3196,7 @@ Copy only the contents of this code box into the matching Apps Script file.
   }
   function renderRoute() {
     if (!route) return;
+    clearDeliveryPdf();
     $("routeTitle").textContent = route.eventName + " Delivery Route";
     $("routeDate").textContent = dateLabel(route.deliveryDate);
     $("routePickup").textContent = "Pickup: " + (route.startAddress || "Not configured");
@@ -3217,7 +3284,6 @@ Copy only the contents of this code box into the matching Apps Script file.
           const i = route.stops.findIndex((x) => x.recipientId === dragId),
             j = route.stops.findIndex((x) => x.recipientId === r.recipientId);
           if (i < 0 || j < 0 || i === j) return;
-          document.body.classList.remove("route-print-ready");
           const [row] = route.stops.splice(i, 1);
           route.stops.splice(j, 0, row);
           routeUnsaved = true;
@@ -3329,6 +3395,7 @@ Copy only the contents of this code box into the matching Apps Script file.
     b.addEventListener("click", () =>
       task(async () => {
         view = b.dataset.view;
+        if (view !== "routeView") clearDeliveryPdf();
         ["requestsView", "routeView", "settingsView", "reportsView"].forEach(
           (id) => ($(id).hidden = id !== view),
         );
@@ -3537,22 +3604,31 @@ Copy only the contents of this code box into the matching Apps Script file.
       renderRoute();
     }),
   );
+  function clearDeliveryPdf() {
+    if (deliveryPdfUrl) URL.revokeObjectURL(deliveryPdfUrl);
+    deliveryPdfUrl = null;
+    $("openDeliveryPdf").removeAttribute("href");
+    $("downloadDeliveryPdf").removeAttribute("href");
+    $("deliveryPdf").hidden = true;
+  }
   $("printRoute").addEventListener("click", () => task(async () => {
-    if (!route || routeUnsaved || !route.isFinal) return;
-    // Another administrator may have changed quantities, addresses or approval
-    // since this page loaded. Never print a cached route without a live read.
-    const current = await rpc("route", { eventId: route.eventId });
-    if (current.version !== route.version || !current.isFinal) {
-      route = current;
-      renderRoute();
-      throw new Error("The delivery route changed. Review the current route and save its order before printing.");
+    if (!route || routeUnsaved || !route.isFinal || !route.stops.length) return;
+    clearDeliveryPdf();
+    try {
+      const pdf = await rpc("deliveryPdf", { eventId: route.eventId, routeVersion: route.version });
+      const bytes = Uint8Array.from(atob(pdf.base64), (c) => c.charCodeAt(0));
+      deliveryPdfUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      $("openDeliveryPdf").href = deliveryPdfUrl;
+      $("downloadDeliveryPdf").href = deliveryPdfUrl;
+      $("downloadDeliveryPdf").download = pdf.filename;
+      $("deliveryPdf").hidden = false;
+      $("openDeliveryPdf").focus();
+    } catch (error) {
+      if (error.code === "CONFLICT") await refresh();
+      throw error;
     }
-    route = current;
-    renderRoute();
-    document.body.classList.add("route-print-ready");
-    window.print();
   }));
-  window.addEventListener("afterprint", () => document.body.classList.remove("route-print-ready"));
+  window.addEventListener("pagehide", clearDeliveryPdf);
   ["reportEvent", "reportYear"].forEach((id) =>
     $(id).addEventListener("change", () => task(reports)),
   );

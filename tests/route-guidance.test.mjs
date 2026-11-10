@@ -21,7 +21,7 @@ function view({reviewed = true, final = false, maps = false, empty = false} = {}
   const helpers = source.slice(source.indexOf('  const el ='), source.indexOf('  const addressCall ='));
   const render = source.slice(source.indexOf('  function renderRoute()'), source.indexOf('  function renderSettings()'));
   vm.runInNewContext(helpers + render + '\nrenderRoute();', {
-    document: {createElement: () => new Element()}, $: get, route, routeUnsaved: false,
+    document: {createElement: () => new Element()}, $: get, route, routeUnsaved: false, clearDeliveryPdf: () => {},
     readonly: () => false, addressReviewed: status => status === 'Confirmed',
     dateLabel: value => value, mapsUrl: () => 'https://maps.example.test/', matchMedia: () => ({matches: false}) });
   return nodes;

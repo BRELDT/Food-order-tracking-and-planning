@@ -51,6 +51,59 @@ function route_(s, eventId) {
     totalMeals: running,
   };
 }
+function deliverySheetHtml_(route) {
+  const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+  const detail = (label, value) =>
+    value ? `<p><strong>${label}</strong> ${escape(value)}</p>` : "";
+  const stops = route.stops.map((r) => `
+    <section class="stop">
+      <h2><span class="check"></span>Stop ${escape(r.stop)} — ${escape(r.recipientName)}</h2>
+      <p>${escape(r.address)}</p>
+      <p><strong>Meals:</strong> ${escape(r.meals)} &nbsp; <strong>Running Meal Total:</strong> ${escape(r.runningMeals)}</p>
+      ${detail("Phone:", r.phone)}
+      ${detail("Dietary:", r.dietaryRestrictions)}
+      ${detail("Door:", r.doorPreference)}
+      ${detail("Delivery Instructions:", r.deliveryInstructions)}
+    </section>`).join("");
+  return `<!doctype html>
+    <html lang="en"><head><meta charset="utf-8"><title>Delivery Sheet</title>
+    <style>
+      @page { size: letter; margin: 0.55in; }
+      body { margin: 0; color: #000; background: #fff; font: 11pt/1.3 Arial, sans-serif; }
+      h1, h2, p { overflow-wrap: anywhere; word-wrap: break-word; }
+      h1 { font-size: 18pt; margin: 0 0 5pt; }
+      h2 { font-size: 12pt; margin: 0 0 3pt; }
+      p { margin: 2pt 0; white-space: pre-wrap; }
+      header { margin-bottom: 10pt; break-after: avoid; page-break-after: avoid; }
+      .stop { border: 1pt solid #555; padding: 7pt; margin: 0 0 8pt;
+        break-inside: avoid; page-break-inside: avoid; }
+      .check { display: inline-block; border: 1pt solid #000;
+        width: 10pt; height: 10pt; margin-right: 6pt; vertical-align: -1pt; }
+    </style></head><body>
+    <header><h1>${escape(route.eventName)} Delivery Sheet</h1>
+      ${detail("Delivery date:", route.deliveryDate)}
+      ${detail("Pickup:", route.startAddress)}
+      <p><strong>${route.stops.length} Stops · ${escape(route.totalMeals)} Meals</strong></p>
+    </header>
+    ${stops}
+    </body></html>`;
+}
+function deliveryPdf_(s, p) {
+  const route = route_(s, id_(p.eventId));
+  if (route.version !== p.routeVersion || !route.isFinal || !route.stops.length)
+    fail_("CONFLICT", "The delivery route changed. Review the current route and save its order before preparing the PDF.");
+  try {
+    const pdf = HtmlService.createHtmlOutput(deliverySheetHtml_(route)).getAs("application/pdf");
+    const bytes = pdf.getBytes();
+    if (bytes.slice(0, 5).join(",") !== "37,80,68,70,45")
+      throw new Error("Invalid PDF output");
+    return { filename: "delivery-sheet-" + route.deliveryDate + ".pdf", base64: Utilities.base64Encode(bytes) };
+  } catch (_) {
+    fail_("PDF", "The delivery PDF could not be generated. Try Prepare Delivery PDF again.");
+  }
+}
 function routeOrder_(s, p, admin, optimized) {
   const e = byId_(s, "EVENTS", p.eventId);
   editable_(e);

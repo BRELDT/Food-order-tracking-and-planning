@@ -24,7 +24,7 @@ function submit_(p, adminEmail) {
     }
     const e = byId_(s, "EVENTS", canonical.EventID);
     if (adminEmail) editable_(e);
-    else if (e.Status !== "Open" || e.Archived === true)
+    else if (!acceptsPublicReferrals_(e))
       fail_("CLOSED", "This event is no longer accepting requests.");
     const meals = canonical.recipients.reduce((n, r) => n + r.MealCount, 0),
       left = available_(s, e);

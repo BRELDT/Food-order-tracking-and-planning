@@ -139,9 +139,13 @@ function archiveWrite_(s, p, admin) {
   );
   return e;
 }
+function acceptsPublicReferrals_(e) {
+  return e.Status === "Open" && e.Archived !== true &&
+    e.DeliveryDate >= Utilities.formatDate(new Date(), "America/New_York", "yyyy-MM-dd");
+}
 function publicEvents_() {
   const s = load_();
-  return s.EVENTS.filter((e) => e.Status === "Open" && e.Archived !== true)
+  return s.EVENTS.filter(acceptsPublicReferrals_)
     .map((e) => ({
       eventId: e.EventID,
       eventName: e.EventName,

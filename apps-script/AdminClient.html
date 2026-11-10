@@ -11,6 +11,7 @@
     dragId = null,
     createId = null,
     routeUnsaved = false,
+    deliveryPdfUrl = null,
     referralAddressControls = [];
   const el = (tag, text, cls) => {
     const n = document.createElement(tag);
@@ -179,7 +180,7 @@
     await refresh();
   }
   async function refresh() {
-    document.body.classList.remove("route-print-ready");
+    clearDeliveryPdf();
     const id = $("adminEvents").value;
     if (!id) {
       dashboard = null;
@@ -194,6 +195,7 @@
       $("routePickup").textContent = "";
       $("routeSummary").textContent = "";
       $("routeStatus").textContent = "No event selected.";
+      $("printRoute").disabled = true;
       $("archiveEvent").disabled = true;
       $("reopenEvent").hidden = true;
       $("settingsForm").inert = true;
@@ -625,7 +627,6 @@
     route.totalMeals = n;
   }
   function move(id, delta) {
-    document.body.classList.remove("route-print-ready");
     const i = route.stops.findIndex((s) => s.recipientId === id),
       j = i + delta;
     if (j < 0 || j >= route.stops.length) return;
@@ -636,6 +637,7 @@
   }
   function renderRoute() {
     if (!route) return;
+    clearDeliveryPdf();
     $("routeTitle").textContent = route.eventName + " Delivery Route";
     $("routeDate").textContent = dateLabel(route.deliveryDate);
     $("routePickup").textContent = "Pickup: " + (route.startAddress || "Not configured");
@@ -723,7 +725,6 @@
           const i = route.stops.findIndex((x) => x.recipientId === dragId),
             j = route.stops.findIndex((x) => x.recipientId === r.recipientId);
           if (i < 0 || j < 0 || i === j) return;
-          document.body.classList.remove("route-print-ready");
           const [row] = route.stops.splice(i, 1);
           route.stops.splice(j, 0, row);
           routeUnsaved = true;
@@ -835,6 +836,7 @@
     b.addEventListener("click", () =>
       task(async () => {
         view = b.dataset.view;
+        if (view !== "routeView") clearDeliveryPdf();
         ["requestsView", "routeView", "settingsView", "reportsView"].forEach(
           (id) => ($(id).hidden = id !== view),
         );
@@ -1043,22 +1045,31 @@
       renderRoute();
     }),
   );
+  function clearDeliveryPdf() {
+    if (deliveryPdfUrl) URL.revokeObjectURL(deliveryPdfUrl);
+    deliveryPdfUrl = null;
+    $("openDeliveryPdf").removeAttribute("href");
+    $("downloadDeliveryPdf").removeAttribute("href");
+    $("deliveryPdf").hidden = true;
+  }
   $("printRoute").addEventListener("click", () => task(async () => {
-    if (!route || routeUnsaved || !route.isFinal) return;
-    // Another administrator may have changed quantities, addresses or approval
-    // since this page loaded. Never print a cached route without a live read.
-    const current = await rpc("route", { eventId: route.eventId });
-    if (current.version !== route.version || !current.isFinal) {
-      route = current;
-      renderRoute();
-      throw new Error("The delivery route changed. Review the current route and save its order before printing.");
+    if (!route || routeUnsaved || !route.isFinal || !route.stops.length) return;
+    clearDeliveryPdf();
+    try {
+      const pdf = await rpc("deliveryPdf", { eventId: route.eventId, routeVersion: route.version });
+      const bytes = Uint8Array.from(atob(pdf.base64), (c) => c.charCodeAt(0));
+      deliveryPdfUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      $("openDeliveryPdf").href = deliveryPdfUrl;
+      $("downloadDeliveryPdf").href = deliveryPdfUrl;
+      $("downloadDeliveryPdf").download = pdf.filename;
+      $("deliveryPdf").hidden = false;
+      $("openDeliveryPdf").focus();
+    } catch (error) {
+      if (error.code === "CONFLICT") await refresh();
+      throw error;
     }
-    route = current;
-    renderRoute();
-    document.body.classList.add("route-print-ready");
-    window.print();
   }));
-  window.addEventListener("afterprint", () => document.body.classList.remove("route-print-ready"));
+  window.addEventListener("pagehide", clearDeliveryPdf);
   ["reportEvent", "reportYear"].forEach((id) =>
     $(id).addEventListener("change", () => task(reports)),
   );

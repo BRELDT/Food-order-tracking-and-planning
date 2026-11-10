@@ -1,4 +1,4 @@
-const MEALS_BACKEND_VERSION = "2026-11-04-thanksgiving-readiness-v1";
+const MEALS_BACKEND_VERSION = "2026-11-06-delivery-pdf-v1";
 function include_(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
@@ -101,6 +101,7 @@ function adminCall(action, p) {
       );
     if (action === "dashboard") return dashboard_(auth.state, p);
     if (action === "route") return route_(auth.state, id_(p.eventId));
+    if (action === "deliveryPdf") return deliveryPdf_(auth.state, p);
     if (action === "reports") return reports_(auth.state, p);
     if (action === "createReferral") return submit_(p, auth.email);
     if (action === "submissionReceipt") {

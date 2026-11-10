@@ -231,7 +231,7 @@ function publicAddressCall_(action, p) {
   // Public callers cannot use this interface to read saved addresses or recipients.
   const s = load_(),
     e = byId_(s, "EVENTS", id_(p.eventId));
-  if (e.Status !== "Open" || e.Archived === true || available_(s, e) <= 0)
+  if (!acceptsPublicReferrals_(e) || available_(s, e) <= 0)
     fail_("CLOSED", "This event is no longer accepting requests.");
   if (action === "addressSuggestions") return addressSuggestions_(p);
   if (action === "addressPreview") return addressPreview_(p);
