@@ -3,12 +3,12 @@
 Copy the entire contents of this single code box into Code.gs. This includes the backend and complete admin interface. No setup or migration function should be run. Address services and routing remain disabled until separately configured.
 
 ```javascript
-// Build marker: COMMUNITY-MEALS-20261106-DELIVERY-PDF
+// Build marker: COMMUNITY-MEALS-PASSWORD-ADMIN
 /* Community Meals V1 — generated from the modular files in this commit.
    Install the ENTIRE file as Code.gs. No other .gs/.html files required.
    Preserve existing Script Properties and deployment settings.
    No setup or migration function needs to run. */
-const ADMIN_PAGE_HTML_ = "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n    <base target=\"_top\" />\n    <style>\n      :root {\n  --navy: #15324d;\n  --blue: #1668ad;\n  --green: #126c56;\n  --red: #9d2222;\n  --border: #ccd7e1;\n  --muted: #526478;\n  --paper: #f3f6f9;\n  font-family:\n    system-ui,\n    -apple-system,\n    BlinkMacSystemFont,\n    \"Segoe UI\",\n    sans-serif;\n  color: var(--navy);\n  background: var(--paper);\n  font-size: 16px;\n  line-height: 1.5;\n}\n* {\n  box-sizing: border-box;\n}\nbody {\n  margin: 0;\n}\nh1 {\n  font-size: clamp(1.75rem, 5vw, 2.4rem);\n  line-height: 1.2;\n}\nh2 {\n  font-size: 1.35rem;\n}\nh3 {\n  font-size: 1.1rem;\n}\nh1,\nh2,\nh3,\np,\nlegend {\n  overflow-wrap: anywhere;\n}\n.stop header h3 {\n  min-width: 0;\n  flex: 1;\n}\n.page-wrap {\n  width: min(100% - 2rem, 1040px);\n  margin: auto;\n  padding: 1.5rem 0;\n}\n.narrow {\n  max-width: 640px;\n}\n.site-header {\n  background: var(--navy);\n  color: white;\n}\n.site-header p {\n  margin: 0.4rem 0;\n}\n.eyebrow {\n  text-transform: uppercase;\n  font-size: 0.875rem;\n  letter-spacing: 0.08em;\n}\n.event-panel,\nfieldset,\n.stop,\n.request-card,\n.panel {\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: white;\n  padding: 1.25rem;\n  margin: 0 0 1.25rem;\n  min-width: 0;\n}\n.event-panel {\n  border-left: 5px solid var(--green);\n}\nlegend {\n  font-weight: 750;\n  font-size: 1.2rem;\n  padding: 0 0.4rem;\n}\nlabel {\n  display: block;\n  font-weight: 650;\n}\ninput,\nselect,\ntextarea,\nbutton {\n  font: inherit;\n}\ninput,\nselect,\ntextarea {\n  display: block;\n  width: 100%;\n  margin: 0.35rem 0 0;\n  border: 1px solid #8e9eae;\n  border-radius: 6px;\n  padding: 0.7rem;\n  min-height: 46px;\n  background: white;\n  color: var(--navy);\n}\ntextarea {\n  resize: vertical;\n}\n.grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 1rem;\n}\n.full {\n  grid-column: 1/-1;\n}\nbutton,\n.button {\n  display: inline-block;\n  min-height: 46px;\n  border: 0;\n  border-radius: 7px;\n  padding: 0.7rem 1rem;\n  background: var(--blue);\n  color: white;\n  cursor: pointer;\n  text-decoration: none;\n  font-weight: 650;\n}\nbutton.secondary {\n  background: #e8eef4;\n  color: var(--navy);\n}\nbutton.danger {\n  background: var(--red);\n}\nbutton:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n}\n:focus-visible {\n  outline: 3px solid #efb718;\n  outline-offset: 3px;\n}\n.hint {\n  font-size: 0.875rem;\n  font-weight: 400;\n  color: var(--muted);\n}\n.capacity {\n  font-size: 1.2rem;\n}\n.capacity strong {\n  font-size: 1.75rem;\n}\n.totals,\n.metrics,\n.actions,\n.tabs {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.8rem;\n  margin: 1rem 0;\n}\n.totals {\n  background: #e1eef5;\n  padding: 1rem;\n  border-radius: 8px;\n  justify-content: space-between;\n}\n.warning {\n  color: var(--red);\n  font-weight: 650;\n}\n.badge {\n  display: inline-block;\n  background: #fff0cc;\n  border-radius: 5px;\n  padding: 0.2rem 0.5rem;\n  font-size: 0.875rem;\n}\n.request-card header,\n.stop header {\n  display: flex;\n  gap: 0.7rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.request-card h3,\n.stop h3 {\n  margin: 0.3rem 0;\n}\n.check-label {\n  display: flex;\n  align-items: center;\n  gap: 0.5rem;\n}\n.check-label input {\n  width: 22px;\n  min-height: 22px;\n  margin: 0;\n}\n.metrics span {\n  background: #e8eef4;\n  border-radius: 7px;\n  padding: 0.6rem 1rem;\n}\n.tabs button[aria-selected=\"true\"] {\n  background: var(--navy);\n}\n.recipient-card .remove {\n  margin-bottom: 1rem;\n}\n.stop dl {\n  display: grid;\n  grid-template-columns: max-content 1fr;\n  gap: 0.25rem 0.7rem;\n}\n.stop dt {\n  font-weight: 650;\n}\n.stop dd {\n  margin: 0;\n  overflow-wrap: anywhere;\n}\na {\n  color: #105a9b;\n  overflow-wrap: anywhere;\n}\ndialog {\n  width: min(95vw, 800px);\n  max-height: 90dvh;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 1.25rem;\n  color: var(--navy);\n}\ndialog::backdrop {\n  background: #132a42a6;\n}\n.dialog-header {\n  display: flex;\n  justify-content: space-between;\n  gap: 1rem;\n  align-items: center;\n}\n.dialog-header h2 {\n  margin: 0;\n}\n.print-check {\n  display: none;\n}\n.hidden,\n[hidden] {\n  display: none !important;\n}\n.busy {\n  opacity: 0.65;\n}\n.report-row {\n  padding: 0.7rem 0;\n  border-bottom: 1px solid var(--border);\n}\n#adminMessage,\n#submissionMessage {\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n.print-route-title {\n  display: none;\n}\n@media (max-width: 640px) {\n  .grid {\n    grid-template-columns: 1fr;\n  }\n  .page-wrap {\n    width: calc(100% - 1.4rem);\n  }\n  .event-panel,\n  fieldset,\n  .stop,\n  .request-card,\n  .panel {\n    padding: 1rem;\n  }\n  .actions button {\n    flex: 1 1 auto;\n  }\n  .tabs {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n  }\n  .tabs button {\n    padding: 0.65rem 0.4rem;\n  }\n  .metrics {\n    gap: 0.4rem;\n  }\n  .metrics span {\n    flex: 1 1 40%;\n    padding: 0.5rem;\n  }\n  .stop dl {\n    grid-template-columns: 1fr;\n  }\n  .stop dd {\n    margin-bottom: 0.45rem;\n  }\n  dialog {\n    padding: 1rem;\n  }\n}\n@media print {\n  @page {\n    size: letter;\n    margin: 0.55in;\n  }\n  :root {\n    background: white;\n    color: black;\n    font-size: 11pt;\n  }\n  body {\n    background: white;\n  }\n  .site-header,\n  .no-print,\n  nav,\n  footer,\n  dialog,\n  #adminMessage,\n  #requestsView,\n  #settingsView,\n  #reportsView {\n    display: none !important;\n  }\n  main.page-wrap {\n    width: 100%;\n    padding: 0;\n  }\n  #routeView {\n    display: block !important;\n  }\n  #routeView .actions,\n  #routeView button,\n  .route-status {\n    display: none !important;\n  }\n  .print-route-title {\n    display: block;\n  }\n  .stop {\n    border: 1px solid #888;\n    border-radius: 0;\n    break-inside: avoid;\n    page-break-inside: avoid;\n    margin: 0 0 0.15in;\n    padding: 0.12in;\n  }\n  .stop header {\n    gap: 0.1in;\n  }\n  .stop h3 {\n    font-size: 12pt;\n  }\n  .print-check {\n    display: inline-block;\n    width: 13pt;\n    height: 13pt;\n    border: 1.2pt solid black;\n    flex: none;\n  }\n  .stop dl {\n    display: block;\n    margin: 0.04in 0;\n  }\n  .stop dt,\n  .stop dd {\n    display: inline;\n    margin: 0;\n  }\n  .stop dt {\n    margin-right: 0.2em;\n  }\n  .stop dd::after {\n    content: \"\";\n    display: block;\n  }\n  .stop a {\n    color: black;\n    text-decoration: none;\n  }\n  .stop .address {\n    margin: 0.04in 0;\n  }\n  .stop .badge {\n    display: none;\n  }\n  .route-header {\n    break-after: avoid;\n  }\n  .route-header h2 {\n    margin: 0.05in 0;\n  }\n  .page-wrap {\n    margin: 0;\n  }\n  #routeStops {\n    display: block;\n  }\n  .stop .no-print {\n    display: none !important;\n  }\n}\n\n.address-entry {\n  min-width: 0;\n  position: relative;\n}\n.address-suggestions {\n  border: 1px solid var(--border);\n  border-radius: 6px;\n  background: white;\n  margin: 0.35rem 0;\n  padding: 0.3rem;\n}\n.address-suggestion {\n  display: block;\n  width: 100%;\n  text-align: left;\n  background: white;\n  color: var(--navy);\n  border-radius: 0;\n  border-bottom: 1px solid var(--border);\n  overflow-wrap: anywhere;\n}\n.address-suggestion:focus-visible {\n  background: #e1eef5;\n}\n.address-attribution {\n  display: block;\n  white-space: nowrap;\n  font:\n    400 1rem Roboto,\n    sans-serif;\n  letter-spacing: normal;\n  color: #5e5e5e;\n  padding: 10px 10px 5px;\n}\n.address-state {\n  margin: 0.4rem 0;\n}\n.address-check-button {\n  margin-top: 0.35rem;\n}\n.address-check p {\n  overflow-wrap: anywhere;\n}\n@media print {\n  .address-entry,\n  .address-check {\n    display: none !important;\n  }\n}\n\n.request-recipient-list { padding-left: 1.5rem; margin: 1rem 0; }\n.request-recipient-list li { padding: .65rem .25rem; border-bottom: 1px solid #dbe2e8; overflow-wrap: anywhere; }\n.request-recipient-list li:last-child { border-bottom: 0; }\n.request-recipient-list p { margin: .25rem 0; }\n\nbutton[data-click-feedback=\"true\"] { outline: 3px solid #78a9da; outline-offset: 2px; }\nbutton[aria-busy=\"true\"] { cursor: wait; opacity: .8; }\nbutton[aria-busy=\"true\"]::before {\n  content: \"\"; display: inline-block; width: .85em; height: .85em;\n  margin-right: .5em; border: 2px solid currentColor; border-right-color: transparent;\n  border-radius: 50%; vertical-align: -.1em; animation: meal-button-spin .8s linear infinite;\n}\nbutton[aria-busy=\"true\"]::after { content: \" — Loading…\"; }\n@keyframes meal-button-spin { to { transform: rotate(360deg); } }\n@media (prefers-reduced-motion: reduce) { button[aria-busy=\"true\"]::before { animation: none; } }\n\n/* Printing uses a freshly verified saved route. Direct browser print is safe. */\n.print-verification-warning { display: none; }\n@media print {\n  body:not(.route-print-ready) #routeView > :not(.print-verification-warning) { display: none !important; }\n  body:not(.route-print-ready) .print-verification-warning { display: block !important; }\n}\n\n    </style>\n  </head>\n  <body>\n    <header class=\"site-header no-print\">\n      <div class=\"page-wrap\">\n        <h1>Community Meals</h1>\n        <p id=\"adminIdentity\"></p>\n      </div>\n    </header>\n    <main class=\"page-wrap\">\n      <section class=\"no-print\">\n        <div class=\"grid\">\n          <label>Meal event<select id=\"adminEvents\"></select></label\n          ><label class=\"check-label\"\n            ><input type=\"checkbox\" id=\"showArchived\" />Show archived\n            events</label\n          >\n        </div>\n        <div class=\"actions\">\n          <button id=\"createEvent\">Create Event</button\n          ><button id=\"archiveEvent\" class=\"secondary\">Archive Event</button\n          ><button id=\"reopenEvent\" class=\"secondary\" hidden>\n            Reopen / Unarchive</button\n          ><button id=\"refreshAdmin\" class=\"secondary\">Refresh</button\n          ><button id=\"publicLink\" class=\"secondary\">Copy Public Link</button>\n        </div>\n        <div id=\"metrics\" class=\"metrics\"></div>\n        <p id=\"readonlyNotice\" class=\"warning\"></p>\n        <p id=\"integrityNotice\" class=\"warning\" role=\"status\"></p>\n        <nav class=\"tabs\" aria-label=\"Admin sections\">\n          <button data-view=\"requestsView\" aria-selected=\"true\">Requests</button\n          ><button data-view=\"routeView\" aria-selected=\"false\">\n            Delivery Route</button\n          ><button data-view=\"settingsView\" aria-selected=\"false\">\n            Event Settings</button\n          ><button data-view=\"reportsView\" aria-selected=\"false\">\n            Reports\n          </button>\n        </nav>\n        <p id=\"adminMessage\" role=\"status\" aria-live=\"polite\"></p>\n      </section>\n      <section id=\"requestsView\">\n        <h2>Requests</h2>\n        <div class=\"actions\">\n          <button id=\"addReferral\">Add Referral</button\n          ><button id=\"selectAll\" class=\"secondary\">Select All Pending</button\n          ><button id=\"approveSelected\">Approve Selected</button\n          ><button id=\"rejectSelected\" class=\"danger\">Reject Selected</button>\n        </div>\n        <div id=\"requestCards\"></div>\n      </section>\n      <section id=\"routeView\" hidden>\n        <p class=\"print-verification-warning\">Open the prepared delivery PDF to print the delivery sheet.</p>\n        <div class=\"route-header\">\n          <h2 id=\"routeTitle\">Delivery Route</h2>\n          <p id=\"routeDate\"></p>\n          <p id=\"routePickup\"></p>\n          <p id=\"routeSummary\"></p>\n          <p id=\"routeStatus\" class=\"route-status warning\"></p>\n          <p id=\"routingAvailability\" class=\"hint no-print\"></p>\n        </div>\n        <div class=\"actions no-print\">\n          <button id=\"optimizeRoute\">Optimize Route</button\n          ><button id=\"saveRoute\">Save Manual Order</button\n          ><button id=\"printRoute\" class=\"secondary\" disabled>\n            Prepare Delivery PDF\n          </button>\n        </div>\n        <div id=\"deliveryPdf\" class=\"no-print\" hidden>\n          <p role=\"status\">US Letter PDF ready. On iPhone, open it and use Share → Print. If the viewer does not open, download the PDF and open it in Files.</p>\n          <div class=\"actions\">\n            <a id=\"openDeliveryPdf\" class=\"button\" target=\"_blank\" rel=\"noopener noreferrer\">Open PDF</a>\n            <a id=\"downloadDeliveryPdf\" class=\"button\" target=\"_blank\" rel=\"noopener noreferrer\">Download PDF</a>\n          </div>\n        </div>\n        <div id=\"routeStops\"></div>\n      </section>\n      <section id=\"settingsView\" hidden>\n        <h2>Event Settings</h2>\n        <form id=\"settingsForm\">\n          <div class=\"grid\">\n            <label\n              >Event name<input\n                name=\"eventName\"\n                required\n                maxlength=\"160\" /></label\n            ><label\n              >Delivery date<input\n                type=\"date\"\n                name=\"deliveryDate\"\n                required /></label\n            ><label\n              >Meal capacity<input\n                type=\"number\"\n                name=\"capacity\"\n                min=\"0\"\n                max=\"100000\"\n                step=\"1\"\n                required /></label\n            ><label\n              >Status<select name=\"status\">\n                <option>Draft</option>\n                <option>Open</option>\n                <option>Closed</option>\n                <option>Completed</option>\n              </select></label\n            ><label class=\"full\"\n              >Starting / pickup address<input\n                name=\"startAddress\"\n                maxlength=\"500\"\n            /></label>\n          </div>\n          <div class=\"actions\">\n            <button type=\"submit\">Save Event Settings</button\n            ><button type=\"button\" id=\"verifyPickup\" class=\"secondary\">\n              Validate Pickup Address\n            </button>\n          </div>\n          <button type=\"button\" id=\"manualPickup\" class=\"secondary\">Mark Saved Pickup Reviewed</button>\n          <p id=\"pickupStatus\"></p>\n          <p class=\"hint\" translate=\"no\">Address validation: Google Maps</p>\n        </form>\n      </section>\n      <section id=\"reportsView\" hidden>\n        <h2>Reports</h2>\n        <p class=\"hint\">\n          Archived events are included. Recipient totals count delivery records\n          across events.\n        </p>\n        <div class=\"grid\">\n          <label\n            >Event<select id=\"reportEvent\">\n              <option value=\"\">All events</option>\n            </select></label\n          ><label\n            >Year<select id=\"reportYear\">\n              <option value=\"\">All years</option>\n            </select></label\n          >\n        </div>\n        <div id=\"reportTotals\" class=\"metrics\"></div>\n        <p id=\"reportIntegrityNotice\" class=\"warning\" role=\"status\"></p>\n        <h3>Referring organizations</h3>\n        <div id=\"organizationReports\"></div>\n      </section>\n    </main>\n    <dialog id=\"referralDialog\">\n      <div class=\"dialog-header\">\n        <h2 id=\"referralHeading\">Referral</h2>\n        <button type=\"button\" id=\"closeReferral\" class=\"secondary\">\n          Close\n        </button>\n      </div>\n      <form id=\"referralEditor\">\n        <fieldset>\n          <legend>Referring organization</legend>\n          <div class=\"grid\">\n            <label\n              >Organization name<input\n                name=\"organizationName\"\n                maxlength=\"160\"\n                required /></label\n            ><label\n              >Email address<input\n                type=\"email\"\n                name=\"organizationEmail\"\n                maxlength=\"254\"\n                required /></label\n            ><label\n              >Phone number<input\n                name=\"organizationPhone\"\n                type=\"tel\"\n                maxlength=\"40\"\n                required\n            /></label>\n          </div>\n        </fieldset>\n        <div id=\"editorRecipients\"></div>\n        <div class=\"actions\">\n          <button type=\"button\" id=\"editorAddRecipient\" class=\"secondary\">\n            + Add Another Recipient</button\n          ><button type=\"submit\" id=\"saveReferral\">Save Referral</button>\n        </div>\n      </form>\n      <p id=\"editorMessage\" role=\"status\"></p>\n    </dialog>\n    <dialog id=\"eventDialog\">\n      <div class=\"dialog-header\">\n        <h2>Create Event</h2>\n        <button id=\"closeEvent\" class=\"secondary\">Close</button>\n      </div>\n      <form id=\"eventEditor\">\n        <div class=\"grid\">\n          <label\n            >Event name<input\n              name=\"eventName\"\n              required\n              maxlength=\"160\" /></label\n          ><label\n            >Delivery date<input\n              type=\"date\"\n              name=\"deliveryDate\"\n              required /></label\n          ><label\n            >Meal capacity<input\n              type=\"number\"\n              name=\"capacity\"\n              min=\"0\"\n              max=\"100000\"\n              step=\"1\"\n              required /></label\n          ><label\n            >Status<select name=\"status\">\n              <option>Draft</option>\n              <option>Open</option>\n              <option>Closed</option>\n            </select></label\n          ><label class=\"full\"\n            >Starting / pickup address<input\n              name=\"startAddress\"\n              maxlength=\"500\"\n          /></label>\n        </div>\n        <div class=\"actions\"><button type=\"submit\">Create Event</button></div>\n      </form>\n      <p id=\"eventEditorMessage\" role=\"status\"></p>\n    </dialog>\n    <dialog id=\"publicLinkDialog\" aria-labelledby=\"publicLinkTitle\">\n      <h2 id=\"publicLinkTitle\">Public Referral Link</h2>\n      <p>Share this link with organizations requesting meals.</p>\n      <label>Website link<input id=\"publicLinkValue\" type=\"url\" readonly /></label>\n      <div class=\"actions\">\n        <button id=\"copyPublicLink\" type=\"button\">Copy Link</button>\n        <a id=\"openPublicLink\" target=\"_blank\" rel=\"noopener noreferrer\">Open Public Form</a>\n        <button id=\"closePublicLink\" type=\"button\" class=\"secondary\">Close</button>\n      </div>\n      <p id=\"publicLinkMessage\" role=\"status\" aria-live=\"polite\"></p>\n    </dialog>\n    <script>\n      /* Shared public/admin address controls. Address data and receipts stay in memory. */\n\"use strict\";\nwindow.MealButtonFeedback = (() => {\n  const active = new WeakMap();\n  let clicked = null;\n  document.addEventListener(\"click\", (event) => {\n    const button = event.target.closest?.(\"button\");\n    if (!button) return;\n    if (active.has(button)) {\n      event.preventDefault();\n      event.stopImmediatePropagation();\n      return;\n    }\n    clicked = button;\n    button.setAttribute(\"data-click-feedback\", \"true\");\n    setTimeout(() => button.removeAttribute(\"data-click-feedback\"), 250);\n    setTimeout(() => { if (clicked === button) clicked = null; }, 0);\n  }, true);\n  function begin(button) {\n    if (!button || active.has(button)) return () => {};\n    const before = [\"aria-busy\", \"aria-disabled\", \"aria-label\"].map(name => [name, button.getAttribute(name)]);\n    active.set(button, true);\n    button.setAttribute(\"aria-busy\", \"true\");\n    button.setAttribute(\"aria-disabled\", \"true\");\n    button.setAttribute(\"aria-label\", button.textContent.trim() + \" — Loading\");\n    return () => {\n      active.delete(button);\n      for (const [name, value] of before)\n        if (value == null) button.removeAttribute(name);\n        else button.setAttribute(name, value);\n    };\n  }\n  return { begin, current: () => clicked };\n})();\nwindow.MealAddresses = (() => {\n  const states = new WeakMap();\n  let counter = 0;\n  const node = (tag, text) => {\n    const n = document.createElement(tag);\n    if (text != null) n.textContent = text;\n    return n;\n  };\n  function choose(result) {\n    return new Promise((resolve) => {\n      const d = node(\"dialog\"),\n        heading = node(\"h2\", \"Check this address\");\n      d.className = \"address-check\";\n      heading.id = \"address-check-\" + ++counter;\n      d.setAttribute(\"aria-labelledby\", heading.id);\n      d.append(\n        heading,\n        node(\n          \"p\",\n          result.confident\n            ? \"Please confirm the address for delivery.\"\n            : \"This address could not be confidently confirmed. You may edit it or keep it for administrator review.\",\n        ),\n      );\n      if (result.unitIssue)\n        d.append(\n          node(\n            \"p\",\n            \"Apartment / suite / unit information needs review. Your entered unit has been preserved.\",\n          ),\n        );\n      d.append(node(\"h3\", \"You entered:\"), node(\"p\", result.original));\n      if (result.recommended)\n        d.append(\n          node(\"h3\", \"Recommended:\"),\n          node(\"p\", result.recommended),\n          attribution(),\n        );\n      const actions = node(\"div\");\n      actions.className = \"actions\";\n      const finish = (value) => {\n        d.close();\n        d.remove();\n        resolve(value);\n      };\n      for (const [label, value] of [\n        [\"Use Recommended\", \"recommended\"],\n        [\"Keep What I Entered\", \"original\"],\n        [\"Edit\", \"edit\"],\n      ]) {\n        if (value === \"recommended\" && !result.recommended) continue;\n        const b = node(\"button\", label);\n        b.type = \"button\";\n        b.addEventListener(\"click\", () => finish(value));\n        actions.append(b);\n      }\n      d.append(actions);\n      d.addEventListener(\"cancel\", (e) => {\n        e.preventDefault();\n        finish(\"edit\");\n      });\n      document.body.append(d);\n      d.showModal();\n    });\n  }\n  function attribution() {\n    const n = node(\"span\");\n    const logo = node(\"img\");\n    logo.alt = \"Google Maps\";\n    logo.height = 18;\n    logo.src =\n      \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGIAAAASCAYAAACghwvPAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABDBJREFUeNrcWI1R4lAQjgwFhAouVHBQwYUKDA0oVACpQKkArIBoA8QKEiswHZir4GIF3q7z7c3nmxci3gwyvJk3Itl9b3++/XbDRUDr6uoqlj8L2UnwceWy7x8eHvLgG5fYN5I/a/0stkyCM1o9clIdLDxJCPDdTmS232xvKDvG/moyb3V3yISQmx01EUjCEt9VsqeyB4K6C3wuzwh8N7o7gryG3PWxjOqDjiwJmQR/zgKgo1wNl8/ZGSVkLT7l4lPjob/ZsY3poSfoqmWnbYJdSdCEyo4+QQ0qF3bIRADIIZQTIYiH0NyypRqOvi7E+Dd8TiXYmwOdD2E4I6jGWTkHCXKJIzcXudLTjC0JDWgxBGU+oo8FoE3VSaATkc6qzRf4W+FM1RmKbE1n7XCn2lDaUOC554Of8rzAua8AdwhbMtjTUBuY4XmA52mfbKw8RhctOVDZFYLiojBCY9cgZ0jWM13cUBAKeT5VZ5CEguQMtZy8R8c+CxwnNwLtNHuqWG24k71FcKdONaSw2XePASeGnxOAiYeICneMUHVq05R6cY0ExEhK1OsAfdyyjUctCXMgdIALdG2pYgwdavQAcpXj/JqQP8R5Y+jta6oWHB0uhhi1rQeEHVSrdyWgy1sETPukC0oLnPo5QZVYL104sqo/hsyQ7kgoXnqGVpP6p5V7z4nw8evE2YywS7o4g3MN0NTQ2GuIXhkNQc5QaP0gJrkachWQ2/ZOYTSxwiT0h+6rneryrZQSuoDdqSdpRouXyhJgikuq2n+VxsMO/Fzh31+wKQATrJEc9TfrEYIWLoI0cLwpWE8k9tvRaQjtERlaOXK1U3k8pfEq9zRbWwVKPgRYxkBlvS8L8CkHCFX3zp2ikPQZqCnpAG7VQoMmn8K+CPbqmS96fo8QF+0rZyrdgJKn64engceEysYNNjXwwD0PKAl8SWpxkCe+ARBZHzBzWAXUotv2ondNFGzUNPbIjfYARs9/rxjQ7gS09E7fPaDCJgzN/LNmCOOgvmEmKMUbyGyoVN915PmSkrCjQOVOxSWUhB0ZWBHytza60k8uQQtd1HyXOgqdF5R+FzVZZY4RmK6Vd4y5IRoyg9Li9gRaU9tCsExqE1wfxqTy8BVKEaYJ38qgrDob0bkGCtZsAI3DGpgUMiNMGe6Zc0KmTU2FR8635jS5vTg6MfFzVzKqDhFLuN5R4r62d6YlwFCBykKMwTpB/oRdCvac4lL3yJhbasiNBwlT962bysulianTwN1Gb9w/pgZeQS53zqocOiqteqA79vSRDJOJb+IqW7h8n5xxe0jBnXvOKpH8iN4VMhtMAOINvUzG0Jme1G8OoMSR851W25vs3Sn/XgIbi//+9fUEHNmCErfWyFHiM9/L3Lmt/gnZcoey9/F95VDW2a2TqQjqEYfw/Skt7Q33X1X+K8AAJX03+VzRIA4AAAAASUVORK5CYII=\";\n    n.append(logo);\n    n.className = \"address-attribution\";\n    n.setAttribute(\"translate\", \"no\");\n    return n;\n  }\n  function attach(\n    input,\n    call,\n    context = () => ({}),\n    initialStatus = \"Needs Review\",\n  ) {\n    if (states.has(input)) return states.get(input);\n    const label = input.parentElement,\n      holder = node(\"div\");\n    holder.className =\n      \"address-entry\" + (label.classList.contains(\"full\") ? \" full\" : \"\");\n    label.replaceWith(holder);\n    holder.append(label);\n    const list = node(\"div\"),\n      status = node(\"p\"),\n      check = node(\"button\", \"Check Address\");\n    list.className = \"address-suggestions\";\n    list.id = \"address-list-\" + ++counter;\n    list.hidden = true;\n    list.setAttribute(\"role\", \"group\");\n    list.setAttribute(\"aria-label\", \"Google address suggestions\");\n    status.className = \"hint address-state\";\n    status.setAttribute(\"role\", \"status\");\n    status.setAttribute(\"aria-live\", \"polite\");\n    check.type = \"button\";\n    check.className = \"secondary address-check-button\";\n    holder.append(list, check, status);\n    const privacy = node(\n      \"p\",\n      \"Address search and checking send only this address text to Google. Keep recipient names and delivery notes in their separate fields.\",\n    );\n    privacy.className = \"hint\";\n    holder.append(privacy);\n    input.setAttribute(\"autocomplete\", \"off\");\n    input.setAttribute(\"aria-controls\", list.id);\n    input.setAttribute(\"aria-expanded\", \"false\");\n    input.setAttribute(\"aria-autocomplete\", \"list\");\n    let revision = 0,\n      timer,\n      session = null,\n      features = null,\n      configRequest = null,\n      suggesting = false,\n      lastSuggestionAt = 0,\n      receipt = \"\",\n      checked = input.value.trim(),\n      running = null;\n    const labelStatus = (s) =>\n      s === \"Confirmed\"\n        ? \"Address Verified\"\n        : s === \"Manually Reviewed\"\n          ? \"Address manually reviewed\"\n          : \"Needs Review\";\n    status.textContent = labelStatus(initialStatus);\n    const clear = () => {\n      list.hidden = true;\n      list.replaceChildren();\n      input.setAttribute(\"aria-expanded\", \"false\");\n    };\n    const reset = (s = \"Needs Review\") => {\n      revision++;\n      clearTimeout(timer);\n      timer = null;\n      session = null;\n      receipt = \"\";\n      checked = input.value.trim();\n      status.textContent = labelStatus(s);\n      clear();\n    };\n    async function config() {\n      if (features) return features;\n      if (!configRequest)\n        configRequest = call(\"addressConfig\", {}).then(\n          (value) => (features = value),\n          (error) => { configRequest = null; throw error; },\n        );\n      return configRequest;\n    }\n    async function validate(candidate) {\n      if (running) return running;\n      const original = input.value.trim(),\n        rev = revision;\n      if (!original) return true;\n      const finishFeedback = MealButtonFeedback.begin(check);\n      clear();\n      clearTimeout(timer);\n      timer = null;\n      running = (async () => {\n        let result;\n        try {\n          if (!(await config()).validation) {\n            checked = original;\n            receipt = \"\";\n            status.textContent =\n              \"Needs Review — address checking is currently unavailable.\";\n            return true;\n          }\n          status.textContent = \"Checking address…\";\n          result = await call(\"addressPreview\", {\n            ...context(),\n            address: original,\n            candidate: candidate || original,\n            sessionToken: session || \"\",\n          });\n        } catch (_) {\n          result = { original, confident: false };\n        } finally {\n          session = null;\n        }\n        if (\n          rev !== revision ||\n          input.value.trim() !== original ||\n          !input.isConnected\n        )\n          return false;\n        let choice = \"original\";\n        if (!result.confident || !result.equivalent)\n          choice = await choose(result);\n        if (rev !== revision || !input.isConnected) return false;\n        if (choice === \"edit\") {\n          checked = \"\";\n          receipt = \"\";\n          status.textContent =\n            \"Needs Review — edit the address and check again.\";\n          input.focus();\n          return false;\n        }\n        if (choice === \"recommended\") {\n          input.value = result.recommended;\n          receipt = result.recommendedReceipt || \"needs-review\";\n        } else receipt = result.originalReceipt || \"needs-review\";\n        checked = input.value.trim();\n        status.textContent =\n          result.confident && (choice === \"recommended\" || result.equivalent)\n            ? \"Address Verified\"\n            : \"Needs Review\";\n        return true;\n      })();\n      try {\n        return await running;\n      } finally {\n        running = null;\n        finishFeedback();\n      }\n    }\n    function selectSuggestion(address) {\n      if (running) return;\n      const entered = input.value.trim();\n      const units = (value) => value.match(\n        /(?:\\b(?:apartment|apt|suite|ste|unit|floor|fl|building|bldg|room|rm)\\.?\\s*|#\\s*)[a-z0-9][a-z0-9 -]*/gi,\n      ) || [];\n      const enteredUnits = units(entered), selectedUnits = units(address);\n      const key = (parts) => parts.map(x => x.toLowerCase().replace(/\\./g, \"\")\n        .replace(/\\b(?:apartment|apt)\\b/g, \"apt\")\n        .replace(/\\b(?:suite|ste)\\b/g, \"suite\").replace(/\\s+/g, \" \").trim()).sort().join(\"|\");\n      // A conflicting unit still needs the original-versus-recommended review.\n      if (enteredUnits.length && selectedUnits.length && key(enteredUnits) !== key(selectedUnits))\n        return validate(address);\n      input.value = address + (enteredUnits.length && !selectedUnits.length\n        ? \", \" + enteredUnits.join(\", \") : \"\");\n      revision++;\n      receipt = \"\";\n      checked = \"\";\n      // Clicking a suggestion explicitly selects it. Validate that selected value now.\n      return validate();\n    }\n    function scheduleSuggestions() {\n      if (timer || suggesting || running || input.value.trim().length < 4 ||\n          input.disabled || !input.isConnected || document.activeElement !== input) return;\n      // Start during typing; coalesce edits and allow only one request in flight.\n      const delay = Math.max(150, 1000 - (Date.now() - lastSuggestionAt));\n      timer = setTimeout(() => {\n        timer = null;\n        suggest(revision);\n      }, delay);\n    }\n    async function suggest(rev) {\n      const address = input.value.trim();\n      if (address.length < 4 || input.disabled || suggesting || running ||\n          !input.isConnected || document.activeElement !== input) return;\n      suggesting = true;\n      try {\n        if (!(await config()).autocomplete || rev !== revision) return;\n        session ||= crypto.randomUUID();\n        lastSuggestionAt = Date.now();\n        status.textContent = \"Searching addresses…\";\n        const data = await call(\"addressSuggestions\", {\n          ...context(),\n          address,\n          sessionToken: session,\n        });\n        if (\n          rev !== revision ||\n          running || checked === input.value.trim() ||\n          !input.isConnected ||\n          document.activeElement !== input\n        )\n          return;\n        clear();\n        for (const suggestion of data.suggestions || []) {\n          const b = node(\"button\", suggestion.address);\n          b.type = \"button\";\n          b.className = \"address-suggestion\";\n          // Keep Safari/touch blur from removing the button before its click.\n          b.addEventListener(\"pointerdown\", (event) => event.preventDefault());\n          b.addEventListener(\"click\", () => selectSuggestion(suggestion.address));\n          b.addEventListener(\"keydown\", (e) => {\n            const buttons = [...list.querySelectorAll(\"button\")],\n              at = buttons.indexOf(b);\n            if (e.key === \"ArrowDown\" || e.key === \"ArrowUp\") {\n              e.preventDefault();\n              buttons[\n                (at + (e.key === \"ArrowDown\" ? 1 : buttons.length - 1)) %\n                  buttons.length\n              ].focus();\n            }\n            if (e.key === \"Escape\") {\n              e.preventDefault();\n              clear();\n              input.focus();\n            }\n          });\n          list.append(b);\n        }\n        if (list.children.length) {\n          list.append(attribution());\n          list.hidden = false;\n          input.setAttribute(\"aria-expanded\", \"true\");\n        }\n      } catch (_) {\n        if (rev === revision) {\n          clear();\n          status.textContent =\n            \"Suggestions unavailable. Enter the full address; it can still be submitted.\";\n        }\n      } finally {\n        suggesting = false;\n        if (rev !== revision) scheduleSuggestions();\n        else if (!running && status.textContent === \"Searching addresses…\")\n          status.textContent = \"Needs Review\";\n      }\n    }\n    input.addEventListener(\"focus\", () => {\n      // Warm configuration before the first address-search request.\n      config().catch(() => {});\n    });\n    input.addEventListener(\"input\", () => {\n      revision++;\n      receipt = \"\";\n      checked = \"\";\n      clear();\n      status.textContent = suggesting ? \"Searching addresses…\" : \"Needs Review\";\n      scheduleSuggestions();\n    });\n    input.addEventListener(\"keydown\", (e) => {\n      if (e.key === \"Escape\") clear();\n      if (e.key === \"ArrowDown\" && !list.hidden) {\n        e.preventDefault();\n        list.querySelector(\"button\")?.focus();\n      }\n    });\n    holder.addEventListener(\"focusout\", (e) => {\n      if (!holder.contains(e.relatedTarget)) clear();\n    });\n    check.addEventListener(\"click\", () => validate());\n    const state = {\n      reset,\n      check: () => validate(),\n      prepare: () =>\n        running ||\n        (checked === input.value.trim() ? Promise.resolve(true) : validate()),\n      receipt: () => (checked === input.value.trim() ? receipt : \"\"),\n    };\n    states.set(input, state);\n    return state;\n  }\n  async function prepareAll(root) {\n    for (const input of root.querySelectorAll(\n      '[name=\"address\"], [name=\"startAddress\"]',\n    ))\n      if (\n        !input.disabled &&\n        states.has(input) &&\n        !(await states.get(input).prepare())\n      )\n        return false;\n    return true;\n  }\n  return {\n    attach,\n    prepareAll,\n    receipt: (input) => states.get(input)?.receipt() || \"\",\n    reset: (input, status) => states.get(input)?.reset(status),\n  };\n})();\n\n      \"use strict\";\n(() => {\n  const $ = (id) => document.getElementById(id);\n  let events = [],\n    dashboard = null,\n    route = null,\n    editing = null,\n    viewOnly = false,\n    view = \"requestsView\",\n    busy = false,\n    dragId = null,\n    createId = null,\n    routeUnsaved = false,\n    deliveryPdfUrl = null,\n    referralAddressControls = [];\n  const el = (tag, text, cls) => {\n    const n = document.createElement(tag);\n    if (text != null) n.textContent = text;\n    if (cls) n.className = cls;\n    return n;\n  };\n  const button = (text, fn, cls) => {\n    const b = el(\"button\", text, cls);\n    b.type = \"button\";\n    b.addEventListener(\"click\", fn);\n    return b;\n  };\n  const addressCall = (action, p) => rpc(action, p);\n  const pickupSettings = MealAddresses.attach(\n    $(\"settingsForm\").elements.startAddress,\n    addressCall,\n  );\n  const pickupCreate = MealAddresses.attach(\n    $(\"eventEditor\").elements.startAddress,\n    addressCall,\n  );\n  const addressReviewed = (status) =>\n    [\"Confirmed\", \"Manually Reviewed\"].includes(status);\n  const readonly = () =>\n    !dashboard ||\n    dashboard.event.Archived === true ||\n    dashboard.event.Status === \"Completed\";\n  function rpc(action, p = {}) {\n    return new Promise((resolve, reject) =>\n      google.script.run\n        .withSuccessHandler((r) =>\n          r.ok\n            ? resolve(r.data)\n            : reject(\n                Object.assign(new Error(\n                  r.error?.message ||\n                    \"Your changes were not saved. Please try again.\",\n                ), { code: r.error?.code }),\n              ),\n        )\n        .withFailureHandler(() =>\n          reject(\n            new Error(\n              \"The service could not be reached. Refresh and try again.\",\n            ),\n          ),\n        )\n        .adminCall(action, p),\n    );\n  }\n  const pendingCreates = new Map();\n  for (const action of [\"createReferral\", \"saveEvent\"]) {\n    try {\n      const pending = JSON.parse(sessionStorage.getItem(\"community-meals-admin-\" + action) || \"null\");\n      if (pending) pendingCreates.set(action, pending);\n    } catch (_) { /* Storage may be unavailable; this tab still deduplicates. */ }\n  }\n  function retainCreate(action, pending) {\n    if (pending) pendingCreates.set(action, pending);\n    else pendingCreates.delete(action);\n    try {\n      const key = \"community-meals-admin-\" + action;\n      if (pending) sessionStorage.setItem(key, JSON.stringify(pending));\n      else sessionStorage.removeItem(key);\n    } catch (_) { /* No recipient details are stored in browser storage. */ }\n  }\n  async function createOnce(action, payload) {\n    const canonical = { ...payload };\n    delete canonical.submissionId;\n    delete canonical.creationId;\n    delete canonical.addressReceipt;\n    if (canonical.recipients)\n      canonical.recipients = canonical.recipients.map(({ addressReceipt, ...r }) => r);\n    const digest = await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(JSON.stringify(canonical)));\n    const fingerprint = [...new Uint8Array(digest)].map(n => n.toString(16).padStart(2, \"0\")).join(\"\");\n    let pending = pendingCreates.get(action);\n    const wasPending = Boolean(pending);\n    if (pending && pending.fingerprint !== fingerprint)\n      throw new Error(\"A previous save is unconfirmed. Restore the same information and retry before creating a different record. Refresh the dashboard to check whether it was saved.\");\n    if (!pending) pending = { id: crypto.randomUUID(), fingerprint, eventId: payload.eventId || \"\" };\n    retainCreate(action, pending);\n    try {\n      const result = await rpc(action, { ...payload,\n        [action === \"createReferral\" ? \"submissionId\" : \"creationId\"]: pending.id });\n      retainCreate(action, null);\n      return result;\n    } catch (error) {\n      // A later authentication/validation failure cannot disprove an earlier\n      // lost response. Keep that original operation identity until reconciled.\n      if (!wasPending && [\"INVALID\", \"CAPACITY\", \"CLOSED\", \"READ_ONLY\", \"AUTH\", \"FORBIDDEN\"].includes(error.code))\n        retainCreate(action, null);\n      throw error;\n    }\n  }\n  async function task(fn, trigger = MealButtonFeedback.current()) {\n    if (busy) return;\n    busy = true;\n    const finishFeedback = MealButtonFeedback.begin(trigger);\n    $(\"adminEvents\").disabled = true;\n    $(\"showArchived\").disabled = true;\n    $(\"adminMessage\").textContent = \"Working…\";\n    try {\n      await fn();\n      $(\"adminMessage\").textContent = \"\";\n    } catch (e) {\n      $(\"adminMessage\").textContent = e.message;\n    } finally {\n      busy = false;\n      finishFeedback();\n      $(\"adminEvents\").disabled = false;\n      $(\"showArchived\").disabled = false;\n    }\n  }\n  const dateLabel = (s) =>\n    new Date(s + \"T12:00:00\").toLocaleDateString(undefined, {\n      year: \"numeric\",\n      month: \"long\",\n      day: \"numeric\",\n    });\n  function today() {\n    return new Intl.DateTimeFormat(\"en-CA\", {\n      timeZone: \"America/New_York\",\n      year: \"numeric\",\n      month: \"2-digit\",\n      day: \"2-digit\",\n    }).format(new Date());\n  }\n  function metric(node, pairs) {\n    node.replaceChildren(...pairs.map(([k, v]) => el(\"span\", k + \": \" + v)));\n  }\n  function eventOptions() {\n    const list = events.filter(\n        (e) => $(\"showArchived\").checked || e.Archived !== true,\n      ),\n      old = dashboard?.event.EventID || $(\"adminEvents\").value;\n    const options = list.map((e) => {\n      const o = el(\"option\", e.EventName + (e.Archived ? \" (Archived)\" : \"\"));\n      o.value = e.EventID;\n      return o;\n    });\n    $(\"adminEvents\").replaceChildren(...options);\n    $(\"adminEvents\").value = list.some((e) => e.EventID === old)\n      ? old\n      : (list.find((e) => e.DeliveryDate >= today()) || list[0])?.EventID || \"\";\n  }\n  async function refreshEvents(preferred) {\n    events = await rpc(\"events\");\n    const pendingEvent = pendingCreates.get(\"saveEvent\");\n    if (pendingEvent && events.some(e => e.EventID === pendingEvent.id))\n      retainCreate(\"saveEvent\", null);\n    if (preferred) {\n      dashboard = null;\n      $(\"adminEvents\").value = preferred;\n    }\n    eventOptions();\n    if (\n      preferred &&\n      events.some(\n        (e) =>\n          e.EventID === preferred &&\n          (!$(\"showArchived\").checked ? e.Archived !== true : true),\n      )\n    )\n      $(\"adminEvents\").value = preferred;\n    await refresh();\n  }\n  async function refresh() {\n    clearDeliveryPdf();\n    const id = $(\"adminEvents\").value;\n    if (!id) {\n      dashboard = null;\n      route = null;\n      metric($(\"metrics\"), []);\n      $(\"requestCards\").replaceChildren(\n        el(\"p\", \"No events available. Create an event to get started.\"),\n      );\n      $(\"routeStops\").replaceChildren();\n      $(\"routeTitle\").textContent = \"Delivery Route\";\n      $(\"routeDate\").textContent = \"\";\n      $(\"routePickup\").textContent = \"\";\n      $(\"routeSummary\").textContent = \"\";\n      $(\"routeStatus\").textContent = \"No event selected.\";\n      $(\"printRoute\").disabled = true;\n      $(\"archiveEvent\").disabled = true;\n      $(\"reopenEvent\").hidden = true;\n      $(\"settingsForm\").inert = true;\n      $(\"readonlyNotice\").textContent = \"\";\n      $(\"integrityNotice\").textContent = \"\";\n      $(\"addReferral\").disabled = true;\n      await reports();\n      return;\n    }\n    dashboard = await rpc(\"dashboard\", { eventId: id });\n    route = await rpc(\"route\", { eventId: id });\n    routeUnsaved = false;\n    renderDashboard();\n    renderRequests();\n    renderRoute();\n    renderSettings();\n    if (view === \"reportsView\") await reports();\n  }\n  function renderDashboard() {\n    $(\"integrityNotice\").textContent = integrityMessage(dashboard.integrity);\n    metric($(\"metrics\"), [\n      [\"Capacity\", dashboard.capacity],\n      [\"Reserved\", dashboard.reserved],\n      [\"Available\", dashboard.available],\n      [\"Pending Referrals\", dashboard.pendingReferrals],\n      [\"Approved Referrals\", dashboard.approvedReferrals],\n      [\"Delivery Stops\", dashboard.deliveryStops],\n    ]);\n    const ro = readonly();\n    $(\"readonlyNotice\").textContent = ro\n      ? \"This event is read-only. Use Reopen / Unarchive to make corrections.\"\n      : \"\";\n    $(\"archiveEvent\").disabled = dashboard.event.Archived === true;\n    $(\"reopenEvent\").hidden = !ro;\n    [\n      \"addReferral\",\n      \"selectAll\",\n      \"approveSelected\",\n      \"rejectSelected\",\n      \"optimizeRoute\",\n      \"saveRoute\",\n      \"verifyPickup\",\n    ].forEach((id) => ($(id).disabled = ro));\n    $(\"settingsForm\").inert = ro;\n  }\n  function integrityMessage(issues) {\n    if (!issues || !(issues.recipientRecords || issues.submissionRecords)) return \"\";\n    return \"Historical records need review: \" + issues.recipientRecords +\n      \" unlinked recipient records (\" + issues.mealQuantities + \" meal quantities) and \" +\n      issues.submissionRecords + \" unlinked submission records. These records are preserved and excluded from referral totals; their delivery status must be reviewed before restoring them.\";\n  }\n  function selectedRefs() {\n    return [...$(\"requestCards\").querySelectorAll(\"input:checked\")].map(\n      (x) => ({\n        referralId: x.dataset.referralId,\n        version: Number(x.dataset.version),\n      }),\n    );\n  }\n  async function changeStatus(referrals, status) {\n    if (!referrals.length) throw new Error(\"Select at least one referral.\");\n    if (\n      status === \"Rejected\" &&\n      !confirm(\n        \"Reject \" +\n          referrals.length +\n          \" referral(s) and release their reserved meals?\",\n      )\n    )\n      return;\n    await rpc(\"statuses\", { referrals, status });\n    await refresh();\n  }\n  function renderRequests() {\n    const refs = dashboard.referrals\n      .slice()\n      .sort(\n        (a, b) =>\n          (a.Status === \"Pending\" ? 0 : 1) - (b.Status === \"Pending\" ? 0 : 1) ||\n          a.SubmittedAt.localeCompare(b.SubmittedAt),\n      );\n    $(\"requestCards\").replaceChildren();\n    if (!refs.length) $(\"requestCards\").append(el(\"p\", \"No referrals yet.\"));\n    refs.forEach((r) => {\n      const card = el(\"article\", null, \"request-card\"),\n        header = el(\"header\");\n      const check = el(\"input\");\n      check.type = \"checkbox\";\n      check.dataset.referralId = r.ReferralID;\n      check.dataset.version = r.Version;\n      check.disabled = readonly();\n      const label = el(\"label\", null, \"check-label\");\n      label.append(check, el(\"span\", \"Select \" + r.OrganizationName));\n      header.append(label, el(\"span\", r.Status, \"badge\"));\n      card.append(\n        header,\n        el(\n          \"h3\",\n          r.OrganizationName +\n            \" — \" +\n            r.recipients.length +\n            \" Recipients — \" +\n            r.meals +\n            \" Meals\",\n        ),\n        el(\n          \"p\",\n          \"Submitted \" + new Date(r.SubmittedAt).toLocaleString(),\n          \"hint\",\n        ),\n      );\n      const recipients = el(\"ol\", null, \"request-recipient-list\");\n      r.recipients.forEach((recipient) => {\n        const item = el(\"li\");\n        item.append(\n          el(\"strong\", recipient.RecipientName),\n          el(\"p\", recipient.Address),\n          el(\"p\", recipient.MealCount + (Number(recipient.MealCount) === 1 ? \" meal\" : \" meals\")),\n        );\n        if (!addressReviewed(recipient.AddressStatus))\n          item.append(el(\"span\", \"Address Needs Review\", \"badge\"));\n        else item.append(el(\"span\", recipient.AddressStatus === \"Confirmed\"\n          ? \"Address Verified\" : \"Address Manually Reviewed\", \"hint\"));\n        if (recipient.DuplicateFlag)\n          item.append(el(\"span\", \"Possible Duplicate\", \"warning\"));\n        recipients.append(item);\n      });\n      card.append(recipients);\n      if (r.recipients.some((x) => x.DuplicateFlag))\n        card.append(\n          el(\n            \"p\",\n            \"Possible Duplicate — open View to see matching records.\",\n            \"warning\",\n          ),\n        );\n      if (r.recipients.some((x) => !addressReviewed(x.AddressStatus)))\n        card.append(el(\"p\", \"Address Needs Review\", \"badge\"));\n      const actions = el(\"div\", null, \"actions\");\n      actions.append(button(\"View\", () => openReferral(r, true), \"secondary\"));\n      if (!readonly()) {\n        actions.append(\n          button(\"Edit\", () => openReferral(r, false), \"secondary\"),\n          button(\"Review Addresses with Google\", () =>\n            task(() => reviewReferralAddresses(r)), \"secondary\"),\n        );\n        [\"Approved\", \"Rejected\", \"Pending\"]\n          .filter((s) => s !== r.Status)\n          .forEach((status) =>\n            actions.append(\n              button(\n                status === \"Approved\"\n                  ? \"Approve\"\n                  : status === \"Rejected\"\n                    ? \"Reject\"\n                    : \"Return to Pending\",\n                () =>\n                  task(() =>\n                    changeStatus(\n                      [{ referralId: r.ReferralID, version: r.Version }],\n                      status,\n                    ),\n                  ),\n                status === \"Rejected\" ? \"danger\" : \"secondary\",\n              ),\n            ),\n          );\n      }\n      card.append(actions);\n      $(\"requestCards\").append(card);\n    });\n  }\n  function field(label, name, value, type = \"text\", max = 1000) {\n    const wrap = el(\"label\", label),\n      input = el(type === \"textarea\" ? \"textarea\" : \"input\");\n    input.name = name;\n    if (type !== \"textarea\") input.type = type;\n    input.value = value ?? \"\";\n    input.maxLength = max;\n    if (type === \"number\") {\n      input.min = \"1\";\n      input.max = \"10000\";\n      input.step = \"1\";\n    }\n    if ([\"recipientName\", \"address\", \"mealCount\"].includes(name))\n      input.required = true;\n    wrap.append(input);\n    return wrap;\n  }\n  function recipientEditor(r) {\n    const card = el(\"fieldset\", null, \"recipient-card\");\n    if (r) {\n      card.dataset.recipientId = r.RecipientID;\n      card.dataset.version = r.Version;\n    }\n    card.append(\n      el(\"legend\", \"Recipient \" + ($(\"editorRecipients\").children.length + 1)),\n    );\n    const grid = el(\"div\", null, \"grid\");\n    grid.append(\n      field(\"Recipient name\", \"recipientName\", r?.RecipientName, \"text\", 160),\n      field(\n        \"Street address (include apartment/unit)\",\n        \"address\",\n        r?.Address,\n        \"text\",\n        500,\n      ),\n      field(\"Phone (optional)\", \"phone\", r?.Phone, \"tel\", 40),\n      field(\"Number of meals\", \"mealCount\", r?.MealCount || 1, \"number\"),\n      field(\n        \"Dietary restrictions / allergies\",\n        \"dietaryRestrictions\",\n        r?.DietaryRestrictions,\n        \"textarea\",\n        500,\n      ),\n    );\n    const door = el(\"label\", \"Preferred door\"),\n      select = el(\"select\");\n    select.name = \"doorPreference\";\n    [\"Front\", \"Side\", \"Back\", \"Other\"].forEach((s) => {\n      const o = el(\"option\", s);\n      o.value = s;\n      select.append(o);\n    });\n    select.value = r?.DoorPreference || \"Front\";\n    door.append(select);\n    grid.append(\n      door,\n      field(\n        \"Delivery instructions (printed)\",\n        \"deliveryInstructions\",\n        r?.DeliveryInstructions,\n        \"textarea\",\n      ),\n      field(\n        \"Internal notes (admin only; never printed)\",\n        \"notes\",\n        r?.Notes,\n        \"textarea\",\n      ),\n    );\n    card.append(grid);\n    if (!viewOnly)\n      referralAddressControls.push(MealAddresses.attach(\n        grid.querySelector('[name=\"address\"]'),\n        addressCall,\n        () => ({}),\n        r?.AddressStatus,\n      ));\n    if (r) {\n      card.append(\n        el(\n          \"p\",\n          addressReviewed(r.AddressStatus)\n            ? r.AddressStatus === \"Manually Reviewed\"\n              ? \"Address manually reviewed (Google validation not performed)\"\n              : \"Address confirmed\"\n            : \"Address Needs Review\",\n          addressReviewed(r.AddressStatus) ? \"hint\" : \"warning\",\n        ),\n      );\n      if (r.matches?.length) {\n        const details = el(\"details\"),\n          summary = el(\"summary\", \"Possible Duplicate — matching recipients\");\n        details.append(summary);\n        r.matches.forEach((m) =>\n          details.append(\n            el(\n              \"p\",\n              m.recipientName +\n                \" — \" +\n                m.address +\n                \" — Referral \" +\n                m.referralId,\n            ),\n          ),\n        );\n        card.append(details);\n      }\n      if (!readonly()) {\n        card.append(\n          button(\n            \"Mark Saved Address Reviewed\",\n            () => {\n              if (\n                !confirm(\n                  \"Have you checked the SAVED address and confirmed it is usable for delivery? Unsaved edits are not reviewed. This is manual review, not Google validation.\",\n                )\n              )\n                return;\n              task(async () => {\n                await rpc(\"manualAddressReview\", {\n                  entity: \"recipient\",\n                  recipientId: r.RecipientID,\n                  version: r.Version,\n                  confirmed: true,\n                });\n                $(\"referralDialog\").close();\n                await refresh();\n              });\n            },\n            \"secondary\",\n          ),\n        );\n      }\n    } else {\n      card.append(\n        button(\n          \"Remove Recipient\",\n          () => {\n            if ($(\"editorRecipients\").children.length > 1) {\n              card.remove();\n              [...$(\"editorRecipients\").children].forEach(\n                (c, i) =>\n                  (c.querySelector(\"legend\").textContent =\n                    \"Recipient \" + (i + 1)),\n              );\n            }\n          },\n          \"secondary\",\n        ),\n      );\n    }\n    $(\"editorRecipients\").append(card);\n    if (viewOnly)\n      grid\n        .querySelectorAll(\"input,select,textarea\")\n        .forEach((x) => (x.disabled = true));\n  }\n  function openReferral(r, read) {\n    editing = r || null;\n    viewOnly = read || readonly();\n    createId = r ? null : crypto.randomUUID();\n    $(\"referralHeading\").textContent = r\n      ? viewOnly\n        ? \"View Referral\"\n        : \"Edit Referral\"\n      : \"Add Referral\";\n    $(\"editorMessage\").textContent = \"\";\n    referralAddressControls = [];\n    $(\"saveReferral\").textContent = \"Save Referral\";\n    $(\"saveReferral\").disabled = false;\n    [\"organizationName\", \"organizationEmail\", \"organizationPhone\"].forEach(\n      (n) => {\n        const key = n[0].toUpperCase() + n.slice(1);\n        $(\"referralEditor\").elements[n].value = r?.[key] || \"\";\n        $(\"referralEditor\").elements[n].disabled = viewOnly;\n      },\n    );\n    $(\"editorRecipients\").replaceChildren();\n    if (r) r.recipients.forEach(recipientEditor);\n    else recipientEditor();\n    $(\"editorAddRecipient\").hidden = !!r || viewOnly;\n    $(\"saveReferral\").hidden = viewOnly;\n    $(\"referralDialog\").showModal();\n  }\n  async function reviewReferralAddresses(r) {\n    if (readonly()) return;\n    openReferral(r, false);\n    $(\"referralHeading\").textContent = \"Review Addresses with Google\";\n    $(\"saveReferral\").textContent = \"Save Reviewed Addresses\";\n    $(\"saveReferral\").disabled = true;\n    const controls = referralAddressControls.slice();\n    const current = () => editing?.ReferralID === r.ReferralID && $(\"referralDialog\").open;\n    try {\n      for (let i = 0; i < controls.length; i++) {\n        if (!current()) return;\n        $(\"editorMessage\").textContent = \"Checking address \" + (i + 1) + \" of \" + controls.length + \"…\";\n        const ready = await controls[i].check();\n        if (!current()) return;\n        if (!ready) {\n          $(\"editorMessage\").textContent = \"Edit the address, then click Save Reviewed Addresses. Changes have not been saved yet.\";\n          return;\n        }\n      }\n      if (current()) $(\"editorMessage\").textContent =\n        \"Address checks finished. Click Save Reviewed Addresses to save your choices. Any unconfirmed address remains Address Needs Review.\";\n    } catch (error) {\n      if (current()) $(\"editorMessage\").textContent = error.message;\n      throw error;\n    } finally {\n      if (current()) $(\"saveReferral\").disabled = false;\n    }\n  }\n  function editorPayload() {\n    const f = $(\"referralEditor\"),\n      p = { eventId: dashboard.event.EventID };\n    [\"organizationName\", \"organizationEmail\", \"organizationPhone\"].forEach(\n      (n) => (p[n] = f.elements[n].value.trim()),\n    );\n    p.recipients = [...$(\"editorRecipients\").children].map((c) => {\n      const x = Object.fromEntries(\n        [...c.querySelectorAll(\"[name]\")].map((n) => [\n          n.name,\n          n.name === \"mealCount\" ? Number(n.value) : n.value.trim(),\n        ]),\n      );\n      x.addressReceipt = MealAddresses.receipt(\n        c.querySelector('[name=\"address\"]'),\n      );\n      if (editing) {\n        x.recipientId = c.dataset.recipientId;\n        x.version = Number(c.dataset.version);\n      }\n      return x;\n    });\n    if (editing) {\n      p.referralId = editing.ReferralID;\n      p.version = editing.Version;\n    } else p.submissionId = createId;\n    return p;\n  }\n  function mapsUrl(address) {\n    return /iPhone|iPad|iPod/.test(navigator.userAgent) ||\n      (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)\n      ? \"https://maps.apple.com/?daddr=\" + encodeURIComponent(address)\n      : \"https://www.google.com/maps/search/?api=1&query=\" +\n          encodeURIComponent(address);\n  }\n  function renumberRoute() {\n    let n = 0;\n    route.stops.forEach((r, i) => {\n      r.stop = i + 1;\n      n += r.meals;\n      r.runningMeals = n;\n    });\n    route.totalMeals = n;\n  }\n  function move(id, delta) {\n    const i = route.stops.findIndex((s) => s.recipientId === id),\n      j = i + delta;\n    if (j < 0 || j >= route.stops.length) return;\n    [route.stops[i], route.stops[j]] = [route.stops[j], route.stops[i]];\n    routeUnsaved = true;\n    renumberRoute();\n    renderRoute();\n  }\n  function renderRoute() {\n    if (!route) return;\n    clearDeliveryPdf();\n    $(\"routeTitle\").textContent = route.eventName + \" Delivery Route\";\n    $(\"routeDate\").textContent = dateLabel(route.deliveryDate);\n    $(\"routePickup\").textContent = \"Pickup: \" + (route.startAddress || \"Not configured\");\n    $(\"routeSummary\").textContent =\n      route.stops.length + \" Stops · \" + route.totalMeals + \" Meals\";\n    const addressesReady = !route.unresolved.length && addressReviewed(route.startAddressStatus);\n    $(\"routeStatus\").textContent = !route.stops.length\n      ? \"Approve at least one recipient to build a delivery route.\"\n      : routeUnsaved\n        ? \"Order changed. Click Save Manual Order to save your changes before printing.\"\n        : route.isFinal\n          ? \"Official delivery order saved. You can print the delivery sheet.\"\n          : addressesReady\n            ? \"All addresses are reviewed. Check the stop order, then click Save Manual Order to finalize the route and enable printing.\"\n            : \"Route is not final. \" +\n              (route.unresolved.length\n                ? route.unresolved.length + \" recipient address(es) need review. \"\n                : \"\") +\n              (!addressReviewed(route.startAddressStatus)\n                ? \"Pickup address needs review in Event Settings. \"\n                : \"\") +\n              \"Review the addresses, then click Save Manual Order to finalize the route.\";\n    $(\"printRoute\").disabled = !route.stops.length || routeUnsaved || !route.isFinal;\n    const optimizationReason = readonly()\n      ? \"This event is read-only. Reopen / Unarchive it before changing the route.\"\n      : !route.mapsEnabled\n        ? \"Automatic route optimization is off. Use Move Up / Move Down or drag stops into order, then click Save Manual Order. You can print a reviewed, saved route without automatic optimization.\"\n        : !route.stops.length\n          ? \"Approve at least one recipient before optimizing.\"\n          : !addressesReady\n            ? \"Review the pickup address and every recipient address before optimizing.\"\n            : \"Google route optimization is enabled in configuration. You may optimize or save a manual order.\";\n    $(\"routingAvailability\").textContent = optimizationReason;\n    $(\"optimizeRoute\").disabled = readonly() || !route.mapsEnabled || !route.stops.length || !addressesReady;\n    $(\"optimizeRoute\").title = optimizationReason;\n    $(\"saveRoute\").disabled = readonly() || !route.stops.length;\n    $(\"routeStops\").replaceChildren();\n    route.stops.forEach((r) => {\n      const card = el(\"article\", null, \"stop\");\n      card.dataset.recipientId = r.recipientId;\n      const head = el(\"header\");\n      head.append(\n        el(\"span\", null, \"print-check\"),\n        el(\"h3\", \"Stop \" + r.stop + \" — \" + r.recipientName),\n      );\n      card.append(head);\n      const address = el(\"p\", null, \"address\"),\n        link = el(\"a\", r.address);\n      link.href = mapsUrl(r.address);\n      link.target = \"_blank\";\n      link.rel = \"noopener noreferrer\";\n      address.append(link);\n      card.append(address);\n      const dl = el(\"dl\");\n      const pair = (k, v) => {\n        if (v) {\n          dl.append(el(\"dt\", k), el(\"dd\", String(v)));\n        }\n      };\n      pair(\"Phone:\", r.phone);\n      pair(\"Meals:\", r.meals);\n      pair(\"Running Meal Total:\", r.runningMeals);\n      pair(\"Dietary:\", r.dietaryRestrictions);\n      pair(\"Door:\", r.doorPreference);\n      pair(\"Delivery Instructions:\", r.deliveryInstructions);\n      card.append(dl);\n      if (!addressReviewed(r.addressStatus))\n        card.append(el(\"p\", \"Address Needs Review\", \"badge\"));\n      if (!readonly()) {\n        const controls = el(\"div\", null, \"actions no-print\"),\n          up = button(\"Move Up\", () => move(r.recipientId, -1), \"secondary\"),\n          down = button(\"Move Down\", () => move(r.recipientId, 1), \"secondary\");\n        up.disabled = r.stop === 1;\n        down.disabled = r.stop === route.stops.length;\n        controls.append(up, down);\n        card.append(controls);\n        card.draggable = matchMedia(\"(pointer:fine)\").matches;\n        card.addEventListener(\"dragstart\", (ev) => {\n          dragId = r.recipientId;\n          ev.dataTransfer.setData(\"text/plain\", r.recipientId);\n        });\n        card.addEventListener(\"dragover\", (ev) => ev.preventDefault());\n        card.addEventListener(\"drop\", (ev) => {\n          ev.preventDefault();\n          const i = route.stops.findIndex((x) => x.recipientId === dragId),\n            j = route.stops.findIndex((x) => x.recipientId === r.recipientId);\n          if (i < 0 || j < 0 || i === j) return;\n          const [row] = route.stops.splice(i, 1);\n          route.stops.splice(j, 0, row);\n          routeUnsaved = true;\n          renumberRoute();\n          renderRoute();\n        });\n      }\n      $(\"routeStops\").append(card);\n    });\n    if (!route.stops.length)\n      $(\"routeStops\").append(el(\"p\", \"No Approved recipients for this event.\"));\n  }\n  function renderSettings() {\n    const e = dashboard.event;\n    const values = {\n      eventName: e.EventName,\n      deliveryDate: e.DeliveryDate,\n      capacity: e.Capacity,\n      startAddress: e.StartAddress,\n      status: e.Status,\n    };\n    Object.entries(values).forEach(\n      ([k, v]) => ($(\"settingsForm\").elements[k].value = v),\n    );\n    $(\"verifyPickup\").disabled = readonly();\n    pickupSettings.reset(e.StartAddressStatus);\n    $(\"manualPickup\").disabled = readonly();\n    $(\"pickupStatus\").textContent = addressReviewed(e.StartAddressStatus)\n      ? e.StartAddressStatus === \"Manually Reviewed\"\n        ? \"Pickup address manually reviewed (Google validation not performed).\"\n        : \"Pickup address confirmed.\"\n      : \"Pickup Address Needs Review\";\n  }\n  function eventPayload(f) {\n    return {\n      addressReceipt: MealAddresses.receipt(f.elements.startAddress),\n      ...Object.fromEntries(\n        [\"eventName\", \"deliveryDate\", \"capacity\", \"startAddress\", \"status\"].map(\n          (n) => [\n            n,\n            n === \"capacity\"\n              ? Number(f.elements[n].value)\n              : f.elements[n].value.trim(),\n          ],\n        ),\n      ),\n    };\n  }\n  async function reports() {\n    const old = $(\"reportEvent\").value,\n      year = $(\"reportYear\").value;\n    $(\"reportEvent\").replaceChildren(el(\"option\", \"All events\"));\n    $(\"reportEvent\").firstChild.value = \"\";\n    events.forEach((e) => {\n      const o = el(\"option\", e.EventName + (e.Archived ? \" (Archived)\" : \"\"));\n      o.value = e.EventID;\n      $(\"reportEvent\").append(o);\n    });\n    $(\"reportEvent\").value = old;\n    const years = [...new Set(events.map((e) => e.DeliveryDate.slice(0, 4)))]\n      .sort()\n      .reverse();\n    $(\"reportYear\").replaceChildren(el(\"option\", \"All years\"));\n    $(\"reportYear\").firstChild.value = \"\";\n    years.forEach((y) => {\n      const o = el(\"option\", y);\n      o.value = y;\n      $(\"reportYear\").append(o);\n    });\n    $(\"reportYear\").value = year;\n    const r = await rpc(\"reports\", {\n      eventId: $(\"reportEvent\").value,\n      year: $(\"reportYear\").value,\n    });\n    $(\"reportIntegrityNotice\").textContent = integrityMessage(r.integrity);\n    metric($(\"reportTotals\"), [\n      [\"Events\", r.totals.events],\n      [\"Originally Requested Meals\", r.totals.originallyRequestedMeals],\n      [\"Currently Reserved Meals\", r.totals.currentlyReservedMeals],\n      [\"Approved Meals\", r.totals.approvedMeals],\n      [\"Rejected Meals\", r.totals.rejectedMeals],\n      [\"Recipient Records\", r.totals.recipientRecords],\n      [\"Approved Stops\", r.totals.approvedStops],\n      [\"Organizations\", r.totals.organizations],\n      [\"Capacity\", r.totals.capacity],\n      [\"Remaining Capacity\", r.totals.remainingCapacity],\n      [\"Pending Referrals\", r.totals.pendingReferrals],\n      [\"Approved Referrals\", r.totals.approvedReferrals],\n      [\"Rejected Referrals\", r.totals.rejectedReferrals],\n    ]);\n    $(\"organizationReports\").replaceChildren(\n      ...r.organizations.map((o) =>\n        el(\n          \"div\",\n          o.name +\n            \" — \" +\n            o.referrals +\n            \" Referrals · \" +\n            o.originallyRequestedMeals +\n            \" Originally Requested Meals · \" +\n            o.currentMeals +\n            \" Current Meals\",\n          \"report-row\",\n        ),\n      ),\n    );\n  }\n  document.querySelectorAll(\"[data-view]\").forEach((b) =>\n    b.addEventListener(\"click\", () =>\n      task(async () => {\n        view = b.dataset.view;\n        if (view !== \"routeView\") clearDeliveryPdf();\n        [\"requestsView\", \"routeView\", \"settingsView\", \"reportsView\"].forEach(\n          (id) => ($(id).hidden = id !== view),\n        );\n        document\n          .querySelectorAll(\"[data-view]\")\n          .forEach((x) => x.setAttribute(\"aria-selected\", String(x === b)));\n        if (view === \"reportsView\") await reports();\n      }),\n    ),\n  );\n  $(\"adminEvents\").addEventListener(\"change\", () => task(refresh));\n  $(\"showArchived\").addEventListener(\"change\", () =>\n    task(async () => {\n      eventOptions();\n      await refresh();\n    }),\n  );\n  $(\"refreshAdmin\").addEventListener(\"click\", () =>\n    task(() => refreshEvents()),\n  );\n  async function copyPublicLink() {\n    const input = $(\"publicLinkValue\");\n    try {\n      await navigator.clipboard.writeText(input.value);\n      $(\"publicLinkMessage\").textContent = \"Public link copied. Ready to share.\";\n    } catch (_) {\n      input.focus();\n      input.select();\n      input.setSelectionRange(0, input.value.length);\n      $(\"publicLinkMessage\").textContent = \"Automatic copying is unavailable in this browser. Copy the selected website link above.\";\n    }\n  }\n  $(\"publicLink\").addEventListener(\"click\", () =>\n    task(async () => {\n      const { url } = await rpc(\"publicFormLink\");\n      $(\"publicLinkValue\").value = url;\n      $(\"openPublicLink\").href = url;\n      $(\"publicLinkMessage\").textContent = \"\";\n      $(\"publicLinkDialog\").showModal();\n      await copyPublicLink();\n    }),\n  );\n  $(\"copyPublicLink\").addEventListener(\"click\", () => task(copyPublicLink));\n  $(\"closePublicLink\").addEventListener(\"click\", () => $(\"publicLinkDialog\").close());\n  $(\"createEvent\").addEventListener(\"click\", () => {\n    $(\"eventEditor\").reset();\n    pickupCreate.reset();\n    $(\"eventEditorMessage\").textContent = \"\";\n    $(\"eventDialog\").showModal();\n  });\n  $(\"closeEvent\").addEventListener(\"click\", () => $(\"eventDialog\").close());\n  $(\"closeReferral\").addEventListener(\"click\", () =>\n    $(\"referralDialog\").close(),\n  );\n  $(\"addReferral\").addEventListener(\"click\", () => task(async () => {\n    const pending = pendingCreates.get(\"createReferral\");\n    if (pending) {\n      const { receipt } = await rpc(\"submissionReceipt\", { submissionId: pending.id });\n      if (receipt) {\n        retainCreate(\"createReferral\", null);\n        await refreshEvents(pending.eventId);\n        alert(\"Your previous referral was saved once. Referral ID: \" + receipt.referralId);\n        return;\n      }\n    }\n    openReferral(null, false);\n    if (pending) $(\"editorMessage\").textContent = \"Previous save unconfirmed. Re-enter the same information to retry safely. Recipient details were not stored in this browser.\";\n  }));\n  $(\"editorAddRecipient\").addEventListener(\"click\", () => {\n    if ($(\"editorRecipients\").children.length < 100) recipientEditor();\n  });\n  $(\"selectAll\").addEventListener(\"click\", () => {\n    $(\"requestCards\")\n      .querySelectorAll('input[type=\"checkbox\"]')\n      .forEach(\n        (x) =>\n          (x.checked =\n            dashboard.referrals.find(\n              (r) => r.ReferralID === x.dataset.referralId,\n            )?.Status === \"Pending\"),\n      );\n  });\n  $(\"approveSelected\").addEventListener(\"click\", () =>\n    task(() => changeStatus(selectedRefs(), \"Approved\")),\n  );\n  $(\"rejectSelected\").addEventListener(\"click\", () =>\n    task(() => changeStatus(selectedRefs(), \"Rejected\")),\n  );\n  $(\"referralEditor\").addEventListener(\"submit\", (e) => {\n    e.preventDefault();\n    if (busy) return;\n    task(async () => {\n      if (!(await MealAddresses.prepareAll($(\"referralEditor\")))) return;\n      const payload = editorPayload();\n      try {\n        if (editing) await rpc(\"editReferral\", payload);\n        else await createOnce(\"createReferral\", payload);\n        $(\"referralDialog\").close();\n        await refresh();\n      } catch (err) {\n        $(\"editorMessage\").textContent = err.message;\n        throw err;\n      }\n    }, e.submitter || e.target.querySelector('button[type=\"submit\"]'));\n  });\n  $(\"eventEditor\").addEventListener(\"submit\", (e) => {\n    e.preventDefault();\n    task(async () => {\n      try {\n        if (!(await MealAddresses.prepareAll($(\"eventEditor\")))) return;\n        const event = await createOnce(\"saveEvent\", eventPayload($(\"eventEditor\")));\n        $(\"eventDialog\").close();\n        await refreshEvents(event.EventID);\n      } catch (err) {\n        $(\"eventEditorMessage\").textContent = err.message;\n        throw err;\n      }\n    }, e.submitter || e.target.querySelector('button[type=\"submit\"]'));\n  });\n  $(\"settingsForm\").addEventListener(\"submit\", (e) => {\n    e.preventDefault();\n    task(async () => {\n      const d = dashboard.event;\n      if (!(await MealAddresses.prepareAll($(\"settingsForm\")))) return;\n      await rpc(\"saveEvent\", {\n        ...eventPayload($(\"settingsForm\")),\n        eventId: d.EventID,\n        version: d.Version,\n      });\n      await refreshEvents(d.EventID);\n    }, e.submitter || e.target.querySelector('button[type=\"submit\"]'));\n  });\n  $(\"archiveEvent\").addEventListener(\"click\", () =>\n    task(async () => {\n      if (\n        !confirm(\n          \"Archive this event? Its records will remain available in Reports.\",\n        )\n      )\n        return;\n      await rpc(\"archive\", {\n        eventId: dashboard.event.EventID,\n        version: dashboard.event.Version,\n        mode: \"archive\",\n        confirmed: true,\n      });\n      dashboard = null;\n      await refreshEvents();\n    }),\n  );\n  $(\"reopenEvent\").addEventListener(\"click\", () =>\n    task(async () => {\n      if (\n        !confirm(\n          \"Reopen / Unarchive this event for corrections? This action will be audit logged.\",\n        )\n      )\n        return;\n      const id = dashboard.event.EventID;\n      await rpc(\"archive\", {\n        eventId: id,\n        version: dashboard.event.Version,\n        mode: \"reopen\",\n        confirmed: true,\n      });\n      await refreshEvents(id);\n    }),\n  );\n  $(\"manualPickup\").addEventListener(\"click\", () => {\n    if (\n      !confirm(\n        \"Have you checked the SAVED pickup address and confirmed it is usable? This is manual review, not Google validation.\",\n      )\n    )\n      return;\n    task(async () => {\n      await rpc(\"manualAddressReview\", {\n        entity: \"event\",\n        eventId: dashboard.event.EventID,\n        version: dashboard.event.Version,\n        confirmed: true,\n      });\n      await refresh();\n    });\n  });\n  $(\"verifyPickup\").addEventListener(\"click\", () =>\n    task(() => pickupSettings.check()),\n  );\n  $(\"optimizeRoute\").addEventListener(\"click\", () =>\n    task(async () => {\n      route = await rpc(\"optimize\", {\n        eventId: route.eventId,\n        routeVersion: route.version,\n      });\n      await refresh();\n    }),\n  );\n  $(\"saveRoute\").addEventListener(\"click\", () =>\n    task(async () => {\n      route = await rpc(\"reorder\", {\n        eventId: route.eventId,\n        routeVersion: route.version,\n        recipientIds: route.stops.map((r) => r.recipientId),\n      });\n      routeUnsaved = false;\n      renderRoute();\n    }),\n  );\n  function clearDeliveryPdf() {\n    if (deliveryPdfUrl) URL.revokeObjectURL(deliveryPdfUrl);\n    deliveryPdfUrl = null;\n    $(\"openDeliveryPdf\").removeAttribute(\"href\");\n    $(\"downloadDeliveryPdf\").removeAttribute(\"href\");\n    $(\"deliveryPdf\").hidden = true;\n  }\n  $(\"printRoute\").addEventListener(\"click\", () => task(async () => {\n    if (!route || routeUnsaved || !route.isFinal || !route.stops.length) return;\n    clearDeliveryPdf();\n    try {\n      const pdf = await rpc(\"deliveryPdf\", { eventId: route.eventId, routeVersion: route.version });\n      const bytes = Uint8Array.from(atob(pdf.base64), (c) => c.charCodeAt(0));\n      deliveryPdfUrl = URL.createObjectURL(new Blob([bytes], { type: \"application/pdf\" }));\n      $(\"openDeliveryPdf\").href = deliveryPdfUrl;\n      $(\"downloadDeliveryPdf\").href = deliveryPdfUrl;\n      $(\"downloadDeliveryPdf\").download = pdf.filename;\n      $(\"deliveryPdf\").hidden = false;\n      $(\"openDeliveryPdf\").focus();\n    } catch (error) {\n      if (error.code === \"CONFLICT\") await refresh();\n      throw error;\n    }\n  }));\n  window.addEventListener(\"pagehide\", clearDeliveryPdf);\n  [\"reportEvent\", \"reportYear\"].forEach((id) =>\n    $(id).addEventListener(\"change\", () => task(reports)),\n  );\n  task(async () => {\n    const identity = await rpc(\"identity\");\n    $(\"adminIdentity\").textContent =\n      identity.email + \" · \" + identity.environment;\n    await refreshEvents();\n  });\n})();\n\n    </script>\n  </body>\n</html>\n";
+const ADMIN_PAGE_HTML_ = "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n    <base target=\"_top\" />\n    <style>\n      :root {\n  --navy: #15324d;\n  --blue: #1668ad;\n  --green: #126c56;\n  --red: #9d2222;\n  --border: #ccd7e1;\n  --muted: #526478;\n  --paper: #f3f6f9;\n  font-family:\n    system-ui,\n    -apple-system,\n    BlinkMacSystemFont,\n    \"Segoe UI\",\n    sans-serif;\n  color: var(--navy);\n  background: var(--paper);\n  font-size: 16px;\n  line-height: 1.5;\n}\n* {\n  box-sizing: border-box;\n}\nbody {\n  margin: 0;\n}\nh1 {\n  font-size: clamp(1.75rem, 5vw, 2.4rem);\n  line-height: 1.2;\n}\nh2 {\n  font-size: 1.35rem;\n}\nh3 {\n  font-size: 1.1rem;\n}\nh1,\nh2,\nh3,\np,\nlegend {\n  overflow-wrap: anywhere;\n}\n.stop header h3 {\n  min-width: 0;\n  flex: 1;\n}\n.page-wrap {\n  width: min(100% - 2rem, 1040px);\n  margin: auto;\n  padding: 1.5rem 0;\n}\n.narrow {\n  max-width: 640px;\n}\n.site-header {\n  background: var(--navy);\n  color: white;\n}\n.site-header p {\n  margin: 0.4rem 0;\n}\n.eyebrow {\n  text-transform: uppercase;\n  font-size: 0.875rem;\n  letter-spacing: 0.08em;\n}\n.event-panel,\nfieldset,\n.stop,\n.request-card,\n.panel {\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: white;\n  padding: 1.25rem;\n  margin: 0 0 1.25rem;\n  min-width: 0;\n}\n.event-panel {\n  border-left: 5px solid var(--green);\n}\nlegend {\n  font-weight: 750;\n  font-size: 1.2rem;\n  padding: 0 0.4rem;\n}\nlabel {\n  display: block;\n  font-weight: 650;\n}\ninput,\nselect,\ntextarea,\nbutton {\n  font: inherit;\n}\ninput,\nselect,\ntextarea {\n  display: block;\n  width: 100%;\n  margin: 0.35rem 0 0;\n  border: 1px solid #8e9eae;\n  border-radius: 6px;\n  padding: 0.7rem;\n  min-height: 46px;\n  background: white;\n  color: var(--navy);\n}\ntextarea {\n  resize: vertical;\n}\n.grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 1rem;\n}\n.full {\n  grid-column: 1/-1;\n}\nbutton,\n.button {\n  display: inline-block;\n  min-height: 46px;\n  border: 0;\n  border-radius: 7px;\n  padding: 0.7rem 1rem;\n  background: var(--blue);\n  color: white;\n  cursor: pointer;\n  text-decoration: none;\n  font-weight: 650;\n}\nbutton.secondary {\n  background: #e8eef4;\n  color: var(--navy);\n}\nbutton.danger {\n  background: var(--red);\n}\nbutton:disabled {\n  opacity: 0.55;\n  cursor: not-allowed;\n}\n:focus-visible {\n  outline: 3px solid #efb718;\n  outline-offset: 3px;\n}\n.hint {\n  font-size: 0.875rem;\n  font-weight: 400;\n  color: var(--muted);\n}\n.capacity {\n  font-size: 1.2rem;\n}\n.capacity strong {\n  font-size: 1.75rem;\n}\n.totals,\n.metrics,\n.actions,\n.tabs {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.8rem;\n  margin: 1rem 0;\n}\n.totals {\n  background: #e1eef5;\n  padding: 1rem;\n  border-radius: 8px;\n  justify-content: space-between;\n}\n.warning {\n  color: var(--red);\n  font-weight: 650;\n}\n.badge {\n  display: inline-block;\n  background: #fff0cc;\n  border-radius: 5px;\n  padding: 0.2rem 0.5rem;\n  font-size: 0.875rem;\n}\n.request-card header,\n.stop header {\n  display: flex;\n  gap: 0.7rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.request-card h3,\n.stop h3 {\n  margin: 0.3rem 0;\n}\n.check-label {\n  display: flex;\n  align-items: center;\n  gap: 0.5rem;\n}\n.check-label input {\n  width: 22px;\n  min-height: 22px;\n  margin: 0;\n}\n.metrics span {\n  background: #e8eef4;\n  border-radius: 7px;\n  padding: 0.6rem 1rem;\n}\n.tabs button[aria-selected=\"true\"] {\n  background: var(--navy);\n}\n.recipient-card .remove {\n  margin-bottom: 1rem;\n}\n.stop dl {\n  display: grid;\n  grid-template-columns: max-content 1fr;\n  gap: 0.25rem 0.7rem;\n}\n.stop dt {\n  font-weight: 650;\n}\n.stop dd {\n  margin: 0;\n  overflow-wrap: anywhere;\n}\na {\n  color: #105a9b;\n  overflow-wrap: anywhere;\n}\ndialog {\n  width: min(95vw, 800px);\n  max-height: 90dvh;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 1.25rem;\n  color: var(--navy);\n}\ndialog::backdrop {\n  background: #132a42a6;\n}\n.dialog-header {\n  display: flex;\n  justify-content: space-between;\n  gap: 1rem;\n  align-items: center;\n}\n.dialog-header h2 {\n  margin: 0;\n}\n.print-check {\n  display: none;\n}\n.hidden,\n[hidden] {\n  display: none !important;\n}\n.busy {\n  opacity: 0.65;\n}\n.report-row {\n  padding: 0.7rem 0;\n  border-bottom: 1px solid var(--border);\n}\n#adminMessage,\n#submissionMessage {\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n.print-route-title {\n  display: none;\n}\n@media (max-width: 640px) {\n  .grid {\n    grid-template-columns: 1fr;\n  }\n  .page-wrap {\n    width: calc(100% - 1.4rem);\n  }\n  .event-panel,\n  fieldset,\n  .stop,\n  .request-card,\n  .panel {\n    padding: 1rem;\n  }\n  .actions button {\n    flex: 1 1 auto;\n  }\n  .tabs {\n    display: grid;\n    grid-template-columns: 1fr 1fr;\n  }\n  .tabs button {\n    padding: 0.65rem 0.4rem;\n  }\n  .metrics {\n    gap: 0.4rem;\n  }\n  .metrics span {\n    flex: 1 1 40%;\n    padding: 0.5rem;\n  }\n  .stop dl {\n    grid-template-columns: 1fr;\n  }\n  .stop dd {\n    margin-bottom: 0.45rem;\n  }\n  dialog {\n    padding: 1rem;\n  }\n}\n@media print {\n  @page {\n    size: letter;\n    margin: 0.55in;\n  }\n  :root {\n    background: white;\n    color: black;\n    font-size: 11pt;\n  }\n  body {\n    background: white;\n  }\n  .site-header,\n  .no-print,\n  nav,\n  footer,\n  dialog,\n  #adminMessage,\n  #requestsView,\n  #settingsView,\n  #reportsView {\n    display: none !important;\n  }\n  main.page-wrap {\n    width: 100%;\n    padding: 0;\n  }\n  #routeView {\n    display: block !important;\n  }\n  #routeView .actions,\n  #routeView button,\n  .route-status {\n    display: none !important;\n  }\n  .print-route-title {\n    display: block;\n  }\n  .stop {\n    border: 1px solid #888;\n    border-radius: 0;\n    break-inside: avoid;\n    page-break-inside: avoid;\n    margin: 0 0 0.15in;\n    padding: 0.12in;\n  }\n  .stop header {\n    gap: 0.1in;\n  }\n  .stop h3 {\n    font-size: 12pt;\n  }\n  .print-check {\n    display: inline-block;\n    width: 13pt;\n    height: 13pt;\n    border: 1.2pt solid black;\n    flex: none;\n  }\n  .stop dl {\n    display: block;\n    margin: 0.04in 0;\n  }\n  .stop dt,\n  .stop dd {\n    display: inline;\n    margin: 0;\n  }\n  .stop dt {\n    margin-right: 0.2em;\n  }\n  .stop dd::after {\n    content: \"\";\n    display: block;\n  }\n  .stop a {\n    color: black;\n    text-decoration: none;\n  }\n  .stop .address {\n    margin: 0.04in 0;\n  }\n  .stop .badge {\n    display: none;\n  }\n  .route-header {\n    break-after: avoid;\n  }\n  .route-header h2 {\n    margin: 0.05in 0;\n  }\n  .page-wrap {\n    margin: 0;\n  }\n  #routeStops {\n    display: block;\n  }\n  .stop .no-print {\n    display: none !important;\n  }\n}\n\n.address-entry {\n  min-width: 0;\n  position: relative;\n}\n.address-suggestions {\n  border: 1px solid var(--border);\n  border-radius: 6px;\n  background: white;\n  margin: 0.35rem 0;\n  padding: 0.3rem;\n}\n.address-suggestion {\n  display: block;\n  width: 100%;\n  text-align: left;\n  background: white;\n  color: var(--navy);\n  border-radius: 0;\n  border-bottom: 1px solid var(--border);\n  overflow-wrap: anywhere;\n}\n.address-suggestion:focus-visible {\n  background: #e1eef5;\n}\n.address-attribution {\n  display: block;\n  white-space: nowrap;\n  font:\n    400 1rem Roboto,\n    sans-serif;\n  letter-spacing: normal;\n  color: #5e5e5e;\n  padding: 10px 10px 5px;\n}\n.address-state {\n  margin: 0.4rem 0;\n}\n.address-check-button {\n  margin-top: 0.35rem;\n}\n.address-check p {\n  overflow-wrap: anywhere;\n}\n@media print {\n  .address-entry,\n  .address-check {\n    display: none !important;\n  }\n}\n\n.request-recipient-list { padding-left: 1.5rem; margin: 1rem 0; }\n.request-recipient-list li { padding: .65rem .25rem; border-bottom: 1px solid #dbe2e8; overflow-wrap: anywhere; }\n.request-recipient-list li:last-child { border-bottom: 0; }\n.request-recipient-list p { margin: .25rem 0; }\n\nbutton[data-click-feedback=\"true\"] { outline: 3px solid #78a9da; outline-offset: 2px; }\nbutton[aria-busy=\"true\"] { cursor: wait; opacity: .8; }\nbutton[aria-busy=\"true\"]::before {\n  content: \"\"; display: inline-block; width: .85em; height: .85em;\n  margin-right: .5em; border: 2px solid currentColor; border-right-color: transparent;\n  border-radius: 50%; vertical-align: -.1em; animation: meal-button-spin .8s linear infinite;\n}\nbutton[aria-busy=\"true\"]::after { content: \" — Loading…\"; }\n@keyframes meal-button-spin { to { transform: rotate(360deg); } }\n@media (prefers-reduced-motion: reduce) { button[aria-busy=\"true\"]::before { animation: none; } }\n\n/* Printing uses a freshly verified saved route. Direct browser print is safe. */\n.print-verification-warning { display: none; }\n@media print {\n  body:not(.route-print-ready) #routeView > :not(.print-verification-warning) { display: none !important; }\n  body:not(.route-print-ready) .print-verification-warning { display: block !important; }\n}\n\n    </style>\n  </head>\n  <body>\n    <main class=\"page-wrap\" id=\"passwordGate\" hidden>\n      <h1>Community Meals Administration</h1>\n      <form id=\"passwordLoginForm\" method=\"post\" class=\"panel\">\n        <h2>Sign in</h2>\n        <label>Username <input id=\"passwordLoginName\" autocomplete=\"username\" required maxlength=\"32\" /></label>\n        <label>Password <input id=\"passwordLoginValue\" type=\"password\" autocomplete=\"current-password\" required maxlength=\"256\" /></label>\n        <div class=\"actions\">\n          <button type=\"submit\">Sign in</button>\n          <button id=\"showPasswordSetup\" type=\"button\" class=\"secondary\">Set up or reset password</button>\n        </div>\n      </form>\n      <form id=\"passwordSetupForm\" method=\"post\" class=\"panel\" hidden>\n        <h2>Set your password</h2>\n        <label>Username <input id=\"passwordSetupName\" autocomplete=\"username\" required maxlength=\"32\" /></label>\n        <label>Setup code <input id=\"passwordSetupCode\" autocomplete=\"off\" spellcheck=\"false\" required maxlength=\"64\" /></label>\n        <label>New password <input id=\"passwordSetupValue\" type=\"password\" autocomplete=\"new-password\" required minlength=\"15\" maxlength=\"256\" /></label>\n        <label>Confirm password <input id=\"passwordSetupConfirm\" type=\"password\" autocomplete=\"new-password\" required minlength=\"15\" maxlength=\"256\" /></label>\n        <p>Use at least 15 characters. Ask the program owner for a setup code.</p>\n        <div class=\"actions\">\n          <button type=\"submit\">Save password</button>\n          <button id=\"showPasswordLogin\" type=\"button\" class=\"secondary\">Back to sign in</button>\n        </div>\n      </form>\n      <p id=\"passwordStatus\" role=\"status\" aria-live=\"polite\"></p>\n      <a id=\"passwordReturn\" class=\"button\" hidden>Return to sign in</a>\n    </main>\n    <div id=\"adminWorkspace\" hidden>\n    <header class=\"site-header no-print\">\n      <div class=\"page-wrap\">\n        <h1>Community Meals</h1>\n        <p id=\"adminIdentity\"></p>\n        <button id=\"passwordLogout\" type=\"button\" class=\"secondary\" hidden>Sign out</button>\n        <details id=\"passwordOwnerPanel\" hidden>\n          <summary>Manage username accounts</summary>\n          <form id=\"passwordOwnerForm\" method=\"post\">\n            <label>Username <input id=\"passwordOwnerName\" required maxlength=\"32\" /></label>\n            <div class=\"actions\">\n              <button type=\"submit\" value=\"setup\">Issue setup or reset code</button>\n              <button type=\"submit\" value=\"disable\" class=\"danger\">Disable account</button>\n            </div>\n          </form>\n          <p id=\"passwordOwnerStatus\" role=\"status\"></p>\n        </details>\n      </div>\n    </header>\n    <main class=\"page-wrap\">\n      <section class=\"no-print\">\n        <div class=\"grid\">\n          <label>Meal event<select id=\"adminEvents\"></select></label\n          ><label class=\"check-label\"\n            ><input type=\"checkbox\" id=\"showArchived\" />Show archived\n            events</label\n          >\n        </div>\n        <div class=\"actions\">\n          <button id=\"createEvent\">Create Event</button\n          ><button id=\"archiveEvent\" class=\"secondary\">Archive Event</button\n          ><button id=\"reopenEvent\" class=\"secondary\" hidden>\n            Reopen / Unarchive</button\n          ><button id=\"refreshAdmin\" class=\"secondary\">Refresh</button\n          ><button id=\"publicLink\" class=\"secondary\">Copy Public Link</button>\n        </div>\n        <div id=\"metrics\" class=\"metrics\"></div>\n        <p id=\"readonlyNotice\" class=\"warning\"></p>\n        <p id=\"integrityNotice\" class=\"warning\" role=\"status\"></p>\n        <nav class=\"tabs\" aria-label=\"Admin sections\">\n          <button data-view=\"requestsView\" aria-selected=\"true\">Requests</button\n          ><button data-view=\"routeView\" aria-selected=\"false\">\n            Delivery Route</button\n          ><button data-view=\"settingsView\" aria-selected=\"false\">\n            Event Settings</button\n          ><button data-view=\"reportsView\" aria-selected=\"false\">\n            Reports\n          </button>\n        </nav>\n        <p id=\"adminMessage\" role=\"status\" aria-live=\"polite\"></p>\n      </section>\n      <section id=\"requestsView\">\n        <h2>Requests</h2>\n        <div class=\"actions\">\n          <button id=\"addReferral\">Add Referral</button\n          ><button id=\"selectAll\" class=\"secondary\">Select All Pending</button\n          ><button id=\"approveSelected\">Approve Selected</button\n          ><button id=\"rejectSelected\" class=\"danger\">Reject Selected</button>\n        </div>\n        <div id=\"requestCards\"></div>\n      </section>\n      <section id=\"routeView\" hidden>\n        <p class=\"print-verification-warning\">Open the prepared delivery PDF to print the delivery sheet.</p>\n        <div class=\"route-header\">\n          <h2 id=\"routeTitle\">Delivery Route</h2>\n          <p id=\"routeDate\"></p>\n          <p id=\"routePickup\"></p>\n          <p id=\"routeSummary\"></p>\n          <p id=\"routeStatus\" class=\"route-status warning\"></p>\n          <p id=\"routingAvailability\" class=\"hint no-print\"></p>\n        </div>\n        <div class=\"actions no-print\">\n          <button id=\"optimizeRoute\">Optimize Route</button\n          ><button id=\"saveRoute\">Save Manual Order</button\n          ><button id=\"printRoute\" class=\"secondary\" disabled>\n            Prepare Delivery PDF\n          </button>\n        </div>\n        <div id=\"deliveryPdf\" class=\"no-print\" hidden>\n          <p role=\"status\">US Letter PDF ready. On iPhone, open it and use Share → Print. If the viewer does not open, download the PDF and open it in Files.</p>\n          <div class=\"actions\">\n            <a id=\"openDeliveryPdf\" class=\"button\" target=\"_blank\" rel=\"noopener noreferrer\">Open PDF</a>\n            <a id=\"downloadDeliveryPdf\" class=\"button\" target=\"_blank\" rel=\"noopener noreferrer\">Download PDF</a>\n          </div>\n        </div>\n        <div id=\"routeStops\"></div>\n      </section>\n      <section id=\"settingsView\" hidden>\n        <h2>Event Settings</h2>\n        <form id=\"settingsForm\">\n          <div class=\"grid\">\n            <label\n              >Event name<input\n                name=\"eventName\"\n                required\n                maxlength=\"160\" /></label\n            ><label\n              >Delivery date<input\n                type=\"date\"\n                name=\"deliveryDate\"\n                required /></label\n            ><label\n              >Meal capacity<input\n                type=\"number\"\n                name=\"capacity\"\n                min=\"0\"\n                max=\"100000\"\n                step=\"1\"\n                required /></label\n            ><label\n              >Status<select name=\"status\">\n                <option>Draft</option>\n                <option>Open</option>\n                <option>Closed</option>\n                <option>Completed</option>\n              </select></label\n            ><label class=\"full\"\n              >Starting / pickup address<input\n                name=\"startAddress\"\n                maxlength=\"500\"\n            /></label>\n          </div>\n          <div class=\"actions\">\n            <button type=\"submit\">Save Event Settings</button\n            ><button type=\"button\" id=\"verifyPickup\" class=\"secondary\">\n              Validate Pickup Address\n            </button>\n          </div>\n          <button type=\"button\" id=\"manualPickup\" class=\"secondary\">Mark Saved Pickup Reviewed</button>\n          <p id=\"pickupStatus\"></p>\n          <p class=\"hint\" translate=\"no\">Address validation: Google Maps</p>\n        </form>\n      </section>\n      <section id=\"reportsView\" hidden>\n        <h2>Reports</h2>\n        <p class=\"hint\">\n          Archived events are included. Recipient totals count delivery records\n          across events.\n        </p>\n        <div class=\"grid\">\n          <label\n            >Event<select id=\"reportEvent\">\n              <option value=\"\">All events</option>\n            </select></label\n          ><label\n            >Year<select id=\"reportYear\">\n              <option value=\"\">All years</option>\n            </select></label\n          >\n        </div>\n        <div id=\"reportTotals\" class=\"metrics\"></div>\n        <p id=\"reportIntegrityNotice\" class=\"warning\" role=\"status\"></p>\n        <h3>Referring organizations</h3>\n        <div id=\"organizationReports\"></div>\n      </section>\n    </main>\n    <dialog id=\"referralDialog\">\n      <div class=\"dialog-header\">\n        <h2 id=\"referralHeading\">Referral</h2>\n        <button type=\"button\" id=\"closeReferral\" class=\"secondary\">\n          Close\n        </button>\n      </div>\n      <form id=\"referralEditor\">\n        <fieldset>\n          <legend>Referring organization</legend>\n          <div class=\"grid\">\n            <label\n              >Organization name<input\n                name=\"organizationName\"\n                maxlength=\"160\"\n                required /></label\n            ><label\n              >Email address<input\n                type=\"email\"\n                name=\"organizationEmail\"\n                maxlength=\"254\"\n                required /></label\n            ><label\n              >Phone number<input\n                name=\"organizationPhone\"\n                type=\"tel\"\n                maxlength=\"40\"\n                required\n            /></label>\n          </div>\n        </fieldset>\n        <div id=\"editorRecipients\"></div>\n        <div class=\"actions\">\n          <button type=\"button\" id=\"editorAddRecipient\" class=\"secondary\">\n            + Add Another Recipient</button\n          ><button type=\"submit\" id=\"saveReferral\">Save Referral</button>\n        </div>\n      </form>\n      <p id=\"editorMessage\" role=\"status\"></p>\n    </dialog>\n    <dialog id=\"eventDialog\">\n      <div class=\"dialog-header\">\n        <h2>Create Event</h2>\n        <button id=\"closeEvent\" class=\"secondary\">Close</button>\n      </div>\n      <form id=\"eventEditor\">\n        <div class=\"grid\">\n          <label\n            >Event name<input\n              name=\"eventName\"\n              required\n              maxlength=\"160\" /></label\n          ><label\n            >Delivery date<input\n              type=\"date\"\n              name=\"deliveryDate\"\n              required /></label\n          ><label\n            >Meal capacity<input\n              type=\"number\"\n              name=\"capacity\"\n              min=\"0\"\n              max=\"100000\"\n              step=\"1\"\n              required /></label\n          ><label\n            >Status<select name=\"status\">\n              <option>Draft</option>\n              <option>Open</option>\n              <option>Closed</option>\n            </select></label\n          ><label class=\"full\"\n            >Starting / pickup address<input\n              name=\"startAddress\"\n              maxlength=\"500\"\n          /></label>\n        </div>\n        <div class=\"actions\"><button type=\"submit\">Create Event</button></div>\n      </form>\n      <p id=\"eventEditorMessage\" role=\"status\"></p>\n    </dialog>\n    <dialog id=\"publicLinkDialog\" aria-labelledby=\"publicLinkTitle\">\n      <h2 id=\"publicLinkTitle\">Public Referral Link</h2>\n      <p>Share this link with organizations requesting meals.</p>\n      <label>Website link<input id=\"publicLinkValue\" type=\"url\" readonly /></label>\n      <div class=\"actions\">\n        <button id=\"copyPublicLink\" type=\"button\">Copy Link</button>\n        <a id=\"openPublicLink\" target=\"_blank\" rel=\"noopener noreferrer\">Open Public Form</a>\n        <button id=\"closePublicLink\" type=\"button\" class=\"secondary\">Close</button>\n      </div>\n      <p id=\"publicLinkMessage\" role=\"status\" aria-live=\"polite\"></p>\n    </dialog>\n    </div>\n    <script>\n      /* Shared public/admin address controls. Address data and receipts stay in memory. */\n\"use strict\";\nwindow.MealButtonFeedback = (() => {\n  const active = new WeakMap();\n  let clicked = null;\n  document.addEventListener(\"click\", (event) => {\n    const button = event.target.closest?.(\"button\");\n    if (!button) return;\n    if (active.has(button)) {\n      event.preventDefault();\n      event.stopImmediatePropagation();\n      return;\n    }\n    clicked = button;\n    button.setAttribute(\"data-click-feedback\", \"true\");\n    setTimeout(() => button.removeAttribute(\"data-click-feedback\"), 250);\n    setTimeout(() => { if (clicked === button) clicked = null; }, 0);\n  }, true);\n  function begin(button) {\n    if (!button || active.has(button)) return () => {};\n    const before = [\"aria-busy\", \"aria-disabled\", \"aria-label\"].map(name => [name, button.getAttribute(name)]);\n    active.set(button, true);\n    button.setAttribute(\"aria-busy\", \"true\");\n    button.setAttribute(\"aria-disabled\", \"true\");\n    button.setAttribute(\"aria-label\", button.textContent.trim() + \" — Loading\");\n    return () => {\n      active.delete(button);\n      for (const [name, value] of before)\n        if (value == null) button.removeAttribute(name);\n        else button.setAttribute(name, value);\n    };\n  }\n  return { begin, current: () => clicked };\n})();\nwindow.MealAddresses = (() => {\n  const states = new WeakMap();\n  let counter = 0;\n  const node = (tag, text) => {\n    const n = document.createElement(tag);\n    if (text != null) n.textContent = text;\n    return n;\n  };\n  function choose(result) {\n    return new Promise((resolve) => {\n      const d = node(\"dialog\"),\n        heading = node(\"h2\", \"Check this address\");\n      d.className = \"address-check\";\n      heading.id = \"address-check-\" + ++counter;\n      d.setAttribute(\"aria-labelledby\", heading.id);\n      d.append(\n        heading,\n        node(\n          \"p\",\n          result.confident\n            ? \"Please confirm the address for delivery.\"\n            : \"This address could not be confidently confirmed. You may edit it or keep it for administrator review.\",\n        ),\n      );\n      if (result.unitIssue)\n        d.append(\n          node(\n            \"p\",\n            \"Apartment / suite / unit information needs review. Your entered unit has been preserved.\",\n          ),\n        );\n      d.append(node(\"h3\", \"You entered:\"), node(\"p\", result.original));\n      if (result.recommended)\n        d.append(\n          node(\"h3\", \"Recommended:\"),\n          node(\"p\", result.recommended),\n          attribution(),\n        );\n      const actions = node(\"div\");\n      actions.className = \"actions\";\n      const finish = (value) => {\n        d.close();\n        d.remove();\n        resolve(value);\n      };\n      for (const [label, value] of [\n        [\"Use Recommended\", \"recommended\"],\n        [\"Keep What I Entered\", \"original\"],\n        [\"Edit\", \"edit\"],\n      ]) {\n        if (value === \"recommended\" && !result.recommended) continue;\n        const b = node(\"button\", label);\n        b.type = \"button\";\n        b.addEventListener(\"click\", () => finish(value));\n        actions.append(b);\n      }\n      d.append(actions);\n      d.addEventListener(\"cancel\", (e) => {\n        e.preventDefault();\n        finish(\"edit\");\n      });\n      document.body.append(d);\n      d.showModal();\n    });\n  }\n  function attribution() {\n    const n = node(\"span\");\n    const logo = node(\"img\");\n    logo.alt = \"Google Maps\";\n    logo.height = 18;\n    logo.src =\n      \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGIAAAASCAYAAACghwvPAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABDBJREFUeNrcWI1R4lAQjgwFhAouVHBQwYUKDA0oVACpQKkArIBoA8QKEiswHZir4GIF3q7z7c3nmxci3gwyvJk3Itl9b3++/XbDRUDr6uoqlj8L2UnwceWy7x8eHvLgG5fYN5I/a/0stkyCM1o9clIdLDxJCPDdTmS232xvKDvG/moyb3V3yISQmx01EUjCEt9VsqeyB4K6C3wuzwh8N7o7gryG3PWxjOqDjiwJmQR/zgKgo1wNl8/ZGSVkLT7l4lPjob/ZsY3poSfoqmWnbYJdSdCEyo4+QQ0qF3bIRADIIZQTIYiH0NyypRqOvi7E+Dd8TiXYmwOdD2E4I6jGWTkHCXKJIzcXudLTjC0JDWgxBGU+oo8FoE3VSaATkc6qzRf4W+FM1RmKbE1n7XCn2lDaUOC554Of8rzAua8AdwhbMtjTUBuY4XmA52mfbKw8RhctOVDZFYLiojBCY9cgZ0jWM13cUBAKeT5VZ5CEguQMtZy8R8c+CxwnNwLtNHuqWG24k71FcKdONaSw2XePASeGnxOAiYeICneMUHVq05R6cY0ExEhK1OsAfdyyjUctCXMgdIALdG2pYgwdavQAcpXj/JqQP8R5Y+jta6oWHB0uhhi1rQeEHVSrdyWgy1sETPukC0oLnPo5QZVYL104sqo/hsyQ7kgoXnqGVpP6p5V7z4nw8evE2YywS7o4g3MN0NTQ2GuIXhkNQc5QaP0gJrkachWQ2/ZOYTSxwiT0h+6rneryrZQSuoDdqSdpRouXyhJgikuq2n+VxsMO/Fzh31+wKQATrJEc9TfrEYIWLoI0cLwpWE8k9tvRaQjtERlaOXK1U3k8pfEq9zRbWwVKPgRYxkBlvS8L8CkHCFX3zp2ikPQZqCnpAG7VQoMmn8K+CPbqmS96fo8QF+0rZyrdgJKn64engceEysYNNjXwwD0PKAl8SWpxkCe+ARBZHzBzWAXUotv2ondNFGzUNPbIjfYARs9/rxjQ7gS09E7fPaDCJgzN/LNmCOOgvmEmKMUbyGyoVN915PmSkrCjQOVOxSWUhB0ZWBHytza60k8uQQtd1HyXOgqdF5R+FzVZZY4RmK6Vd4y5IRoyg9Li9gRaU9tCsExqE1wfxqTy8BVKEaYJ38qgrDob0bkGCtZsAI3DGpgUMiNMGe6Zc0KmTU2FR8635jS5vTg6MfFzVzKqDhFLuN5R4r62d6YlwFCBykKMwTpB/oRdCvac4lL3yJhbasiNBwlT962bysulianTwN1Gb9w/pgZeQS53zqocOiqteqA79vSRDJOJb+IqW7h8n5xxe0jBnXvOKpH8iN4VMhtMAOINvUzG0Jme1G8OoMSR851W25vs3Sn/XgIbi//+9fUEHNmCErfWyFHiM9/L3Lmt/gnZcoey9/F95VDW2a2TqQjqEYfw/Skt7Q33X1X+K8AAJX03+VzRIA4AAAAASUVORK5CYII=\";\n    n.append(logo);\n    n.className = \"address-attribution\";\n    n.setAttribute(\"translate\", \"no\");\n    return n;\n  }\n  function attach(\n    input,\n    call,\n    context = () => ({}),\n    initialStatus = \"Needs Review\",\n  ) {\n    if (states.has(input)) return states.get(input);\n    const label = input.parentElement,\n      holder = node(\"div\");\n    holder.className =\n      \"address-entry\" + (label.classList.contains(\"full\") ? \" full\" : \"\");\n    label.replaceWith(holder);\n    holder.append(label);\n    const list = node(\"div\"),\n      status = node(\"p\"),\n      check = node(\"button\", \"Check Address\");\n    list.className = \"address-suggestions\";\n    list.id = \"address-list-\" + ++counter;\n    list.hidden = true;\n    list.setAttribute(\"role\", \"group\");\n    list.setAttribute(\"aria-label\", \"Google address suggestions\");\n    status.className = \"hint address-state\";\n    status.setAttribute(\"role\", \"status\");\n    status.setAttribute(\"aria-live\", \"polite\");\n    check.type = \"button\";\n    check.className = \"secondary address-check-button\";\n    holder.append(list, check, status);\n    const privacy = node(\n      \"p\",\n      \"Address search and checking send only this address text to Google. Keep recipient names and delivery notes in their separate fields.\",\n    );\n    privacy.className = \"hint\";\n    holder.append(privacy);\n    input.setAttribute(\"autocomplete\", \"off\");\n    input.setAttribute(\"aria-controls\", list.id);\n    input.setAttribute(\"aria-expanded\", \"false\");\n    input.setAttribute(\"aria-autocomplete\", \"list\");\n    let revision = 0,\n      timer,\n      session = null,\n      features = null,\n      configRequest = null,\n      suggesting = false,\n      lastSuggestionAt = 0,\n      receipt = \"\",\n      checked = input.value.trim(),\n      running = null;\n    const labelStatus = (s) =>\n      s === \"Confirmed\"\n        ? \"Address Verified\"\n        : s === \"Manually Reviewed\"\n          ? \"Address manually reviewed\"\n          : \"Needs Review\";\n    status.textContent = labelStatus(initialStatus);\n    const clear = () => {\n      list.hidden = true;\n      list.replaceChildren();\n      input.setAttribute(\"aria-expanded\", \"false\");\n    };\n    const reset = (s = \"Needs Review\") => {\n      revision++;\n      clearTimeout(timer);\n      timer = null;\n      session = null;\n      receipt = \"\";\n      checked = input.value.trim();\n      status.textContent = labelStatus(s);\n      clear();\n    };\n    async function config() {\n      if (features) return features;\n      if (!configRequest)\n        configRequest = call(\"addressConfig\", {}).then(\n          (value) => (features = value),\n          (error) => { configRequest = null; throw error; },\n        );\n      return configRequest;\n    }\n    async function validate(candidate) {\n      if (running) return running;\n      const original = input.value.trim(),\n        rev = revision;\n      if (!original) return true;\n      const finishFeedback = MealButtonFeedback.begin(check);\n      clear();\n      clearTimeout(timer);\n      timer = null;\n      running = (async () => {\n        let result;\n        try {\n          if (!(await config()).validation) {\n            checked = original;\n            receipt = \"\";\n            status.textContent =\n              \"Needs Review — address checking is currently unavailable.\";\n            return true;\n          }\n          status.textContent = \"Checking address…\";\n          result = await call(\"addressPreview\", {\n            ...context(),\n            address: original,\n            candidate: candidate || original,\n            sessionToken: session || \"\",\n          });\n        } catch (_) {\n          result = { original, confident: false };\n        } finally {\n          session = null;\n        }\n        if (\n          rev !== revision ||\n          input.value.trim() !== original ||\n          !input.isConnected\n        )\n          return false;\n        let choice = \"original\";\n        if (!result.confident || !result.equivalent)\n          choice = await choose(result);\n        if (rev !== revision || !input.isConnected) return false;\n        if (choice === \"edit\") {\n          checked = \"\";\n          receipt = \"\";\n          status.textContent =\n            \"Needs Review — edit the address and check again.\";\n          input.focus();\n          return false;\n        }\n        if (choice === \"recommended\") {\n          input.value = result.recommended;\n          receipt = result.recommendedReceipt || \"needs-review\";\n        } else receipt = result.originalReceipt || \"needs-review\";\n        checked = input.value.trim();\n        status.textContent =\n          result.confident && (choice === \"recommended\" || result.equivalent)\n            ? \"Address Verified\"\n            : \"Needs Review\";\n        return true;\n      })();\n      try {\n        return await running;\n      } finally {\n        running = null;\n        finishFeedback();\n      }\n    }\n    function selectSuggestion(address) {\n      if (running) return;\n      const entered = input.value.trim();\n      const units = (value) => value.match(\n        /(?:\\b(?:apartment|apt|suite|ste|unit|floor|fl|building|bldg|room|rm)\\.?\\s*|#\\s*)[a-z0-9][a-z0-9 -]*/gi,\n      ) || [];\n      const enteredUnits = units(entered), selectedUnits = units(address);\n      const key = (parts) => parts.map(x => x.toLowerCase().replace(/\\./g, \"\")\n        .replace(/\\b(?:apartment|apt)\\b/g, \"apt\")\n        .replace(/\\b(?:suite|ste)\\b/g, \"suite\").replace(/\\s+/g, \" \").trim()).sort().join(\"|\");\n      // A conflicting unit still needs the original-versus-recommended review.\n      if (enteredUnits.length && selectedUnits.length && key(enteredUnits) !== key(selectedUnits))\n        return validate(address);\n      input.value = address + (enteredUnits.length && !selectedUnits.length\n        ? \", \" + enteredUnits.join(\", \") : \"\");\n      revision++;\n      receipt = \"\";\n      checked = \"\";\n      // Clicking a suggestion explicitly selects it. Validate that selected value now.\n      return validate();\n    }\n    function scheduleSuggestions() {\n      if (timer || suggesting || running || input.value.trim().length < 4 ||\n          input.disabled || !input.isConnected || document.activeElement !== input) return;\n      // Start during typing; coalesce edits and allow only one request in flight.\n      const delay = Math.max(150, 1000 - (Date.now() - lastSuggestionAt));\n      timer = setTimeout(() => {\n        timer = null;\n        suggest(revision);\n      }, delay);\n    }\n    async function suggest(rev) {\n      const address = input.value.trim();\n      if (address.length < 4 || input.disabled || suggesting || running ||\n          !input.isConnected || document.activeElement !== input) return;\n      suggesting = true;\n      try {\n        if (!(await config()).autocomplete || rev !== revision) return;\n        session ||= crypto.randomUUID();\n        lastSuggestionAt = Date.now();\n        status.textContent = \"Searching addresses…\";\n        const data = await call(\"addressSuggestions\", {\n          ...context(),\n          address,\n          sessionToken: session,\n        });\n        if (\n          rev !== revision ||\n          running || checked === input.value.trim() ||\n          !input.isConnected ||\n          document.activeElement !== input\n        )\n          return;\n        clear();\n        for (const suggestion of data.suggestions || []) {\n          const b = node(\"button\", suggestion.address);\n          b.type = \"button\";\n          b.className = \"address-suggestion\";\n          // Keep Safari/touch blur from removing the button before its click.\n          b.addEventListener(\"pointerdown\", (event) => event.preventDefault());\n          b.addEventListener(\"click\", () => selectSuggestion(suggestion.address));\n          b.addEventListener(\"keydown\", (e) => {\n            const buttons = [...list.querySelectorAll(\"button\")],\n              at = buttons.indexOf(b);\n            if (e.key === \"ArrowDown\" || e.key === \"ArrowUp\") {\n              e.preventDefault();\n              buttons[\n                (at + (e.key === \"ArrowDown\" ? 1 : buttons.length - 1)) %\n                  buttons.length\n              ].focus();\n            }\n            if (e.key === \"Escape\") {\n              e.preventDefault();\n              clear();\n              input.focus();\n            }\n          });\n          list.append(b);\n        }\n        if (list.children.length) {\n          list.append(attribution());\n          list.hidden = false;\n          input.setAttribute(\"aria-expanded\", \"true\");\n        }\n      } catch (_) {\n        if (rev === revision) {\n          clear();\n          status.textContent =\n            \"Suggestions unavailable. Enter the full address; it can still be submitted.\";\n        }\n      } finally {\n        suggesting = false;\n        if (rev !== revision) scheduleSuggestions();\n        else if (!running && status.textContent === \"Searching addresses…\")\n          status.textContent = \"Needs Review\";\n      }\n    }\n    input.addEventListener(\"focus\", () => {\n      // Warm configuration before the first address-search request.\n      config().catch(() => {});\n    });\n    input.addEventListener(\"input\", () => {\n      revision++;\n      receipt = \"\";\n      checked = \"\";\n      clear();\n      status.textContent = suggesting ? \"Searching addresses…\" : \"Needs Review\";\n      scheduleSuggestions();\n    });\n    input.addEventListener(\"keydown\", (e) => {\n      if (e.key === \"Escape\") clear();\n      if (e.key === \"ArrowDown\" && !list.hidden) {\n        e.preventDefault();\n        list.querySelector(\"button\")?.focus();\n      }\n    });\n    holder.addEventListener(\"focusout\", (e) => {\n      if (!holder.contains(e.relatedTarget)) clear();\n    });\n    check.addEventListener(\"click\", () => validate());\n    const state = {\n      reset,\n      check: () => validate(),\n      prepare: () =>\n        running ||\n        (checked === input.value.trim() ? Promise.resolve(true) : validate()),\n      receipt: () => (checked === input.value.trim() ? receipt : \"\"),\n    };\n    states.set(input, state);\n    return state;\n  }\n  async function prepareAll(root) {\n    for (const input of root.querySelectorAll(\n      '[name=\"address\"], [name=\"startAddress\"]',\n    ))\n      if (\n        !input.disabled &&\n        states.has(input) &&\n        !(await states.get(input).prepare())\n      )\n        return false;\n    return true;\n  }\n  return {\n    attach,\n    prepareAll,\n    receipt: (input) => states.get(input)?.receipt() || \"\",\n    reset: (input, status) => states.get(input)?.reset(status),\n  };\n})();\n\n      \"use strict\";\n(() => {\n  const $ = (id) => document.getElementById(id);\n  const passwordUrl = document.body.dataset.passwordUrl;\n  let sessionToken = \"\", sessionClosed = false;\n  let sessionIdleMs = 0, sessionIdleUntil = 0, sessionUntil = 0, sessionTimer;\n  let events = [],\n    dashboard = null,\n    route = null,\n    editing = null,\n    viewOnly = false,\n    view = \"requestsView\",\n    busy = false,\n    dragId = null,\n    createId = null,\n    routeUnsaved = false,\n    deliveryPdfUrl = null,\n    referralAddressControls = [];\n  const el = (tag, text, cls) => {\n    const n = document.createElement(tag);\n    if (text != null) n.textContent = text;\n    if (cls) n.className = cls;\n    return n;\n  };\n  const button = (text, fn, cls) => {\n    const b = el(\"button\", text, cls);\n    b.type = \"button\";\n    b.addEventListener(\"click\", fn);\n    return b;\n  };\n  const addressCall = (action, p) => rpc(action, p);\n  const pickupSettings = MealAddresses.attach(\n    $(\"settingsForm\").elements.startAddress,\n    addressCall,\n  );\n  const pickupCreate = MealAddresses.attach(\n    $(\"eventEditor\").elements.startAddress,\n    addressCall,\n  );\n  const addressReviewed = (status) =>\n    [\"Confirmed\", \"Manually Reviewed\"].includes(status);\n  const readonly = () =>\n    !dashboard ||\n    dashboard.event.Archived === true ||\n    dashboard.event.Status === \"Completed\";\n  function rpc(action, p = {}) {\n    return new Promise((resolve, reject) => {\n      if (passwordUrl) checkPasswordExpiry();\n      const token = sessionToken;\n      if (passwordUrl && (!token || sessionClosed)) {\n        reject(new Error(\"Sign in again.\"));\n        return;\n      }\n      const call = google.script.run\n        .withSuccessHandler((r) => {\n          if (passwordUrl && (token !== sessionToken || sessionClosed)) {\n            reject(new Error(\"Sign in again.\"));\n            return;\n          }\n          if (passwordUrl && r.error?.code === \"AUTH\") endPasswordSession(r.error.message);\n          if (r.ok) {\n            if (passwordUrl) schedulePasswordExpiry();\n            resolve(r.data);\n          } else {\n            reject(Object.assign(new Error(\n              r.error?.message || \"Your changes were not saved. Please try again.\",\n            ), { code: r.error?.code }));\n          }\n        })\n        .withFailureHandler(() =>\n          reject(\n            new Error(\n              \"The service could not be reached. Refresh and try again.\",\n            ),\n          ),\n        );\n      if (passwordUrl) call.passwordAdminCall(token, action, p);\n      else call.adminCall(action, p);\n    });\n  }\n  const pendingCreates = new Map();\n  let pendingCreatePrefix = \"\";\n  function loadPendingCreates(prefix) {\n    pendingCreatePrefix = prefix;\n    for (const action of [\"createReferral\", \"saveEvent\"]) {\n      try {\n        const pending = JSON.parse(sessionStorage.getItem(prefix + action) || \"null\");\n        if (pending) pendingCreates.set(action, pending);\n      } catch (_) { /* Storage may be unavailable; this tab still deduplicates. */ }\n    }\n  }\n  if (!passwordUrl) loadPendingCreates(\"community-meals-admin-\");\n  function retainCreate(action, pending) {\n    if (pending) pendingCreates.set(action, pending);\n    else pendingCreates.delete(action);\n    if (!pendingCreatePrefix || sessionClosed) return;\n    try {\n      const key = pendingCreatePrefix + action;\n      if (pending) sessionStorage.setItem(key, JSON.stringify(pending));\n      else sessionStorage.removeItem(key);\n    } catch (_) { /* No recipient details are stored in browser storage. */ }\n  }\n  async function createOnce(action, payload) {\n    const canonical = { ...payload };\n    delete canonical.submissionId;\n    delete canonical.creationId;\n    delete canonical.addressReceipt;\n    if (canonical.recipients)\n      canonical.recipients = canonical.recipients.map(({ addressReceipt, ...r }) => r);\n    const digest = await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(JSON.stringify(canonical)));\n    const fingerprint = [...new Uint8Array(digest)].map(n => n.toString(16).padStart(2, \"0\")).join(\"\");\n    let pending = pendingCreates.get(action);\n    const wasPending = Boolean(pending);\n    if (pending && pending.fingerprint !== fingerprint)\n      throw new Error(\"A previous save is unconfirmed. Restore the same information and retry before creating a different record. Refresh the dashboard to check whether it was saved.\");\n    if (!pending) pending = { id: crypto.randomUUID(), fingerprint, eventId: payload.eventId || \"\" };\n    retainCreate(action, pending);\n    try {\n      const result = await rpc(action, { ...payload,\n        [action === \"createReferral\" ? \"submissionId\" : \"creationId\"]: pending.id });\n      retainCreate(action, null);\n      return result;\n    } catch (error) {\n      // A later authentication/validation failure cannot disprove an earlier\n      // lost response. Keep that original operation identity until reconciled.\n      if (!wasPending && [\"INVALID\", \"CAPACITY\", \"CLOSED\", \"READ_ONLY\", \"AUTH\", \"FORBIDDEN\"].includes(error.code))\n        retainCreate(action, null);\n      throw error;\n    }\n  }\n  async function task(fn, trigger = MealButtonFeedback.current()) {\n    if (busy) return;\n    busy = true;\n    const finishFeedback = MealButtonFeedback.begin(trigger);\n    $(\"adminEvents\").disabled = true;\n    $(\"showArchived\").disabled = true;\n    $(\"adminMessage\").textContent = \"Working…\";\n    try {\n      await fn();\n      if (!sessionClosed) $(\"adminMessage\").textContent = \"\";\n    } catch (e) {\n      if (sessionClosed) return;\n      $(\"adminMessage\").textContent = e.message;\n    } finally {\n      busy = false;\n      finishFeedback();\n      if (!sessionClosed) {\n        $(\"adminEvents\").disabled = false;\n        $(\"showArchived\").disabled = false;\n      }\n    }\n  }\n  const dateLabel = (s) =>\n    new Date(s + \"T12:00:00\").toLocaleDateString(undefined, {\n      year: \"numeric\",\n      month: \"long\",\n      day: \"numeric\",\n    });\n  function today() {\n    return new Intl.DateTimeFormat(\"en-CA\", {\n      timeZone: \"America/New_York\",\n      year: \"numeric\",\n      month: \"2-digit\",\n      day: \"2-digit\",\n    }).format(new Date());\n  }\n  function metric(node, pairs) {\n    node.replaceChildren(...pairs.map(([k, v]) => el(\"span\", k + \": \" + v)));\n  }\n  function eventOptions() {\n    const list = events.filter(\n        (e) => $(\"showArchived\").checked || e.Archived !== true,\n      ),\n      old = dashboard?.event.EventID || $(\"adminEvents\").value;\n    const options = list.map((e) => {\n      const o = el(\"option\", e.EventName + (e.Archived ? \" (Archived)\" : \"\"));\n      o.value = e.EventID;\n      return o;\n    });\n    $(\"adminEvents\").replaceChildren(...options);\n    $(\"adminEvents\").value = list.some((e) => e.EventID === old)\n      ? old\n      : (list.find((e) => e.DeliveryDate >= today()) || list[0])?.EventID || \"\";\n  }\n  async function refreshEvents(preferred) {\n    events = await rpc(\"events\");\n    const pendingEvent = pendingCreates.get(\"saveEvent\");\n    if (pendingEvent && events.some(e => e.EventID === pendingEvent.id))\n      retainCreate(\"saveEvent\", null);\n    if (preferred) {\n      dashboard = null;\n      $(\"adminEvents\").value = preferred;\n    }\n    eventOptions();\n    if (\n      preferred &&\n      events.some(\n        (e) =>\n          e.EventID === preferred &&\n          (!$(\"showArchived\").checked ? e.Archived !== true : true),\n      )\n    )\n      $(\"adminEvents\").value = preferred;\n    await refresh();\n  }\n  async function refresh() {\n    clearDeliveryPdf();\n    const id = $(\"adminEvents\").value;\n    if (!id) {\n      dashboard = null;\n      route = null;\n      metric($(\"metrics\"), []);\n      $(\"requestCards\").replaceChildren(\n        el(\"p\", \"No events available. Create an event to get started.\"),\n      );\n      $(\"routeStops\").replaceChildren();\n      $(\"routeTitle\").textContent = \"Delivery Route\";\n      $(\"routeDate\").textContent = \"\";\n      $(\"routePickup\").textContent = \"\";\n      $(\"routeSummary\").textContent = \"\";\n      $(\"routeStatus\").textContent = \"No event selected.\";\n      $(\"printRoute\").disabled = true;\n      $(\"archiveEvent\").disabled = true;\n      $(\"reopenEvent\").hidden = true;\n      $(\"settingsForm\").inert = true;\n      $(\"readonlyNotice\").textContent = \"\";\n      $(\"integrityNotice\").textContent = \"\";\n      $(\"addReferral\").disabled = true;\n      await reports();\n      return;\n    }\n    dashboard = await rpc(\"dashboard\", { eventId: id });\n    route = await rpc(\"route\", { eventId: id });\n    routeUnsaved = false;\n    renderDashboard();\n    renderRequests();\n    renderRoute();\n    renderSettings();\n    if (view === \"reportsView\") await reports();\n  }\n  function renderDashboard() {\n    $(\"integrityNotice\").textContent = integrityMessage(dashboard.integrity);\n    metric($(\"metrics\"), [\n      [\"Capacity\", dashboard.capacity],\n      [\"Reserved\", dashboard.reserved],\n      [\"Available\", dashboard.available],\n      [\"Pending Referrals\", dashboard.pendingReferrals],\n      [\"Approved Referrals\", dashboard.approvedReferrals],\n      [\"Delivery Stops\", dashboard.deliveryStops],\n    ]);\n    const ro = readonly();\n    $(\"readonlyNotice\").textContent = ro\n      ? \"This event is read-only. Use Reopen / Unarchive to make corrections.\"\n      : \"\";\n    $(\"archiveEvent\").disabled = dashboard.event.Archived === true;\n    $(\"reopenEvent\").hidden = !ro;\n    [\n      \"addReferral\",\n      \"selectAll\",\n      \"approveSelected\",\n      \"rejectSelected\",\n      \"optimizeRoute\",\n      \"saveRoute\",\n      \"verifyPickup\",\n    ].forEach((id) => ($(id).disabled = ro));\n    $(\"settingsForm\").inert = ro;\n  }\n  function integrityMessage(issues) {\n    if (!issues || !(issues.recipientRecords || issues.submissionRecords)) return \"\";\n    return \"Historical records need review: \" + issues.recipientRecords +\n      \" unlinked recipient records (\" + issues.mealQuantities + \" meal quantities) and \" +\n      issues.submissionRecords + \" unlinked submission records. These records are preserved and excluded from referral totals; their delivery status must be reviewed before restoring them.\";\n  }\n  function selectedRefs() {\n    return [...$(\"requestCards\").querySelectorAll(\"input:checked\")].map(\n      (x) => ({\n        referralId: x.dataset.referralId,\n        version: Number(x.dataset.version),\n      }),\n    );\n  }\n  async function changeStatus(referrals, status) {\n    if (!referrals.length) throw new Error(\"Select at least one referral.\");\n    if (\n      status === \"Rejected\" &&\n      !confirm(\n        \"Reject \" +\n          referrals.length +\n          \" referral(s) and release their reserved meals?\",\n      )\n    )\n      return;\n    await rpc(\"statuses\", { referrals, status });\n    await refresh();\n  }\n  function renderRequests() {\n    const refs = dashboard.referrals\n      .slice()\n      .sort(\n        (a, b) =>\n          (a.Status === \"Pending\" ? 0 : 1) - (b.Status === \"Pending\" ? 0 : 1) ||\n          a.SubmittedAt.localeCompare(b.SubmittedAt),\n      );\n    $(\"requestCards\").replaceChildren();\n    if (!refs.length) $(\"requestCards\").append(el(\"p\", \"No referrals yet.\"));\n    refs.forEach((r) => {\n      const card = el(\"article\", null, \"request-card\"),\n        header = el(\"header\");\n      const check = el(\"input\");\n      check.type = \"checkbox\";\n      check.dataset.referralId = r.ReferralID;\n      check.dataset.version = r.Version;\n      check.disabled = readonly();\n      const label = el(\"label\", null, \"check-label\");\n      label.append(check, el(\"span\", \"Select \" + r.OrganizationName));\n      header.append(label, el(\"span\", r.Status, \"badge\"));\n      card.append(\n        header,\n        el(\n          \"h3\",\n          r.OrganizationName +\n            \" — \" +\n            r.recipients.length +\n            \" Recipients — \" +\n            r.meals +\n            \" Meals\",\n        ),\n        el(\n          \"p\",\n          \"Submitted \" + new Date(r.SubmittedAt).toLocaleString(),\n          \"hint\",\n        ),\n      );\n      const recipients = el(\"ol\", null, \"request-recipient-list\");\n      r.recipients.forEach((recipient) => {\n        const item = el(\"li\");\n        item.append(\n          el(\"strong\", recipient.RecipientName),\n          el(\"p\", recipient.Address),\n          el(\"p\", recipient.MealCount + (Number(recipient.MealCount) === 1 ? \" meal\" : \" meals\")),\n        );\n        if (!addressReviewed(recipient.AddressStatus))\n          item.append(el(\"span\", \"Address Needs Review\", \"badge\"));\n        else item.append(el(\"span\", recipient.AddressStatus === \"Confirmed\"\n          ? \"Address Verified\" : \"Address Manually Reviewed\", \"hint\"));\n        if (recipient.DuplicateFlag)\n          item.append(el(\"span\", \"Possible Duplicate\", \"warning\"));\n        recipients.append(item);\n      });\n      card.append(recipients);\n      if (r.recipients.some((x) => x.DuplicateFlag))\n        card.append(\n          el(\n            \"p\",\n            \"Possible Duplicate — open View to see matching records.\",\n            \"warning\",\n          ),\n        );\n      if (r.recipients.some((x) => !addressReviewed(x.AddressStatus)))\n        card.append(el(\"p\", \"Address Needs Review\", \"badge\"));\n      const actions = el(\"div\", null, \"actions\");\n      actions.append(button(\"View\", () => openReferral(r, true), \"secondary\"));\n      if (!readonly()) {\n        actions.append(\n          button(\"Edit\", () => openReferral(r, false), \"secondary\"),\n          button(\"Review Addresses with Google\", () =>\n            task(() => reviewReferralAddresses(r)), \"secondary\"),\n        );\n        [\"Approved\", \"Rejected\", \"Pending\"]\n          .filter((s) => s !== r.Status)\n          .forEach((status) =>\n            actions.append(\n              button(\n                status === \"Approved\"\n                  ? \"Approve\"\n                  : status === \"Rejected\"\n                    ? \"Reject\"\n                    : \"Return to Pending\",\n                () =>\n                  task(() =>\n                    changeStatus(\n                      [{ referralId: r.ReferralID, version: r.Version }],\n                      status,\n                    ),\n                  ),\n                status === \"Rejected\" ? \"danger\" : \"secondary\",\n              ),\n            ),\n          );\n      }\n      card.append(actions);\n      $(\"requestCards\").append(card);\n    });\n  }\n  function field(label, name, value, type = \"text\", max = 1000) {\n    const wrap = el(\"label\", label),\n      input = el(type === \"textarea\" ? \"textarea\" : \"input\");\n    input.name = name;\n    if (type !== \"textarea\") input.type = type;\n    input.value = value ?? \"\";\n    input.maxLength = max;\n    if (type === \"number\") {\n      input.min = \"1\";\n      input.max = \"10000\";\n      input.step = \"1\";\n    }\n    if ([\"recipientName\", \"address\", \"mealCount\"].includes(name))\n      input.required = true;\n    wrap.append(input);\n    return wrap;\n  }\n  function recipientEditor(r) {\n    const card = el(\"fieldset\", null, \"recipient-card\");\n    if (r) {\n      card.dataset.recipientId = r.RecipientID;\n      card.dataset.version = r.Version;\n    }\n    card.append(\n      el(\"legend\", \"Recipient \" + ($(\"editorRecipients\").children.length + 1)),\n    );\n    const grid = el(\"div\", null, \"grid\");\n    grid.append(\n      field(\"Recipient name\", \"recipientName\", r?.RecipientName, \"text\", 160),\n      field(\n        \"Street address (include apartment/unit)\",\n        \"address\",\n        r?.Address,\n        \"text\",\n        500,\n      ),\n      field(\"Phone (optional)\", \"phone\", r?.Phone, \"tel\", 40),\n      field(\"Number of meals\", \"mealCount\", r?.MealCount || 1, \"number\"),\n      field(\n        \"Dietary restrictions / allergies\",\n        \"dietaryRestrictions\",\n        r?.DietaryRestrictions,\n        \"textarea\",\n        500,\n      ),\n    );\n    const door = el(\"label\", \"Preferred door\"),\n      select = el(\"select\");\n    select.name = \"doorPreference\";\n    [\"Front\", \"Side\", \"Back\", \"Other\"].forEach((s) => {\n      const o = el(\"option\", s);\n      o.value = s;\n      select.append(o);\n    });\n    select.value = r?.DoorPreference || \"Front\";\n    door.append(select);\n    grid.append(\n      door,\n      field(\n        \"Delivery instructions (printed)\",\n        \"deliveryInstructions\",\n        r?.DeliveryInstructions,\n        \"textarea\",\n      ),\n      field(\n        \"Internal notes (admin only; never printed)\",\n        \"notes\",\n        r?.Notes,\n        \"textarea\",\n      ),\n    );\n    card.append(grid);\n    if (!viewOnly)\n      referralAddressControls.push(MealAddresses.attach(\n        grid.querySelector('[name=\"address\"]'),\n        addressCall,\n        () => ({}),\n        r?.AddressStatus,\n      ));\n    if (r) {\n      card.append(\n        el(\n          \"p\",\n          addressReviewed(r.AddressStatus)\n            ? r.AddressStatus === \"Manually Reviewed\"\n              ? \"Address manually reviewed (Google validation not performed)\"\n              : \"Address confirmed\"\n            : \"Address Needs Review\",\n          addressReviewed(r.AddressStatus) ? \"hint\" : \"warning\",\n        ),\n      );\n      if (r.matches?.length) {\n        const details = el(\"details\"),\n          summary = el(\"summary\", \"Possible Duplicate — matching recipients\");\n        details.append(summary);\n        r.matches.forEach((m) =>\n          details.append(\n            el(\n              \"p\",\n              m.recipientName +\n                \" — \" +\n                m.address +\n                \" — Referral \" +\n                m.referralId,\n            ),\n          ),\n        );\n        card.append(details);\n      }\n      if (!readonly()) {\n        card.append(\n          button(\n            \"Mark Saved Address Reviewed\",\n            () => {\n              if (\n                !confirm(\n                  \"Have you checked the SAVED address and confirmed it is usable for delivery? Unsaved edits are not reviewed. This is manual review, not Google validation.\",\n                )\n              )\n                return;\n              task(async () => {\n                await rpc(\"manualAddressReview\", {\n                  entity: \"recipient\",\n                  recipientId: r.RecipientID,\n                  version: r.Version,\n                  confirmed: true,\n                });\n                $(\"referralDialog\").close();\n                await refresh();\n              });\n            },\n            \"secondary\",\n          ),\n        );\n      }\n    } else {\n      card.append(\n        button(\n          \"Remove Recipient\",\n          () => {\n            if ($(\"editorRecipients\").children.length > 1) {\n              card.remove();\n              [...$(\"editorRecipients\").children].forEach(\n                (c, i) =>\n                  (c.querySelector(\"legend\").textContent =\n                    \"Recipient \" + (i + 1)),\n              );\n            }\n          },\n          \"secondary\",\n        ),\n      );\n    }\n    $(\"editorRecipients\").append(card);\n    if (viewOnly)\n      grid\n        .querySelectorAll(\"input,select,textarea\")\n        .forEach((x) => (x.disabled = true));\n  }\n  function openReferral(r, read) {\n    editing = r || null;\n    viewOnly = read || readonly();\n    createId = r ? null : crypto.randomUUID();\n    $(\"referralHeading\").textContent = r\n      ? viewOnly\n        ? \"View Referral\"\n        : \"Edit Referral\"\n      : \"Add Referral\";\n    $(\"editorMessage\").textContent = \"\";\n    referralAddressControls = [];\n    $(\"saveReferral\").textContent = \"Save Referral\";\n    $(\"saveReferral\").disabled = false;\n    [\"organizationName\", \"organizationEmail\", \"organizationPhone\"].forEach(\n      (n) => {\n        const key = n[0].toUpperCase() + n.slice(1);\n        $(\"referralEditor\").elements[n].value = r?.[key] || \"\";\n        $(\"referralEditor\").elements[n].disabled = viewOnly;\n      },\n    );\n    $(\"editorRecipients\").replaceChildren();\n    if (r) r.recipients.forEach(recipientEditor);\n    else recipientEditor();\n    $(\"editorAddRecipient\").hidden = !!r || viewOnly;\n    $(\"saveReferral\").hidden = viewOnly;\n    $(\"referralDialog\").showModal();\n  }\n  async function reviewReferralAddresses(r) {\n    if (readonly()) return;\n    openReferral(r, false);\n    $(\"referralHeading\").textContent = \"Review Addresses with Google\";\n    $(\"saveReferral\").textContent = \"Save Reviewed Addresses\";\n    $(\"saveReferral\").disabled = true;\n    const controls = referralAddressControls.slice();\n    const current = () => editing?.ReferralID === r.ReferralID && $(\"referralDialog\").open;\n    try {\n      for (let i = 0; i < controls.length; i++) {\n        if (!current()) return;\n        $(\"editorMessage\").textContent = \"Checking address \" + (i + 1) + \" of \" + controls.length + \"…\";\n        const ready = await controls[i].check();\n        if (!current()) return;\n        if (!ready) {\n          $(\"editorMessage\").textContent = \"Edit the address, then click Save Reviewed Addresses. Changes have not been saved yet.\";\n          return;\n        }\n      }\n      if (current()) $(\"editorMessage\").textContent =\n        \"Address checks finished. Click Save Reviewed Addresses to save your choices. Any unconfirmed address remains Address Needs Review.\";\n    } catch (error) {\n      if (current()) $(\"editorMessage\").textContent = error.message;\n      throw error;\n    } finally {\n      if (current()) $(\"saveReferral\").disabled = false;\n    }\n  }\n  function editorPayload() {\n    const f = $(\"referralEditor\"),\n      p = { eventId: dashboard.event.EventID };\n    [\"organizationName\", \"organizationEmail\", \"organizationPhone\"].forEach(\n      (n) => (p[n] = f.elements[n].value.trim()),\n    );\n    p.recipients = [...$(\"editorRecipients\").children].map((c) => {\n      const x = Object.fromEntries(\n        [...c.querySelectorAll(\"[name]\")].map((n) => [\n          n.name,\n          n.name === \"mealCount\" ? Number(n.value) : n.value.trim(),\n        ]),\n      );\n      x.addressReceipt = MealAddresses.receipt(\n        c.querySelector('[name=\"address\"]'),\n      );\n      if (editing) {\n        x.recipientId = c.dataset.recipientId;\n        x.version = Number(c.dataset.version);\n      }\n      return x;\n    });\n    if (editing) {\n      p.referralId = editing.ReferralID;\n      p.version = editing.Version;\n    } else p.submissionId = createId;\n    return p;\n  }\n  function mapsUrl(address) {\n    return /iPhone|iPad|iPod/.test(navigator.userAgent) ||\n      (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)\n      ? \"https://maps.apple.com/?daddr=\" + encodeURIComponent(address)\n      : \"https://www.google.com/maps/search/?api=1&query=\" +\n          encodeURIComponent(address);\n  }\n  function renumberRoute() {\n    let n = 0;\n    route.stops.forEach((r, i) => {\n      r.stop = i + 1;\n      n += r.meals;\n      r.runningMeals = n;\n    });\n    route.totalMeals = n;\n  }\n  function move(id, delta) {\n    const i = route.stops.findIndex((s) => s.recipientId === id),\n      j = i + delta;\n    if (j < 0 || j >= route.stops.length) return;\n    [route.stops[i], route.stops[j]] = [route.stops[j], route.stops[i]];\n    routeUnsaved = true;\n    renumberRoute();\n    renderRoute();\n  }\n  function renderRoute() {\n    if (!route) return;\n    clearDeliveryPdf();\n    $(\"routeTitle\").textContent = route.eventName + \" Delivery Route\";\n    $(\"routeDate\").textContent = dateLabel(route.deliveryDate);\n    $(\"routePickup\").textContent = \"Pickup: \" + (route.startAddress || \"Not configured\");\n    $(\"routeSummary\").textContent =\n      route.stops.length + \" Stops · \" + route.totalMeals + \" Meals\";\n    const addressesReady = !route.unresolved.length && addressReviewed(route.startAddressStatus);\n    $(\"routeStatus\").textContent = !route.stops.length\n      ? \"Approve at least one recipient to build a delivery route.\"\n      : routeUnsaved\n        ? \"Order changed. Click Save Manual Order to save your changes before printing.\"\n        : route.isFinal\n          ? \"Official delivery order saved. You can print the delivery sheet.\"\n          : addressesReady\n            ? \"All addresses are reviewed. Check the stop order, then click Save Manual Order to finalize the route and enable printing.\"\n            : \"Route is not final. \" +\n              (route.unresolved.length\n                ? route.unresolved.length + \" recipient address(es) need review. \"\n                : \"\") +\n              (!addressReviewed(route.startAddressStatus)\n                ? \"Pickup address needs review in Event Settings. \"\n                : \"\") +\n              \"Review the addresses, then click Save Manual Order to finalize the route.\";\n    $(\"printRoute\").disabled = !route.stops.length || routeUnsaved || !route.isFinal;\n    const optimizationReason = readonly()\n      ? \"This event is read-only. Reopen / Unarchive it before changing the route.\"\n      : !route.mapsEnabled\n        ? \"Automatic route optimization is off. Use Move Up / Move Down or drag stops into order, then click Save Manual Order. You can print a reviewed, saved route without automatic optimization.\"\n        : !route.stops.length\n          ? \"Approve at least one recipient before optimizing.\"\n          : !addressesReady\n            ? \"Review the pickup address and every recipient address before optimizing.\"\n            : \"Google route optimization is enabled in configuration. You may optimize or save a manual order.\";\n    $(\"routingAvailability\").textContent = optimizationReason;\n    $(\"optimizeRoute\").disabled = readonly() || !route.mapsEnabled || !route.stops.length || !addressesReady;\n    $(\"optimizeRoute\").title = optimizationReason;\n    $(\"saveRoute\").disabled = readonly() || !route.stops.length;\n    $(\"routeStops\").replaceChildren();\n    route.stops.forEach((r) => {\n      const card = el(\"article\", null, \"stop\");\n      card.dataset.recipientId = r.recipientId;\n      const head = el(\"header\");\n      head.append(\n        el(\"span\", null, \"print-check\"),\n        el(\"h3\", \"Stop \" + r.stop + \" — \" + r.recipientName),\n      );\n      card.append(head);\n      const address = el(\"p\", null, \"address\"),\n        link = el(\"a\", r.address);\n      link.href = mapsUrl(r.address);\n      link.target = \"_blank\";\n      link.rel = \"noopener noreferrer\";\n      address.append(link);\n      card.append(address);\n      const dl = el(\"dl\");\n      const pair = (k, v) => {\n        if (v) {\n          dl.append(el(\"dt\", k), el(\"dd\", String(v)));\n        }\n      };\n      pair(\"Phone:\", r.phone);\n      pair(\"Meals:\", r.meals);\n      pair(\"Running Meal Total:\", r.runningMeals);\n      pair(\"Dietary:\", r.dietaryRestrictions);\n      pair(\"Door:\", r.doorPreference);\n      pair(\"Delivery Instructions:\", r.deliveryInstructions);\n      card.append(dl);\n      if (!addressReviewed(r.addressStatus))\n        card.append(el(\"p\", \"Address Needs Review\", \"badge\"));\n      if (!readonly()) {\n        const controls = el(\"div\", null, \"actions no-print\"),\n          up = button(\"Move Up\", () => move(r.recipientId, -1), \"secondary\"),\n          down = button(\"Move Down\", () => move(r.recipientId, 1), \"secondary\");\n        up.disabled = r.stop === 1;\n        down.disabled = r.stop === route.stops.length;\n        controls.append(up, down);\n        card.append(controls);\n        card.draggable = matchMedia(\"(pointer:fine)\").matches;\n        card.addEventListener(\"dragstart\", (ev) => {\n          dragId = r.recipientId;\n          ev.dataTransfer.setData(\"text/plain\", r.recipientId);\n        });\n        card.addEventListener(\"dragover\", (ev) => ev.preventDefault());\n        card.addEventListener(\"drop\", (ev) => {\n          ev.preventDefault();\n          const i = route.stops.findIndex((x) => x.recipientId === dragId),\n            j = route.stops.findIndex((x) => x.recipientId === r.recipientId);\n          if (i < 0 || j < 0 || i === j) return;\n          const [row] = route.stops.splice(i, 1);\n          route.stops.splice(j, 0, row);\n          routeUnsaved = true;\n          renumberRoute();\n          renderRoute();\n        });\n      }\n      $(\"routeStops\").append(card);\n    });\n    if (!route.stops.length)\n      $(\"routeStops\").append(el(\"p\", \"No Approved recipients for this event.\"));\n  }\n  function renderSettings() {\n    const e = dashboard.event;\n    const values = {\n      eventName: e.EventName,\n      deliveryDate: e.DeliveryDate,\n      capacity: e.Capacity,\n      startAddress: e.StartAddress,\n      status: e.Status,\n    };\n    Object.entries(values).forEach(\n      ([k, v]) => ($(\"settingsForm\").elements[k].value = v),\n    );\n    $(\"verifyPickup\").disabled = readonly();\n    pickupSettings.reset(e.StartAddressStatus);\n    $(\"manualPickup\").disabled = readonly();\n    $(\"pickupStatus\").textContent = addressReviewed(e.StartAddressStatus)\n      ? e.StartAddressStatus === \"Manually Reviewed\"\n        ? \"Pickup address manually reviewed (Google validation not performed).\"\n        : \"Pickup address confirmed.\"\n      : \"Pickup Address Needs Review\";\n  }\n  function eventPayload(f) {\n    return {\n      addressReceipt: MealAddresses.receipt(f.elements.startAddress),\n      ...Object.fromEntries(\n        [\"eventName\", \"deliveryDate\", \"capacity\", \"startAddress\", \"status\"].map(\n          (n) => [\n            n,\n            n === \"capacity\"\n              ? Number(f.elements[n].value)\n              : f.elements[n].value.trim(),\n          ],\n        ),\n      ),\n    };\n  }\n  async function reports() {\n    const old = $(\"reportEvent\").value,\n      year = $(\"reportYear\").value;\n    $(\"reportEvent\").replaceChildren(el(\"option\", \"All events\"));\n    $(\"reportEvent\").firstChild.value = \"\";\n    events.forEach((e) => {\n      const o = el(\"option\", e.EventName + (e.Archived ? \" (Archived)\" : \"\"));\n      o.value = e.EventID;\n      $(\"reportEvent\").append(o);\n    });\n    $(\"reportEvent\").value = old;\n    const years = [...new Set(events.map((e) => e.DeliveryDate.slice(0, 4)))]\n      .sort()\n      .reverse();\n    $(\"reportYear\").replaceChildren(el(\"option\", \"All years\"));\n    $(\"reportYear\").firstChild.value = \"\";\n    years.forEach((y) => {\n      const o = el(\"option\", y);\n      o.value = y;\n      $(\"reportYear\").append(o);\n    });\n    $(\"reportYear\").value = year;\n    const r = await rpc(\"reports\", {\n      eventId: $(\"reportEvent\").value,\n      year: $(\"reportYear\").value,\n    });\n    $(\"reportIntegrityNotice\").textContent = integrityMessage(r.integrity);\n    metric($(\"reportTotals\"), [\n      [\"Events\", r.totals.events],\n      [\"Originally Requested Meals\", r.totals.originallyRequestedMeals],\n      [\"Currently Reserved Meals\", r.totals.currentlyReservedMeals],\n      [\"Approved Meals\", r.totals.approvedMeals],\n      [\"Rejected Meals\", r.totals.rejectedMeals],\n      [\"Recipient Records\", r.totals.recipientRecords],\n      [\"Approved Stops\", r.totals.approvedStops],\n      [\"Organizations\", r.totals.organizations],\n      [\"Capacity\", r.totals.capacity],\n      [\"Remaining Capacity\", r.totals.remainingCapacity],\n      [\"Pending Referrals\", r.totals.pendingReferrals],\n      [\"Approved Referrals\", r.totals.approvedReferrals],\n      [\"Rejected Referrals\", r.totals.rejectedReferrals],\n    ]);\n    $(\"organizationReports\").replaceChildren(\n      ...r.organizations.map((o) =>\n        el(\n          \"div\",\n          o.name +\n            \" — \" +\n            o.referrals +\n            \" Referrals · \" +\n            o.originallyRequestedMeals +\n            \" Originally Requested Meals · \" +\n            o.currentMeals +\n            \" Current Meals\",\n          \"report-row\",\n        ),\n      ),\n    );\n  }\n  document.querySelectorAll(\"[data-view]\").forEach((b) =>\n    b.addEventListener(\"click\", () =>\n      task(async () => {\n        view = b.dataset.view;\n        if (view !== \"routeView\") clearDeliveryPdf();\n        [\"requestsView\", \"routeView\", \"settingsView\", \"reportsView\"].forEach(\n          (id) => ($(id).hidden = id !== view),\n        );\n        document\n          .querySelectorAll(\"[data-view]\")\n          .forEach((x) => x.setAttribute(\"aria-selected\", String(x === b)));\n        if (view === \"reportsView\") await reports();\n      }),\n    ),\n  );\n  $(\"adminEvents\").addEventListener(\"change\", () => task(refresh));\n  $(\"showArchived\").addEventListener(\"change\", () =>\n    task(async () => {\n      eventOptions();\n      await refresh();\n    }),\n  );\n  $(\"refreshAdmin\").addEventListener(\"click\", () =>\n    task(() => refreshEvents()),\n  );\n  async function copyPublicLink() {\n    const input = $(\"publicLinkValue\");\n    try {\n      await navigator.clipboard.writeText(input.value);\n      $(\"publicLinkMessage\").textContent = \"Public link copied. Ready to share.\";\n    } catch (_) {\n      input.focus();\n      input.select();\n      input.setSelectionRange(0, input.value.length);\n      $(\"publicLinkMessage\").textContent = \"Automatic copying is unavailable in this browser. Copy the selected website link above.\";\n    }\n  }\n  $(\"publicLink\").addEventListener(\"click\", () =>\n    task(async () => {\n      const { url } = await rpc(\"publicFormLink\");\n      $(\"publicLinkValue\").value = url;\n      $(\"openPublicLink\").href = url;\n      $(\"publicLinkMessage\").textContent = \"\";\n      $(\"publicLinkDialog\").showModal();\n      await copyPublicLink();\n    }),\n  );\n  $(\"copyPublicLink\").addEventListener(\"click\", () => task(copyPublicLink));\n  $(\"closePublicLink\").addEventListener(\"click\", () => $(\"publicLinkDialog\").close());\n  $(\"createEvent\").addEventListener(\"click\", () => {\n    $(\"eventEditor\").reset();\n    pickupCreate.reset();\n    $(\"eventEditorMessage\").textContent = \"\";\n    $(\"eventDialog\").showModal();\n  });\n  $(\"closeEvent\").addEventListener(\"click\", () => $(\"eventDialog\").close());\n  $(\"closeReferral\").addEventListener(\"click\", () =>\n    $(\"referralDialog\").close(),\n  );\n  $(\"addReferral\").addEventListener(\"click\", () => task(async () => {\n    const pending = pendingCreates.get(\"createReferral\");\n    if (pending) {\n      const { receipt } = await rpc(\"submissionReceipt\", { submissionId: pending.id });\n      if (receipt) {\n        retainCreate(\"createReferral\", null);\n        await refreshEvents(pending.eventId);\n        alert(\"Your previous referral was saved once. Referral ID: \" + receipt.referralId);\n        return;\n      }\n    }\n    openReferral(null, false);\n    if (pending) $(\"editorMessage\").textContent = \"Previous save unconfirmed. Re-enter the same information to retry safely. Recipient details were not stored in this browser.\";\n  }));\n  $(\"editorAddRecipient\").addEventListener(\"click\", () => {\n    if ($(\"editorRecipients\").children.length < 100) recipientEditor();\n  });\n  $(\"selectAll\").addEventListener(\"click\", () => {\n    $(\"requestCards\")\n      .querySelectorAll('input[type=\"checkbox\"]')\n      .forEach(\n        (x) =>\n          (x.checked =\n            dashboard.referrals.find(\n              (r) => r.ReferralID === x.dataset.referralId,\n            )?.Status === \"Pending\"),\n      );\n  });\n  $(\"approveSelected\").addEventListener(\"click\", () =>\n    task(() => changeStatus(selectedRefs(), \"Approved\")),\n  );\n  $(\"rejectSelected\").addEventListener(\"click\", () =>\n    task(() => changeStatus(selectedRefs(), \"Rejected\")),\n  );\n  $(\"referralEditor\").addEventListener(\"submit\", (e) => {\n    e.preventDefault();\n    if (busy) return;\n    task(async () => {\n      if (!(await MealAddresses.prepareAll($(\"referralEditor\")))) return;\n      const payload = editorPayload();\n      try {\n        if (editing) await rpc(\"editReferral\", payload);\n        else await createOnce(\"createReferral\", payload);\n        $(\"referralDialog\").close();\n        await refresh();\n      } catch (err) {\n        $(\"editorMessage\").textContent = err.message;\n        throw err;\n      }\n    }, e.submitter || e.target.querySelector('button[type=\"submit\"]'));\n  });\n  $(\"eventEditor\").addEventListener(\"submit\", (e) => {\n    e.preventDefault();\n    task(async () => {\n      try {\n        if (!(await MealAddresses.prepareAll($(\"eventEditor\")))) return;\n        const event = await createOnce(\"saveEvent\", eventPayload($(\"eventEditor\")));\n        $(\"eventDialog\").close();\n        await refreshEvents(event.EventID);\n      } catch (err) {\n        $(\"eventEditorMessage\").textContent = err.message;\n        throw err;\n      }\n    }, e.submitter || e.target.querySelector('button[type=\"submit\"]'));\n  });\n  $(\"settingsForm\").addEventListener(\"submit\", (e) => {\n    e.preventDefault();\n    task(async () => {\n      const d = dashboard.event;\n      if (!(await MealAddresses.prepareAll($(\"settingsForm\")))) return;\n      await rpc(\"saveEvent\", {\n        ...eventPayload($(\"settingsForm\")),\n        eventId: d.EventID,\n        version: d.Version,\n      });\n      await refreshEvents(d.EventID);\n    }, e.submitter || e.target.querySelector('button[type=\"submit\"]'));\n  });\n  $(\"archiveEvent\").addEventListener(\"click\", () =>\n    task(async () => {\n      if (\n        !confirm(\n          \"Archive this event? Its records will remain available in Reports.\",\n        )\n      )\n        return;\n      await rpc(\"archive\", {\n        eventId: dashboard.event.EventID,\n        version: dashboard.event.Version,\n        mode: \"archive\",\n        confirmed: true,\n      });\n      dashboard = null;\n      await refreshEvents();\n    }),\n  );\n  $(\"reopenEvent\").addEventListener(\"click\", () =>\n    task(async () => {\n      if (\n        !confirm(\n          \"Reopen / Unarchive this event for corrections? This action will be audit logged.\",\n        )\n      )\n        return;\n      const id = dashboard.event.EventID;\n      await rpc(\"archive\", {\n        eventId: id,\n        version: dashboard.event.Version,\n        mode: \"reopen\",\n        confirmed: true,\n      });\n      await refreshEvents(id);\n    }),\n  );\n  $(\"manualPickup\").addEventListener(\"click\", () => {\n    if (\n      !confirm(\n        \"Have you checked the SAVED pickup address and confirmed it is usable? This is manual review, not Google validation.\",\n      )\n    )\n      return;\n    task(async () => {\n      await rpc(\"manualAddressReview\", {\n        entity: \"event\",\n        eventId: dashboard.event.EventID,\n        version: dashboard.event.Version,\n        confirmed: true,\n      });\n      await refresh();\n    });\n  });\n  $(\"verifyPickup\").addEventListener(\"click\", () =>\n    task(() => pickupSettings.check()),\n  );\n  $(\"optimizeRoute\").addEventListener(\"click\", () =>\n    task(async () => {\n      route = await rpc(\"optimize\", {\n        eventId: route.eventId,\n        routeVersion: route.version,\n      });\n      await refresh();\n    }),\n  );\n  $(\"saveRoute\").addEventListener(\"click\", () =>\n    task(async () => {\n      route = await rpc(\"reorder\", {\n        eventId: route.eventId,\n        routeVersion: route.version,\n        recipientIds: route.stops.map((r) => r.recipientId),\n      });\n      routeUnsaved = false;\n      renderRoute();\n    }),\n  );\n  function clearDeliveryPdf() {\n    if (deliveryPdfUrl) URL.revokeObjectURL(deliveryPdfUrl);\n    deliveryPdfUrl = null;\n    $(\"openDeliveryPdf\").removeAttribute(\"href\");\n    $(\"downloadDeliveryPdf\").removeAttribute(\"href\");\n    $(\"deliveryPdf\").hidden = true;\n  }\n  $(\"printRoute\").addEventListener(\"click\", () => task(async () => {\n    if (!route || routeUnsaved || !route.isFinal || !route.stops.length) return;\n    clearDeliveryPdf();\n    try {\n      const pdf = await rpc(\"deliveryPdf\", { eventId: route.eventId, routeVersion: route.version });\n      const bytes = Uint8Array.from(atob(pdf.base64), (c) => c.charCodeAt(0));\n      deliveryPdfUrl = URL.createObjectURL(new Blob([bytes], { type: \"application/pdf\" }));\n      $(\"openDeliveryPdf\").href = deliveryPdfUrl;\n      $(\"downloadDeliveryPdf\").href = deliveryPdfUrl;\n      $(\"downloadDeliveryPdf\").download = pdf.filename;\n      $(\"deliveryPdf\").hidden = false;\n      $(\"openDeliveryPdf\").focus();\n    } catch (error) {\n      if (error.code === \"CONFLICT\") await refresh();\n      throw error;\n    }\n  }));\n  window.addEventListener(\"pagehide\", () => {\n    if (sessionToken) endPasswordSession(\"Sign in again.\");\n    else if (!sessionClosed) clearDeliveryPdf();\n  });\n  [\"reportEvent\", \"reportYear\"].forEach((id) =>\n    $(id).addEventListener(\"change\", () => task(reports)),\n  );\n  function startDashboard() {\n    $(\"passwordGate\").hidden = true;\n    $(\"adminWorkspace\").hidden = false;\n    task(async () => {\n      const identity = await rpc(\"identity\");\n      if (passwordUrl) loadPendingCreates(\"community-meals-local-\" + identity.email + \"-\");\n      $(\"adminIdentity\").textContent =\n        identity.email + \" · \" + identity.environment;\n      await refreshEvents();\n    });\n  }\n\n  function passwordRpc(method, ...args) {\n    return new Promise((resolve, reject) => {\n      const call = google.script.run\n        .withSuccessHandler(r => r.ok ? resolve(r.data) : reject(new Error(r.error.message)))\n        .withFailureHandler(() => reject(new Error(\"The service could not be reached. Try again.\")));\n      call[method](...args);\n    });\n  }\n\n  function endPasswordSession(message) {\n    if (sessionClosed) return;\n    sessionClosed = true;\n    sessionToken = \"\";\n    clearTimeout(sessionTimer);\n    clearDeliveryPdf();\n    for (const dialog of document.querySelectorAll(\"dialog.address-check\"))\n      dialog.dispatchEvent(new Event(\"cancel\", { cancelable: true }));\n    pendingCreates.clear();\n    events = [];\n    dashboard = route = editing = null;\n    referralAddressControls = [];\n    $(\"adminWorkspace\").remove();\n    $(\"passwordGate\").hidden = false;\n    $(\"passwordStatus\").textContent = message;\n    $(\"passwordLoginForm\").hidden = true;\n    $(\"passwordSetupForm\").hidden = true;\n    $(\"passwordReturn\").href = passwordUrl;\n    $(\"passwordReturn\").hidden = false;\n    $(\"passwordReturn\").focus();\n  }\n\n  function checkPasswordExpiry() {\n    if (sessionToken && Date.now() >= Math.min(sessionIdleUntil, sessionUntil))\n      endPasswordSession(\"Your session expired. Sign in again.\");\n  }\n\n  function schedulePasswordExpiry() {\n    // The server persists activity at most once per minute.\n    sessionIdleUntil = Date.now() + sessionIdleMs - 60000;\n    clearTimeout(sessionTimer);\n    sessionTimer = setTimeout(checkPasswordExpiry,\n      Math.max(0, Math.min(sessionIdleUntil, sessionUntil) - Date.now()));\n  }\n\n  function passwordForm(id, statusId, submit) {\n    $(id).addEventListener(\"submit\", async (event) => {\n      event.preventDefault();\n      const form = event.currentTarget;\n      const buttons = [...form.querySelectorAll(\"button\")];\n      if (buttons.some(button => button.disabled)) return;\n      buttons.forEach(button => { button.disabled = true; });\n      $(statusId).textContent = \"Working…\";\n      try {\n        $(statusId).textContent = await submit(event.submitter);\n      } catch (error) {\n        $(statusId).textContent = error.message;\n      } finally {\n        buttons.forEach(button => { button.disabled = false; });\n      }\n    });\n  }\n\n  if (passwordUrl) {\n    $(\"passwordGate\").hidden = false;\n    const showSetup = (setup) => {\n      $(\"passwordLoginForm\").hidden = setup;\n      $(\"passwordSetupForm\").hidden = !setup;\n      $(\"passwordLoginValue\").value = \"\";\n      $(\"passwordSetupCode\").value = \"\";\n      $(\"passwordSetupValue\").value = \"\";\n      $(\"passwordSetupConfirm\").value = \"\";\n      $(\"passwordStatus\").textContent = \"\";\n      $(setup ? \"passwordSetupName\" : \"passwordLoginName\").focus();\n    };\n    $(\"showPasswordSetup\").addEventListener(\"click\", () => showSetup(true));\n    $(\"showPasswordLogin\").addEventListener(\"click\", () => showSetup(false));\n    passwordForm(\"passwordLoginForm\", \"passwordStatus\", async () => {\n      const secret = $(\"passwordLoginValue\").value;\n      $(\"passwordLoginValue\").value = \"\";\n      const data = await passwordRpc(\"passwordLogin\", $(\"passwordLoginName\").value, secret);\n      sessionToken = data.token;\n      sessionIdleMs = data.idleMs;\n      sessionUntil = Date.now() + data.maxMs;\n      schedulePasswordExpiry();\n      $(\"passwordLogout\").hidden = false;\n      startDashboard();\n      return \"\";\n    });\n    passwordForm(\"passwordSetupForm\", \"passwordStatus\", async () => {\n      const name = $(\"passwordSetupName\").value;\n      const code = $(\"passwordSetupCode\").value.trim();\n      const secret = $(\"passwordSetupValue\").value;\n      const confirm = $(\"passwordSetupConfirm\").value;\n      $(\"passwordSetupValue\").value = $(\"passwordSetupConfirm\").value = \"\";\n      if (secret !== confirm) throw new Error(\"Enter the same password in both fields.\");\n      await passwordRpc(\"passwordSet\", name, code, secret);\n      $(\"passwordLoginName\").value = name;\n      showSetup(false);\n      return \"Password saved. Sign in to continue.\";\n    });\n    $(\"passwordLogout\").addEventListener(\"click\", async () => {\n      const token = sessionToken;\n      endPasswordSession(\"Signing out…\");\n      try {\n        await passwordRpc(\"passwordLogout\", token);\n        $(\"passwordStatus\").textContent = \"Signed out.\";\n      } catch (_) {\n        $(\"passwordStatus\").textContent = \"Dashboard closed. The server could not confirm sign-out.\";\n      }\n    });\n    document.addEventListener(\"visibilitychange\", checkPasswordExpiry);\n  } else {\n    startDashboard();\n    passwordRpc(\"passwordAccountAccess\")\n      .then(() => { $(\"passwordOwnerPanel\").hidden = false; })\n      .catch(() => {});\n    passwordForm(\"passwordOwnerForm\", \"passwordOwnerStatus\", async (button) => {\n      const action = button?.value || \"setup\";\n      const username = $(\"passwordOwnerName\").value.trim();\n      if (!window.confirm(action === \"disable\"\n        ? \"Disable this account and end its session?\"\n        : \"Issue a setup code and end any existing session for this username?\"))\n        return \"\";\n      const result = await passwordRpc(\"passwordAccountAction\", action, username);\n      return result.code\n        ? \"Share privately with \" + result.username + \": \" + result.url + \" — Setup code: \" +\n          result.code + \" (expires in one hour).\"\n        : \"Account disabled: \" + result.username;\n    });\n    $(\"passwordOwnerPanel\").addEventListener(\"toggle\", () => {\n      if (!$(\"passwordOwnerPanel\").open) $(\"passwordOwnerStatus\").textContent = \"\";\n    });\n  }\n})();\n\n    </script>\n  </body>\n</html>\n";
 
 // ===== Validation.gs =====
 const MEAL_LIMITS = Object.freeze({
@@ -481,7 +481,7 @@ function identity_() {
   const effective = String(
     Session.getEffectiveUser().getEmail() || "",
   ).toLowerCase();
-  if (!active || active !== effective)
+  if (!active.includes("@") || active !== effective)
     fail_(
       "AUTH",
       "Sign in through the authenticated administrator application. Your Google identity could not be verified.",
@@ -515,6 +515,1117 @@ function testAdminIdentity() {
       environment: properties_().getProperty("MEALS_ENV"),
       authorized: true,
     };
+  });
+}
+
+// ===== PasswordCrypto.gs =====
+/* Stanford Javascript Crypto Library 1.0.8, selected upstream modules.
+SJCL is open. You can use, modify and redistribute it under a BSD
+license or under the GNU GPL, version 2.0.
+
+---------------------------------------------------------------------
+
+http://opensource.org/licenses/BSD-2-Clause
+
+Copyright (c) 2009-2015, Emily Stark, Mike Hamburg and Dan Boneh at
+Stanford University. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---------------------------------------------------------------------
+
+http://opensource.org/licenses/GPL-2.0
+
+The Stanford Javascript Crypto Library (hosted here on GitHub) is a
+project by the Stanford Computer Security Lab to build a secure,
+powerful, fast, small, easy-to-use, cross-browser library for
+cryptography in Javascript.
+
+Copyright (c) 2009-2015, Emily Stark, Mike Hamburg and Dan Boneh at
+Stanford University.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
+/** @fileOverview Javascript cryptography implementation.
+ *
+ * Crush to remove comments, shorten variable names and
+ * generally reduce transmission size.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+"use strict";
+/*jslint indent: 2, bitwise: false, nomen: false, plusplus: false, white: false, regexp: false */
+/*global document, window, escape, unescape, module, require, Uint32Array */
+
+/**
+ * The Stanford Javascript Crypto Library, top-level namespace.
+ * @namespace
+ */
+var sjcl = {
+  /**
+   * Symmetric ciphers.
+   * @namespace
+   */
+  cipher: {},
+
+  /**
+   * Hash functions.  Right now only SHA256 is implemented.
+   * @namespace
+   */
+  hash: {},
+
+  /**
+   * Key exchange functions.  Right now only SRP is implemented.
+   * @namespace
+   */
+  keyexchange: {},
+  
+  /**
+   * Cipher modes of operation.
+   * @namespace
+   */
+  mode: {},
+
+  /**
+   * Miscellaneous.  HMAC and PBKDF2.
+   * @namespace
+   */
+  misc: {},
+  
+  /**
+   * Bit array encoders and decoders.
+   * @namespace
+   *
+   * @description
+   * The members of this namespace are functions which translate between
+   * SJCL's bitArrays and other objects (usually strings).  Because it
+   * isn't always clear which direction is encoding and which is decoding,
+   * the method names are "fromBits" and "toBits".
+   */
+  codec: {},
+  
+  /**
+   * Exceptions.
+   * @namespace
+   */
+  exception: {
+    /**
+     * Ciphertext is corrupt.
+     * @constructor
+     */
+    corrupt: function(message) {
+      this.toString = function() { return "CORRUPT: "+this.message; };
+      this.message = message;
+    },
+    
+    /**
+     * Invalid parameter.
+     * @constructor
+     */
+    invalid: function(message) {
+      this.toString = function() { return "INVALID: "+this.message; };
+      this.message = message;
+    },
+    
+    /**
+     * Bug or missing feature in SJCL.
+     * @constructor
+     */
+    bug: function(message) {
+      this.toString = function() { return "BUG: "+this.message; };
+      this.message = message;
+    },
+
+    /**
+     * Something isn't ready.
+     * @constructor
+     */
+    notReady: function(message) {
+      this.toString = function() { return "NOT READY: "+this.message; };
+      this.message = message;
+    }
+  }
+};
+
+/** @fileOverview Arrays of bits, encoded as arrays of Numbers.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/**
+ * Arrays of bits, encoded as arrays of Numbers.
+ * @namespace
+ * @description
+ * <p>
+ * These objects are the currency accepted by SJCL's crypto functions.
+ * </p>
+ *
+ * <p>
+ * Most of our crypto primitives operate on arrays of 4-byte words internally,
+ * but many of them can take arguments that are not a multiple of 4 bytes.
+ * This library encodes arrays of bits (whose size need not be a multiple of 8
+ * bits) as arrays of 32-bit words.  The bits are packed, big-endian, into an
+ * array of words, 32 bits at a time.  Since the words are double-precision
+ * floating point numbers, they fit some extra data.  We use this (in a private,
+ * possibly-changing manner) to encode the number of bits actually  present
+ * in the last word of the array.
+ * </p>
+ *
+ * <p>
+ * Because bitwise ops clear this out-of-band data, these arrays can be passed
+ * to ciphers like AES which want arrays of words.
+ * </p>
+ */
+sjcl.bitArray = {
+  /**
+   * Array slices in units of bits.
+   * @param {bitArray} a The array to slice.
+   * @param {Number} bstart The offset to the start of the slice, in bits.
+   * @param {Number} bend The offset to the end of the slice, in bits.  If this is undefined,
+   * slice until the end of the array.
+   * @return {bitArray} The requested slice.
+   */
+  bitSlice: function (a, bstart, bend) {
+    a = sjcl.bitArray._shiftRight(a.slice(bstart/32), 32 - (bstart & 31)).slice(1);
+    return (bend === undefined) ? a : sjcl.bitArray.clamp(a, bend-bstart);
+  },
+
+  /**
+   * Extract a number packed into a bit array.
+   * @param {bitArray} a The array to slice.
+   * @param {Number} bstart The offset to the start of the slice, in bits.
+   * @param {Number} blength The length of the number to extract.
+   * @return {Number} The requested slice.
+   */
+  extract: function(a, bstart, blength) {
+    // FIXME: this Math.floor is not necessary at all, but for some reason
+    // seems to suppress a bug in the Chromium JIT.
+    var x, sh = Math.floor((-bstart-blength) & 31);
+    if ((bstart + blength - 1 ^ bstart) & -32) {
+      // it crosses a boundary
+      x = (a[bstart/32|0] << (32 - sh)) ^ (a[bstart/32+1|0] >>> sh);
+    } else {
+      // within a single word
+      x = a[bstart/32|0] >>> sh;
+    }
+    return x & ((1<<blength) - 1);
+  },
+
+  /**
+   * Concatenate two bit arrays.
+   * @param {bitArray} a1 The first array.
+   * @param {bitArray} a2 The second array.
+   * @return {bitArray} The concatenation of a1 and a2.
+   */
+  concat: function (a1, a2) {
+    if (a1.length === 0 || a2.length === 0) {
+      return a1.concat(a2);
+    }
+    
+    var last = a1[a1.length-1], shift = sjcl.bitArray.getPartial(last);
+    if (shift === 32) {
+      return a1.concat(a2);
+    } else {
+      return sjcl.bitArray._shiftRight(a2, shift, last|0, a1.slice(0,a1.length-1));
+    }
+  },
+
+  /**
+   * Find the length of an array of bits.
+   * @param {bitArray} a The array.
+   * @return {Number} The length of a, in bits.
+   */
+  bitLength: function (a) {
+    var l = a.length, x;
+    if (l === 0) { return 0; }
+    x = a[l - 1];
+    return (l-1) * 32 + sjcl.bitArray.getPartial(x);
+  },
+
+  /**
+   * Truncate an array.
+   * @param {bitArray} a The array.
+   * @param {Number} len The length to truncate to, in bits.
+   * @return {bitArray} A new array, truncated to len bits.
+   */
+  clamp: function (a, len) {
+    if (a.length * 32 < len) { return a; }
+    a = a.slice(0, Math.ceil(len / 32));
+    var l = a.length;
+    len = len & 31;
+    if (l > 0 && len) {
+      a[l-1] = sjcl.bitArray.partial(len, a[l-1] & 0x80000000 >> (len-1), 1);
+    }
+    return a;
+  },
+
+  /**
+   * Make a partial word for a bit array.
+   * @param {Number} len The number of bits in the word.
+   * @param {Number} x The bits.
+   * @param {Number} [_end=0] Pass 1 if x has already been shifted to the high side.
+   * @return {Number} The partial word.
+   */
+  partial: function (len, x, _end) {
+    if (len === 32) { return x; }
+    return (_end ? x|0 : x << (32-len)) + len * 0x10000000000;
+  },
+
+  /**
+   * Get the number of bits used by a partial word.
+   * @param {Number} x The partial word.
+   * @return {Number} The number of bits used by the partial word.
+   */
+  getPartial: function (x) {
+    return Math.round(x/0x10000000000) || 32;
+  },
+
+  /**
+   * Compare two arrays for equality in a predictable amount of time.
+   * @param {bitArray} a The first array.
+   * @param {bitArray} b The second array.
+   * @return {boolean} true if a == b; false otherwise.
+   */
+  equal: function (a, b) {
+    if (sjcl.bitArray.bitLength(a) !== sjcl.bitArray.bitLength(b)) {
+      return false;
+    }
+    var x = 0, i;
+    for (i=0; i<a.length; i++) {
+      x |= a[i]^b[i];
+    }
+    return (x === 0);
+  },
+
+  /** Shift an array right.
+   * @param {bitArray} a The array to shift.
+   * @param {Number} shift The number of bits to shift.
+   * @param {Number} [carry=0] A byte to carry in
+   * @param {bitArray} [out=[]] An array to prepend to the output.
+   * @private
+   */
+  _shiftRight: function (a, shift, carry, out) {
+    var i, last2=0, shift2;
+    if (out === undefined) { out = []; }
+    
+    for (; shift >= 32; shift -= 32) {
+      out.push(carry);
+      carry = 0;
+    }
+    if (shift === 0) {
+      return out.concat(a);
+    }
+    
+    for (i=0; i<a.length; i++) {
+      out.push(carry | a[i]>>>shift);
+      carry = a[i] << (32-shift);
+    }
+    last2 = a.length ? a[a.length-1] : 0;
+    shift2 = sjcl.bitArray.getPartial(last2);
+    out.push(sjcl.bitArray.partial(shift+shift2 & 31, (shift + shift2 > 32) ? carry : out.pop(),1));
+    return out;
+  },
+  
+  /** xor a block of 4 words together.
+   * @private
+   */
+  _xor4: function(x,y) {
+    return [x[0]^y[0],x[1]^y[1],x[2]^y[2],x[3]^y[3]];
+  },
+
+  /** byteswap a word array inplace.
+   * (does not handle partial words)
+   * @param {sjcl.bitArray} a word array
+   * @return {sjcl.bitArray} byteswapped array
+   */
+  byteswapM: function(a) {
+    var i, v, m = 0xff00;
+    for (i = 0; i < a.length; ++i) {
+      v = a[i];
+      a[i] = (v >>> 24) | ((v >>> 8) & m) | ((v & m) << 8) | (v << 24);
+    }
+    return a;
+  }
+};
+
+/** @fileOverview Bit array codec implementations.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/**
+ * UTF-8 strings
+ * @namespace
+ */
+sjcl.codec.utf8String = {
+  /** Convert from a bitArray to a UTF-8 string. */
+  fromBits: function (arr) {
+    var out = "", bl = sjcl.bitArray.bitLength(arr), i, tmp;
+    for (i=0; i<bl/8; i++) {
+      if ((i&3) === 0) {
+        tmp = arr[i/4];
+      }
+      out += String.fromCharCode(tmp >>> 8 >>> 8 >>> 8);
+      tmp <<= 8;
+    }
+    return decodeURIComponent(escape(out));
+  },
+
+  /** Convert from a UTF-8 string to a bitArray. */
+  toBits: function (str) {
+    str = unescape(encodeURIComponent(str));
+    var out = [], i, tmp=0;
+    for (i=0; i<str.length; i++) {
+      tmp = tmp << 8 | str.charCodeAt(i);
+      if ((i&3) === 3) {
+        out.push(tmp);
+        tmp = 0;
+      }
+    }
+    if (i&3) {
+      out.push(sjcl.bitArray.partial(8*(i&3), tmp));
+    }
+    return out;
+  }
+};
+
+/** @fileOverview Bit array codec implementations.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/**
+ * Hexadecimal
+ * @namespace
+ */
+sjcl.codec.hex = {
+  /** Convert from a bitArray to a hex string. */
+  fromBits: function (arr) {
+    var out = "", i;
+    for (i=0; i<arr.length; i++) {
+      out += ((arr[i]|0)+0xF00000000000).toString(16).substr(4);
+    }
+    return out.substr(0, sjcl.bitArray.bitLength(arr)/4);//.replace(/(.{8})/g, "$1 ");
+  },
+  /** Convert from a hex string to a bitArray. */
+  toBits: function (str) {
+    var i, out=[], len;
+    str = str.replace(/\s|0x/g, "");
+    len = str.length;
+    str = str + "00000000";
+    for (i=0; i<str.length; i+=8) {
+      out.push(parseInt(str.substr(i,8),16)^0);
+    }
+    return sjcl.bitArray.clamp(out, len*4);
+  }
+};
+
+
+/** @fileOverview Javascript SHA-256 implementation.
+ *
+ * An older version of this implementation is available in the public
+ * domain, but this one is (c) Emily Stark, Mike Hamburg, Dan Boneh,
+ * Stanford University 2008-2010 and BSD-licensed for liability
+ * reasons.
+ *
+ * Special thanks to Aldo Cortesi for pointing out several bugs in
+ * this code.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/**
+ * Context for a SHA-256 operation in progress.
+ * @constructor
+ */
+sjcl.hash.sha256 = function (hash) {
+  if (!this._key[0]) { this._precompute(); }
+  if (hash) {
+    this._h = hash._h.slice(0);
+    this._buffer = hash._buffer.slice(0);
+    this._length = hash._length;
+  } else {
+    this.reset();
+  }
+};
+
+/**
+ * Hash a string or an array of words.
+ * @static
+ * @param {bitArray|String} data the data to hash.
+ * @return {bitArray} The hash value, an array of 16 big-endian words.
+ */
+sjcl.hash.sha256.hash = function (data) {
+  return (new sjcl.hash.sha256()).update(data).finalize();
+};
+
+sjcl.hash.sha256.prototype = {
+  /**
+   * The hash's block size, in bits.
+   * @constant
+   */
+  blockSize: 512,
+   
+  /**
+   * Reset the hash state.
+   * @return this
+   */
+  reset:function () {
+    this._h = this._init.slice(0);
+    this._buffer = [];
+    this._length = 0;
+    return this;
+  },
+  
+  /**
+   * Input several words to the hash.
+   * @param {bitArray|String} data the data to hash.
+   * @return this
+   */
+  update: function (data) {
+    if (typeof data === "string") {
+      data = sjcl.codec.utf8String.toBits(data);
+    }
+    var i, b = this._buffer = sjcl.bitArray.concat(this._buffer, data),
+        ol = this._length,
+        nl = this._length = ol + sjcl.bitArray.bitLength(data);
+    if (nl > 9007199254740991){
+      throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits");
+    }
+
+    if (typeof Uint32Array !== 'undefined') {
+	var c = new Uint32Array(b);
+    	var j = 0;
+    	for (i = 512+ol - ((512+ol) & 511); i <= nl; i+= 512) {
+      	    this._block(c.subarray(16 * j, 16 * (j+1)));
+      	    j += 1;
+    	}
+    	b.splice(0, 16 * j);
+    } else {
+	for (i = 512+ol - ((512+ol) & 511); i <= nl; i+= 512) {
+      	    this._block(b.splice(0,16));
+      	}
+    }
+    return this;
+  },
+  
+  /**
+   * Complete hashing and output the hash value.
+   * @return {bitArray} The hash value, an array of 8 big-endian words.
+   */
+  finalize:function () {
+    var i, b = this._buffer, h = this._h;
+
+    // Round out and push the buffer
+    b = sjcl.bitArray.concat(b, [sjcl.bitArray.partial(1,1)]);
+    
+    // Round out the buffer to a multiple of 16 words, less the 2 length words.
+    for (i = b.length + 2; i & 15; i++) {
+      b.push(0);
+    }
+    
+    // append the length
+    b.push(Math.floor(this._length / 0x100000000));
+    b.push(this._length | 0);
+
+    while (b.length) {
+      this._block(b.splice(0,16));
+    }
+
+    this.reset();
+    return h;
+  },
+
+  /**
+   * The SHA-256 initialization vector, to be precomputed.
+   * @private
+   */
+  _init:[],
+  /*
+  _init:[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19],
+  */
+  
+  /**
+   * The SHA-256 hash key, to be precomputed.
+   * @private
+   */
+  _key:[],
+  /*
+  _key:
+    [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+     0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+     0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+     0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+     0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+     0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2],
+  */
+
+
+  /**
+   * Function to precompute _init and _key.
+   * @private
+   */
+  _precompute: function () {
+    var i = 0, prime = 2, factor, isPrime;
+
+    function frac(x) { return (x-Math.floor(x)) * 0x100000000 | 0; }
+
+    for (; i<64; prime++) {
+      isPrime = true;
+      for (factor=2; factor*factor <= prime; factor++) {
+        if (prime % factor === 0) {
+          isPrime = false;
+          break;
+        }
+      }
+      if (isPrime) {
+        if (i<8) {
+          this._init[i] = frac(Math.pow(prime, 1/2));
+        }
+        this._key[i] = frac(Math.pow(prime, 1/3));
+        i++;
+      }
+    }
+  },
+  
+  /**
+   * Perform one cycle of SHA-256.
+   * @param {Uint32Array|bitArray} w one block of words.
+   * @private
+   */
+  _block:function (w) {  
+    var i, tmp, a, b,
+      h = this._h,
+      k = this._key,
+      h0 = h[0], h1 = h[1], h2 = h[2], h3 = h[3],
+      h4 = h[4], h5 = h[5], h6 = h[6], h7 = h[7];
+
+    /* Rationale for placement of |0 :
+     * If a value can overflow is original 32 bits by a factor of more than a few
+     * million (2^23 ish), there is a possibility that it might overflow the
+     * 53-bit mantissa and lose precision.
+     *
+     * To avoid this, we clamp back to 32 bits by |'ing with 0 on any value that
+     * propagates around the loop, and on the hash state h[].  I don't believe
+     * that the clamps on h4 and on h0 are strictly necessary, but it's close
+     * (for h4 anyway), and better safe than sorry.
+     *
+     * The clamps on h[] are necessary for the output to be correct even in the
+     * common case and for short inputs.
+     */
+    for (i=0; i<64; i++) {
+      // load up the input word for this round
+      if (i<16) {
+        tmp = w[i];
+      } else {
+        a   = w[(i+1 ) & 15];
+        b   = w[(i+14) & 15];
+        tmp = w[i&15] = ((a>>>7  ^ a>>>18 ^ a>>>3  ^ a<<25 ^ a<<14) + 
+                         (b>>>17 ^ b>>>19 ^ b>>>10 ^ b<<15 ^ b<<13) +
+                         w[i&15] + w[(i+9) & 15]) | 0;
+      }
+      
+      tmp = (tmp + h7 + (h4>>>6 ^ h4>>>11 ^ h4>>>25 ^ h4<<26 ^ h4<<21 ^ h4<<7) +  (h6 ^ h4&(h5^h6)) + k[i]); // | 0;
+      
+      // shift register
+      h7 = h6; h6 = h5; h5 = h4;
+      h4 = h3 + tmp | 0;
+      h3 = h2; h2 = h1; h1 = h0;
+
+      h0 = (tmp +  ((h1&h2) ^ (h3&(h1^h2))) + (h1>>>2 ^ h1>>>13 ^ h1>>>22 ^ h1<<30 ^ h1<<19 ^ h1<<10)) | 0;
+    }
+
+    h[0] = h[0]+h0 | 0;
+    h[1] = h[1]+h1 | 0;
+    h[2] = h[2]+h2 | 0;
+    h[3] = h[3]+h3 | 0;
+    h[4] = h[4]+h4 | 0;
+    h[5] = h[5]+h5 | 0;
+    h[6] = h[6]+h6 | 0;
+    h[7] = h[7]+h7 | 0;
+  }
+};
+
+
+
+/** @fileOverview HMAC implementation.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/** HMAC with the specified hash function.
+ * @constructor
+ * @param {bitArray} key the key for HMAC.
+ * @param {Object} [Hash=sjcl.hash.sha256] The hash function to use.
+ */
+sjcl.misc.hmac = function (key, Hash) {
+  this._hash = Hash = Hash || sjcl.hash.sha256;
+  var exKey = [[],[]], i,
+      bs = Hash.prototype.blockSize / 32;
+  this._baseHash = [new Hash(), new Hash()];
+
+  if (key.length > bs) {
+    key = Hash.hash(key);
+  }
+  
+  for (i=0; i<bs; i++) {
+    exKey[0][i] = key[i]^0x36363636;
+    exKey[1][i] = key[i]^0x5C5C5C5C;
+  }
+  
+  this._baseHash[0].update(exKey[0]);
+  this._baseHash[1].update(exKey[1]);
+  this._resultHash = new Hash(this._baseHash[0]);
+};
+
+/** HMAC with the specified hash function.  Also called encrypt since it's a prf.
+ * @param {bitArray|String} data The data to mac.
+ */
+sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data) {
+  if (!this._updated) {
+    this.update(data);
+    return this.digest(data);
+  } else {
+    throw new sjcl.exception.invalid("encrypt on already updated hmac called!");
+  }
+};
+
+sjcl.misc.hmac.prototype.reset = function () {
+  this._resultHash = new this._hash(this._baseHash[0]);
+  this._updated = false;
+};
+
+sjcl.misc.hmac.prototype.update = function (data) {
+  this._updated = true;
+  this._resultHash.update(data);
+};
+
+sjcl.misc.hmac.prototype.digest = function () {
+  var w = this._resultHash.finalize(), result = new (this._hash)(this._baseHash[1]).update(w).finalize();
+
+  this.reset();
+
+  return result;
+};
+
+/** @fileOverview Password-based key-derivation function, version 2.0.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/** Password-Based Key-Derivation Function, version 2.0.
+ *
+ * Generate keys from passwords using PBKDF2-HMAC-SHA256.
+ *
+ * This is the method specified by RSA's PKCS #5 standard.
+ *
+ * @param {bitArray|String} password  The password.
+ * @param {bitArray|String} salt The salt.  Should have lots of entropy.
+ * @param {Number} [count=1000] The number of iterations.  Higher numbers make the function slower but more secure.
+ * @param {Number} [length] The length of the derived key.  Defaults to the
+                            output size of the hash function.
+ * @param {Object} [Prff=sjcl.misc.hmac] The pseudorandom function family.
+ * @return {bitArray} the derived key.
+ */
+sjcl.misc.pbkdf2 = function (password, salt, count, length, Prff) {
+  count = count || 10000;
+  
+  if (length < 0 || count < 0) {
+    throw new sjcl.exception.invalid("invalid params to pbkdf2");
+  }
+  
+  if (typeof password === "string") {
+    password = sjcl.codec.utf8String.toBits(password);
+  }
+  
+  if (typeof salt === "string") {
+    salt = sjcl.codec.utf8String.toBits(salt);
+  }
+  
+  Prff = Prff || sjcl.misc.hmac;
+  
+  var prf = new Prff(password),
+      u, ui, i, j, k, out = [], b = sjcl.bitArray;
+
+  for (k = 1; 32 * out.length < (length || 1); k++) {
+    u = ui = prf.encrypt(b.concat(salt,[k]));
+    
+    for (i=1; i<count; i++) {
+      ui = prf.encrypt(ui);
+      for (j=0; j<ui.length; j++) {
+        u[j] ^= ui[j];
+      }
+    }
+    
+    out = out.concat(u);
+  }
+
+  if (length) { out = b.clamp(out, length); }
+
+  return out;
+};
+
+
+// ===== PasswordAuth.gs =====
+const PASSWORD_ROUNDS_ = 600000;
+const PASSWORD_COLUMNS_ = ["PasswordVerifier", "CredentialVersion", "SetupVerifier", "SetupExpiresAt"];
+const PASSWORD_IDLE_MS_ = 30 * 60 * 1000;
+const PASSWORD_MAX_MS_ = 8 * 60 * 60 * 1000;
+
+function passwordEnabled_() {
+  return properties_().getProperty("MEALS_PASSWORD_LOGIN") === "true";
+}
+
+function passwordConfig_() {
+  const p = properties_();
+  const owner = String(p.getProperty("MEALS_PASSWORD_OWNER") || "").trim().toLowerCase();
+  const key = p.getProperty("MEALS_PASSWORD_KEY") || "";
+  const url = p.getProperty("MEALS_PASSWORD_URL") || "";
+  if (!passwordEnabled_() || !/^[a-f0-9]{64}$/.test(key) ||
+      !/^[^@\s]+@[^@\s]+$/.test(owner) ||
+      !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url) ||
+      String(Session.getEffectiveUser().getEmail() || "").toLowerCase() !== owner)
+    fail_("AUTH", "Username sign-in is unavailable.");
+  return { key, url, owner };
+}
+
+function passwordOwner_() {
+  const cfg = passwordConfig_();
+  if (identity_() !== cfg.owner)
+    fail_("FORBIDDEN", "Only the program owner can manage username accounts.");
+  const registry = passwordRegistry_();
+  admin_({ ADMINUSERS: registry.rows.slice(1).map(([Email, Active, Role]) =>
+    ({ Email, Active, Role })) });
+  return { cfg, registry };
+}
+
+function passwordName_(value) {
+  if (typeof value !== "string" || value.length > 64) return "";
+  const name = value.trim().toLowerCase();
+  return /^[a-z][a-z0-9_-]{2,31}$/.test(name) ? name : "";
+}
+
+function passwordInput_(value) {
+  if (typeof value !== "string" || value.length > 256) return false;
+  try {
+    return Array.from(value).length >= 15 &&
+      sjcl.bitArray.bitLength(sjcl.codec.utf8String.toBits(value)) <= 2048;
+  } catch (_) {
+    return false;
+  }
+}
+
+function passwordMac_(cfg, purpose, input) {
+  return Utilities.computeHmacSha256Signature(purpose + ":" + input, cfg.key)
+    .map(b => (b & 255).toString(16).padStart(2, "0")).join("");
+}
+
+function passwordRandom_(cfg, purpose) {
+  // Use the independently generated secret for unpredictability. UUIDs provide uniqueness.
+  return passwordMac_(cfg, purpose, uuid_() + ":" + uuid_());
+}
+
+function passwordEqual_(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function passwordDerive_(password, salt) {
+  return sjcl.codec.hex.fromBits(
+    sjcl.misc.pbkdf2(password, sjcl.codec.hex.toBits(salt), PASSWORD_ROUNDS_, 256)
+  );
+}
+
+function passwordLocked_(fn) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) fail_("BUSY", "Sign-in is busy. Try again shortly.");
+  try {
+    return fn();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function passwordRegistry_() {
+  const db = database_();
+  const sheet = db.getSheetByName("ADMINUSERS");
+  const headers = MEAL_SCHEMA.ADMINUSERS.concat(PASSWORD_COLUMNS_);
+  if (!sheet) fail_("CONFIG", "Username accounts are unavailable.");
+  const rows = sheet.getRange(1, 1, Math.max(sheet.getLastRow(), 1), headers.length).getValues();
+  if (JSON.stringify(rows[0]) !== JSON.stringify(headers))
+    fail_("CONFIG", "Username accounts are unavailable.");
+  return { db, sheet, rows };
+}
+
+function passwordRow_(registry, name) {
+  const id = "local:" + name;
+  const rows = registry.rows;
+  const index = rows.findIndex((row, i) => i > 0 && row[0] === id);
+  if (index < 0) return null;
+  if (rows.some((row, i) => i !== index && row[0] === id))
+    fail_("CONFIG", "Username accounts are unavailable.");
+  const [, active, role, verifier, version, setup, setupExpires] = rows[index];
+  return { index, id, active: (active === true || active === "true") && role === "admin",
+    verifier, version, setup, setupExpires };
+}
+
+function passwordWriteRow_(registry, index, values) {
+  const row = { values: values.map(cell_) };
+  const sheetId = registry.sheet.getSheetId();
+  const request = index == null
+    ? { appendCells: { sheetId, rows: [row], fields: "userEnteredValue" } }
+    : { updateCells: { start: { sheetId, rowIndex: index, columnIndex: 0 },
+        rows: [row], fields: "userEnteredValue" } };
+  Sheets.Spreadsheets.batchUpdate({ requests: [request] }, registry.db.getId());
+}
+
+// Run once from the editor on a staging copy, then separately at approved rollout.
+function setupPasswordColumns_() {
+  const cfg = passwordConfig_();
+  if (identity_() !== cfg.owner) fail_("FORBIDDEN", "Use the owner account.");
+  return passwordLocked_(() => {
+    const db = database_();
+    const sheet = db.getSheetByName("ADMINUSERS");
+    const headers = sheet.getRange(1, 1, 1, 7).getValues()[0];
+    const expected = MEAL_SCHEMA.ADMINUSERS.concat(PASSWORD_COLUMNS_);
+    if (JSON.stringify(headers) === JSON.stringify(expected)) return;
+    if (JSON.stringify(headers.slice(0, 3)) !== JSON.stringify(MEAL_SCHEMA.ADMINUSERS) ||
+        headers.slice(3).some(Boolean) || sheet.getLastColumn() > 3)
+      fail_("CONFIG", "Unexpected ADMINUSERS columns. Nothing was changed.");
+    Sheets.Spreadsheets.batchUpdate({ requests: [{
+      updateCells: {
+        start: { sheetId: sheet.getSheetId(), rowIndex: 0, columnIndex: 3 },
+        rows: [{ values: PASSWORD_COLUMNS_.map(cell_) }],
+        fields: "userEnteredValue",
+      },
+    }] }, db.getId());
+  });
+}
+
+function passwordReserveAttempt_(cfg, name, kind) {
+  const key = "MEALS_PASSWORD_ATTEMPTS";
+  const user = passwordMac_(cfg, "attempt", kind + ":" + name).slice(0, 24);
+  const p = properties_();
+  const currentRate = () => {
+    const slot = Math.floor(Date.now() / 300000);
+    let rate = JSON.parse(p.getProperty(key) || "null");
+    if (!rate || rate.slot !== slot) rate = { slot, count: 0, users: {} };
+    if (rate.count >= 25 || (rate.users[user] || 0) >= 5)
+      fail_("RATE_LIMIT", "Too many attempts. Wait a few minutes and try again.");
+    return rate;
+  };
+  currentRate();
+  passwordLocked_(() => {
+    const rate = currentRate();
+    rate.count++;
+    rate.users[user] = (rate.users[user] || 0) + 1;
+    p.setProperty(key, JSON.stringify(rate));
+  });
+}
+
+function passwordSessionKey_(name) {
+  return "MEALS_PASSWORD_SESSION:" + name;
+}
+
+function passwordReject_() {
+  fail_("AUTH", "Your session ended. Sign in again.");
+}
+
+function passwordSessionRecord_(token) {
+  const cfg = passwordConfig_();
+  const match = typeof token === "string" && token.length <= 97 &&
+    /^([a-z][a-z0-9_-]{2,31})\.([a-f0-9]{64})$/.exec(token);
+  if (!match) return null;
+  const name = match[1];
+  const key = passwordSessionKey_(name);
+  const session = JSON.parse(properties_().getProperty(key) || "null");
+  if (!session || !passwordEqual_(session.digest, passwordMac_(cfg, "session", token)))
+    return null;
+  return { name, key, session };
+}
+
+function passwordSession_(token) {
+  const record = passwordSessionRecord_(token);
+  if (!record) passwordReject_();
+  const { name, key, session } = record;
+  const now = Date.now();
+  if (now >= session.expires || now >= session.seen + PASSWORD_IDLE_MS_)
+    passwordReject_();
+  const row = passwordRow_(passwordRegistry_(), name);
+  if (!row || !row.active || !row.verifier || row.version !== session.version)
+    passwordReject_();
+  return { id: row.id, name, key, session };
+}
+
+function passwordRefreshSession_(token) {
+  const auth = passwordSession_(token);
+  if (Date.now() >= auth.session.seen + 60000) {
+    passwordLocked_(() => {
+      const { key, session } = passwordSession_(token);
+      session.seen = Date.now();
+      properties_().setProperty(key, JSON.stringify(session));
+    });
+  }
+  return auth;
+}
+
+function passwordAccountAction(action, username) {
+  return safeBoundary_(() => passwordLocked_(() => {
+    const { cfg, registry } = passwordOwner_();
+    const name = passwordName_(username);
+    if (!name || !["setup", "disable"].includes(action))
+      fail_("INVALID", "Use 3–32 letters, numbers, underscores or dashes, starting with a letter.");
+    const row = passwordRow_(registry, name);
+    if (action === "disable" && !row)
+      fail_("INVALID", "That username has not been set up.");
+    const code = action === "setup" ? passwordRandom_(cfg, "setup code") : "";
+    const version = passwordRandom_(cfg, "credential version");
+    passwordWriteRow_(registry, row?.index, [
+      "local:" + name, action === "setup", "admin", "", version,
+      code ? passwordMac_(cfg, "setup verifier", name + ":" + code) : "",
+      code ? Date.now() + 60 * 60 * 1000 : "",
+    ]);
+    return code ? { username: name, code, url: cfg.url + "?page=password" } : { username: name };
+  }));
+}
+
+function passwordAccountAccess() {
+  return safeBoundary_(() => {
+    passwordOwner_();
+    return { allowed: true };
+  });
+}
+
+function passwordSet(username, code, password) {
+  return safeBoundary_(() => {
+    const cfg = passwordConfig_();
+    const name = passwordName_(username);
+    passwordReserveAttempt_(cfg, name, "setup");
+    if (!passwordInput_(password))
+      fail_("INVALID", "Use a password with at least 15 characters and no more than 256 UTF-8 bytes.");
+    const row = passwordRow_(passwordRegistry_(), name);
+    const supplied = typeof code === "string" && code.length === 64 ? code : "";
+    const digest = passwordMac_(cfg, "setup verifier", name + ":" + supplied);
+    const valid = (r) => r && r.active && r.setupExpires > Date.now() &&
+      passwordEqual_(r.setup, digest);
+    if (!valid(row)) fail_("AUTH", "The username or setup code is invalid or expired.");
+    const salt = passwordRandom_(cfg, "salt").slice(0, 32);
+    const verifier = "pbkdf2-sha256$600000$" + salt + "$" + passwordDerive_(password, salt);
+    return passwordLocked_(() => {
+      const registry = passwordRegistry_();
+      const current = passwordRow_(registry, name);
+      if (!valid(current) || current.version !== row.version)
+        fail_("AUTH", "The username or setup code is invalid or expired.");
+      passwordWriteRow_(registry, current.index,
+        [current.id, true, "admin", verifier, current.version, "", ""]);
+      return { ready: true };
+    });
+  });
+}
+
+function passwordLogin(username, password) {
+  return safeBoundary_(() => {
+    const cfg = passwordConfig_();
+    const name = passwordName_(username);
+    passwordReserveAttempt_(cfg, name, "login");
+    const row = passwordRow_(passwordRegistry_(), name);
+    const match = row?.active &&
+      /^pbkdf2-sha256\$600000\$([a-f0-9]{32})\$([a-f0-9]{64})$/.exec(row.verifier);
+    const inputOk = passwordInput_(password);
+    const salt = match ? match[1] : passwordMac_(cfg, "dummy salt", name).slice(0, 32);
+    const actual = passwordDerive_(inputOk ? password : "Invalid password input", salt);
+    const verified = passwordEqual_(actual, match ? match[2] : "0".repeat(64));
+    const reject = () => fail_("AUTH", "The username or password is incorrect.");
+    if (!match || !inputOk || !verified) reject();
+    return passwordLocked_(() => {
+      const current = passwordRow_(passwordRegistry_(), name);
+      if (!current || !current.active || current.version !== row.version ||
+          current.verifier !== row.verifier) reject();
+      const token = name + "." + passwordRandom_(cfg, "session token");
+      const now = Date.now();
+      properties_().setProperty(passwordSessionKey_(name), JSON.stringify({
+        digest: passwordMac_(cfg, "session", token),
+        version: current.version,
+        seen: now,
+        expires: now + PASSWORD_MAX_MS_,
+      }));
+      return { token, idleMs: PASSWORD_IDLE_MS_, maxMs: PASSWORD_MAX_MS_ };
+    });
+  });
+}
+
+function passwordLogout(token) {
+  return safeBoundary_(() => passwordLocked_(() => {
+    const record = passwordSessionRecord_(token);
+    if (record) properties_().deleteProperty(record.key);
+    return { signedOut: true };
+  }));
+}
+
+function passwordAdminCall(token, action, p) {
+  return safeBoundary_(() => {
+    const session = passwordRefreshSession_(token);
+    const maps = properties_().getProperty("MEALS_PASSWORD_MAPS") === "true";
+    if (["addressSuggestions", "addressPreview", "verifyAddress", "optimize"].includes(action) &&
+        !maps)
+      fail_("API_DISABLED", "Automatic address and routing tools are disabled for username sign-in.");
+    const result = adminDispatch_(action, p, { email: session.id, label: session.name,
+      state: load_(), recheck: () => passwordSession_(token).id,
+      passwordMaps: maps });
+    passwordSession_(token);
+    return result;
   });
 }
 
@@ -758,13 +1869,13 @@ function referralMeals_(s, id) {
     0,
   );
 }
-function submit_(p, adminEmail) {
+function submit_(p, adminEmail, recheck = admin_) {
   const canonical = canonicalSubmission_(p, Boolean(adminEmail)),
     submissionId = submissionId_(p.submissionId),
     hash = fingerprint_(canonical);
   return locked_((s) => {
     if (adminEmail) {
-      if (admin_(s) !== adminEmail)
+      if (recheck(s) !== adminEmail)
         fail_("AUTH", "Administrator identity changed.");
     }
     const prior = s.SUBMISSIONS.find((r) => r.SubmissionID === submissionId);
@@ -1105,9 +2216,8 @@ function addressLookup_(address) {
     longitude: confirmed ? geo.location.longitude : "",
   };
 }
-function verifyAddress_(p) {
-  const a = requireAdmin_(),
-    isStart = p.entity === "event",
+function verifyAddress_(p, a) {
+  const isStart = p.entity === "event",
     r = byId_(
       a.state,
       isStart ? "EVENTS" : "RECIPIENTS",
@@ -1119,7 +2229,7 @@ function verifyAddress_(p) {
   const address = isStart ? r.StartAddress : r.Address;
   const lookup = addressLookup_(address);
   return locked_((s) => {
-    const admin = admin_(s),
+    const admin = a.recheck(s),
       row = byId_(
         s,
         isStart ? "EVENTS" : "RECIPIENTS",
@@ -1653,9 +2763,8 @@ function routeOrder_(s, p, admin, optimized) {
   );
   return route_(s, e.EventID);
 }
-function optimize_(p) {
-  const a = requireAdmin_(),
-    e = byId_(a.state, "EVENTS", p.eventId);
+function optimize_(p, a) {
+  const e = byId_(a.state, "EVENTS", p.eventId);
   editable_(e);
   if (Number(p.routeVersion) !== Number(e.RouteVersion))
     fail_("CONFLICT", "The delivery route changed. Refresh before optimizing.");
@@ -1740,7 +2849,7 @@ function optimize_(p) {
     routeOrder_(
       s,
       { eventId: e.EventID, routeVersion: p.routeVersion, recipientIds: ids },
-      admin_(s),
+      a.recheck(s),
       true,
     ),
   );
@@ -1930,11 +3039,17 @@ function legacyMigrationPlan_() {
 }
 
 // ===== Code.gs =====
-const MEALS_BACKEND_VERSION = "2026-11-06-delivery-pdf-v1";
+const MEALS_BACKEND_VERSION = "2026-11-10-password-admin-v1";
 function include_(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
 function doGet(e) {
+  if (e && e.parameter && e.parameter.page === "password") {
+    const auth = safeBoundary_(() => passwordConfig_().url);
+    if (!auth.ok)
+      return HtmlService.createHtmlOutput("<h1>Username sign-in is unavailable</h1>");
+    return adminPage_(auth.data);
+  }
   if (e && e.parameter && e.parameter.page === "admin") {
     const auth = safeBoundary_(() => {
       const a = requireAdmin_();
@@ -1944,9 +3059,7 @@ function doGet(e) {
       return HtmlService.createHtmlOutput(
         "<h1>Administrator access unavailable</h1><p>Open the authenticated admin deployment using an approved Google account. If Google cannot identify your account, stop and contact the program administrator.</p>",
       );
-    return HtmlService.createHtmlOutput(ADMIN_PAGE_HTML_)
-      .setTitle("Community Meals Administration")
-      .addMetaTag("viewport", "width=device-width, initial-scale=1");
+    return adminPage_();
   }
   const action = e && e.parameter && e.parameter.action;
   if (action === "submissionReceipt")
@@ -1962,6 +3075,20 @@ function doGet(e) {
           },
         },
   );
+}
+function adminPage_(passwordUrl) {
+  const html = HtmlService.createHtmlOutput(ADMIN_PAGE_HTML_);
+  let page = html;
+  if (passwordUrl) {
+    const shell = html.getContent();
+    if (!shell.includes("<body>"))
+      return HtmlService.createHtmlOutput("<h1>Username sign-in is unavailable</h1>");
+    page = HtmlService.createHtmlOutput(shell.replace(
+      "<body>", '<body data-password-url="' + passwordUrl + '?page=password">'
+    ));
+  }
+  return page.setTitle("Community Meals Administration")
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }
 function publicSubmissionReceipt_(submissionId) {
   // Possession of an unguessable submission UUID is required. Return only the
@@ -2009,59 +3136,62 @@ function json_(data) {
 }
 function adminCall(action, p) {
   return safeBoundary_(() => {
-    // Authorization must happen before dispatch, including every read.
     const auth = requireAdmin_();
-    p = p || {};
-    if (
-      Utilities.newBlob(JSON.stringify(p)).getBytes().length > MEAL_LIMITS.bytes
-    )
-      fail_("INVALID", "The request is too large.");
-    if (action === "addressConfig") return addressFeatures_();
-    if (action === "addressSuggestions") return addressSuggestions_(p);
-    if (action === "addressPreview") return addressPreview_(p);
-    if (action === "publicFormLink") return publicFormLink_();
-    if (action === "identity")
-      return {
-        email: auth.email,
-        environment: properties_().getProperty("MEALS_ENV"),
-        backendVersion: MEALS_BACKEND_VERSION,
-      };
-    if (action === "events")
-      return auth.state.EVENTS.slice().sort((a, b) =>
-        a.DeliveryDate.localeCompare(b.DeliveryDate),
-      );
-    if (action === "dashboard") return dashboard_(auth.state, p);
-    if (action === "route") return route_(auth.state, id_(p.eventId));
-    if (action === "deliveryPdf") return deliveryPdf_(auth.state, p);
-    if (action === "reports") return reports_(auth.state, p);
-    if (action === "createReferral") return submit_(p, auth.email);
-    if (action === "submissionReceipt") {
-      const record = auth.state.SUBMISSIONS.find(r => r.SubmissionID === submissionId_(p.submissionId));
-      if (!record) return { receipt: null };
-      const parent = submissionReferral_(auth.state, record);
-      return { receipt: parent.SubmittedByAdmin === true ? savedSubmissionReceipt_(auth.state, record) : null };
+    return adminDispatch_(action, p, { ...auth, recheck: admin_, passwordMaps: true });
+  });
+}
+function adminDispatch_(action, p, auth) {
+  p = p || {};
+  if (
+    Utilities.newBlob(JSON.stringify(p)).getBytes().length > MEAL_LIMITS.bytes
+  )
+    fail_("INVALID", "The request is too large.");
+  if (action === "addressConfig")
+    return auth.passwordMaps ? addressFeatures_() : { autocomplete: false, validation: false };
+  if (action === "addressSuggestions") return addressSuggestions_(p);
+  if (action === "addressPreview") return addressPreview_(p);
+  if (action === "publicFormLink") return publicFormLink_();
+  if (action === "identity")
+    return {
+      email: auth.label || auth.email,
+      environment: properties_().getProperty("MEALS_ENV"),
+      backendVersion: MEALS_BACKEND_VERSION,
+    };
+  if (action === "events")
+    return auth.state.EVENTS.slice().sort((a, b) =>
+      a.DeliveryDate.localeCompare(b.DeliveryDate),
+    );
+  if (action === "dashboard") return dashboard_(auth.state, p);
+  if (action === "route") return route_(auth.state, id_(p.eventId));
+  if (action === "deliveryPdf") return deliveryPdf_(auth.state, p);
+  if (action === "reports") return reports_(auth.state, p);
+  if (action === "createReferral") return submit_(p, auth.email, auth.recheck);
+  if (action === "submissionReceipt") {
+    const record = auth.state.SUBMISSIONS.find(r => r.SubmissionID === submissionId_(p.submissionId));
+    if (!record) return { receipt: null };
+    const parent = submissionReferral_(auth.state, record);
+    return { receipt: parent.SubmittedByAdmin === true ? savedSubmissionReceipt_(auth.state, record) : null };
+  }
+  if (action === "verifyAddress") return verifyAddress_(p, auth);
+  if (action === "optimize") return optimize_(p, auth);
+  return locked_((s) => {
+    const admin = auth.recheck(s);
+    switch (action) {
+      case "manualAddressReview":
+        return manualAddressReview_(s, p, admin);
+      case "saveEvent":
+        return eventWrite_(s, p, admin);
+      case "archive":
+        return archiveWrite_(s, p, admin);
+      case "statuses":
+        return statuses_(s, p, admin);
+      case "editReferral":
+        return editReferral_(s, p, admin);
+      case "reorder":
+        return routeOrder_(s, p, admin, false);
+      default:
+        fail_("FORBIDDEN", "This administrator operation is unavailable.");
     }
-    if (action === "verifyAddress") return verifyAddress_(p);
-    if (action === "optimize") return optimize_(p);
-    return locked_((s) => {
-      const admin = admin_(s);
-      switch (action) {
-        case "manualAddressReview":
-          return manualAddressReview_(s, p, admin);
-        case "saveEvent":
-          return eventWrite_(s, p, admin);
-        case "archive":
-          return archiveWrite_(s, p, admin);
-        case "statuses":
-          return statuses_(s, p, admin);
-        case "editReferral":
-          return editReferral_(s, p, admin);
-        case "reorder":
-          return routeOrder_(s, p, admin, false);
-        default:
-          fail_("FORBIDDEN", "This administrator operation is unavailable.");
-      }
-    });
   });
 }
 function publicFormLink_() {

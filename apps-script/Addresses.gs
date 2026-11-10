@@ -40,9 +40,8 @@ function addressLookup_(address) {
     longitude: confirmed ? geo.location.longitude : "",
   };
 }
-function verifyAddress_(p) {
-  const a = requireAdmin_(),
-    isStart = p.entity === "event",
+function verifyAddress_(p, a) {
+  const isStart = p.entity === "event",
     r = byId_(
       a.state,
       isStart ? "EVENTS" : "RECIPIENTS",
@@ -54,7 +53,7 @@ function verifyAddress_(p) {
   const address = isStart ? r.StartAddress : r.Address;
   const lookup = addressLookup_(address);
   return locked_((s) => {
-    const admin = admin_(s),
+    const admin = a.recheck(s),
       row = byId_(
         s,
         isStart ? "EVENTS" : "RECIPIENTS",

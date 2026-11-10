@@ -13,7 +13,7 @@ function harness() {
   });
   for (const id of ['adminEvents', 'showArchived', 'adminMessage']) nodes.set(id, node());
   const ctx = vm.createContext({ window: {}, document: { addEventListener: (name, fn) => clicks.push(fn) },
-    setTimeout: () => 1, queueMicrotask, busy: false, $: id => nodes.get(id) });
+    setTimeout: () => 1, queueMicrotask, busy: false, sessionClosed: false, $: id => nodes.get(id) });
   vm.runInContext(fs.readFileSync('address-entry.js', 'utf8'), ctx);
   ctx.MealButtonFeedback = ctx.window.MealButtonFeedback;
   const source = fs.readFileSync('apps-script/AdminClient.html', 'utf8');

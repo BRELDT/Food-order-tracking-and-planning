@@ -151,9 +151,8 @@ function routeOrder_(s, p, admin, optimized) {
   );
   return route_(s, e.EventID);
 }
-function optimize_(p) {
-  const a = requireAdmin_(),
-    e = byId_(a.state, "EVENTS", p.eventId);
+function optimize_(p, a) {
+  const e = byId_(a.state, "EVENTS", p.eventId);
   editable_(e);
   if (Number(p.routeVersion) !== Number(e.RouteVersion))
     fail_("CONFLICT", "The delivery route changed. Refresh before optimizing.");
@@ -238,7 +237,7 @@ function optimize_(p) {
     routeOrder_(
       s,
       { eventId: e.EventID, routeVersion: p.routeVersion, recipientIds: ids },
-      admin_(s),
+      a.recheck(s),
       true,
     ),
   );

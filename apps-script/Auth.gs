@@ -3,7 +3,7 @@ function identity_() {
   const effective = String(
     Session.getEffectiveUser().getEmail() || "",
   ).toLowerCase();
-  if (!active || active !== effective)
+  if (!active.includes("@") || active !== effective)
     fail_(
       "AUTH",
       "Sign in through the authenticated administrator application. Your Google identity could not be verified.",

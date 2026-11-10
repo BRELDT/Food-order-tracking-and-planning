@@ -9,10 +9,49 @@
     </style>
   </head>
   <body>
+    <main class="page-wrap" id="passwordGate" hidden>
+      <h1>Community Meals Administration</h1>
+      <form id="passwordLoginForm" method="post" class="panel">
+        <h2>Sign in</h2>
+        <label>Username <input id="passwordLoginName" autocomplete="username" required maxlength="32" /></label>
+        <label>Password <input id="passwordLoginValue" type="password" autocomplete="current-password" required maxlength="256" /></label>
+        <div class="actions">
+          <button type="submit">Sign in</button>
+          <button id="showPasswordSetup" type="button" class="secondary">Set up or reset password</button>
+        </div>
+      </form>
+      <form id="passwordSetupForm" method="post" class="panel" hidden>
+        <h2>Set your password</h2>
+        <label>Username <input id="passwordSetupName" autocomplete="username" required maxlength="32" /></label>
+        <label>Setup code <input id="passwordSetupCode" autocomplete="off" spellcheck="false" required maxlength="64" /></label>
+        <label>New password <input id="passwordSetupValue" type="password" autocomplete="new-password" required minlength="15" maxlength="256" /></label>
+        <label>Confirm password <input id="passwordSetupConfirm" type="password" autocomplete="new-password" required minlength="15" maxlength="256" /></label>
+        <p>Use at least 15 characters. Ask the program owner for a setup code.</p>
+        <div class="actions">
+          <button type="submit">Save password</button>
+          <button id="showPasswordLogin" type="button" class="secondary">Back to sign in</button>
+        </div>
+      </form>
+      <p id="passwordStatus" role="status" aria-live="polite"></p>
+      <a id="passwordReturn" class="button" hidden>Return to sign in</a>
+    </main>
+    <div id="adminWorkspace" hidden>
     <header class="site-header no-print">
       <div class="page-wrap">
         <h1>Community Meals</h1>
         <p id="adminIdentity"></p>
+        <button id="passwordLogout" type="button" class="secondary" hidden>Sign out</button>
+        <details id="passwordOwnerPanel" hidden>
+          <summary>Manage username accounts</summary>
+          <form id="passwordOwnerForm" method="post">
+            <label>Username <input id="passwordOwnerName" required maxlength="32" /></label>
+            <div class="actions">
+              <button type="submit" value="setup">Issue setup or reset code</button>
+              <button type="submit" value="disable" class="danger">Disable account</button>
+            </div>
+          </form>
+          <p id="passwordOwnerStatus" role="status"></p>
+        </details>
       </div>
     </header>
     <main class="page-wrap">
@@ -244,6 +283,7 @@
       </div>
       <p id="publicLinkMessage" role="status" aria-live="polite"></p>
     </dialog>
+    </div>
     <script>
       <?!= include_('AddressClient'); ?>
       <?!= include_('AdminClient'); ?>
