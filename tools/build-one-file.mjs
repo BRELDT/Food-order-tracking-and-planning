@@ -3,6 +3,8 @@ const names = [
   "Validation",
   "Store",
   "Auth",
+  "PasswordCrypto",
+  "PasswordAuth",
   "Audit",
   "Events",
   "Duplicates",
@@ -25,13 +27,13 @@ const modules = names
     let code = fs.readFileSync(`apps-script/${name}.gs`, "utf8");
     if (name === "Code")
       code = code.replace(
-        'HtmlService.createTemplateFromFile("Admin")\n      .evaluate()',
+        'HtmlService.createTemplateFromFile("Admin").evaluate()',
         "HtmlService.createHtmlOutput(ADMIN_PAGE_HTML_)",
       );
     return `// ===== ${name}.gs =====\n${code}`;
   })
   .join("\n");
-const bundle = `// Build marker: COMMUNITY-MEALS-20261106-DELIVERY-PDF\n/* Community Meals V1 — generated from the modular files in this commit.\n   Install the ENTIRE file as Code.gs. No other .gs/.html files required.\n   Preserve existing Script Properties and deployment settings.\n   No setup or migration function needs to run. */\nconst ADMIN_PAGE_HTML_ = ${JSON.stringify(html)};\n\n${modules}`;
+const bundle = `// Build marker: COMMUNITY-MEALS-PASSWORD-ADMIN\n/* Community Meals V1 — generated from the modular files in this commit.\n   Install the ENTIRE file as Code.gs. No other .gs/.html files required.\n   Preserve existing Script Properties and deployment settings.\n   No setup or migration function needs to run. */\nconst ADMIN_PAGE_HTML_ = ${JSON.stringify(html)};\n\n${modules}`;
 const target = "apps-script/CommunityMeals-OneFile.gs";
 if (process.argv.includes("--check")) {
   if (fs.readFileSync(target, "utf8") !== bundle)

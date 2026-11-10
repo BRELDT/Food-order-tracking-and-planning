@@ -3,12 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/backend.test.mjs tests/address-entry.test.mjs tests/address-timing.test.mjs tests/admin-request-cards.test.mjs tests/button-feedback.test.mjs tests/route-guidance.test.mjs tests/submission-confirmation.test.mjs tests/launch-readiness.test.mjs",
+    "test": "node --test tests/backend.test.mjs tests/address-entry.test.mjs tests/address-timing.test.mjs tests/admin-request-cards.test.mjs tests/button-feedback.test.mjs tests/route-guidance.test.mjs tests/submission-confirmation.test.mjs tests/launch-readiness.test.mjs tests/password-auth.test.mjs",
     "test:ui": "node tests/browser.test.mjs",
     "preview": "node tools/dev-server.mjs",
     "check": "node tools/check.mjs && node tools/build-one-file.mjs --check",
     "test:addresses:ui": "node tests/address-browser.test.mjs",
-    "test:bundle": "MEALS_TEST_BUNDLE=true node --test tests/backend.test.mjs tests/address-entry.test.mjs tests/address-timing.test.mjs tests/admin-request-cards.test.mjs tests/button-feedback.test.mjs tests/route-guidance.test.mjs tests/submission-confirmation.test.mjs tests/launch-readiness.test.mjs"
+    "test:bundle": "MEALS_TEST_BUNDLE=true node --test tests/backend.test.mjs tests/address-entry.test.mjs tests/address-timing.test.mjs tests/admin-request-cards.test.mjs tests/button-feedback.test.mjs tests/route-guidance.test.mjs tests/submission-confirmation.test.mjs tests/launch-readiness.test.mjs tests/password-auth.test.mjs"
   },
   "engines": {
     "node": ">=20"

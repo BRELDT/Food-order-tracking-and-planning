@@ -68,6 +68,7 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
         setProperty: (k, v) => {
           props[k] = v;
         },
+        deleteProperty: (k) => { delete props[k]; },
       }),
     },
     Session: {
@@ -114,7 +115,13 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
     },
     HtmlService: {
       createHtmlOutput: (html) => ({
+        getContent: () => html,
+        setTitle() { return this; },
+        addMetaTag() { return this; },
         getAs: (mimeType) => ({ getBytes: () => [...state.convertPdf(html, mimeType)] }),
+      }),
+      createTemplateFromFile: () => ({
+        evaluate: () => ctx.HtmlService.createHtmlOutput('<body>Admin test shell</body>'),
       }),
     },
     SpreadsheetApp: { openById: () => db },
@@ -194,6 +201,8 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
     "Validation",
     "Store",
     "Auth",
+    "PasswordCrypto",
+    "PasswordAuth",
     "Audit",
     "Events",
     "Duplicates",

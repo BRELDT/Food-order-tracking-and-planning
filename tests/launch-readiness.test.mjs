@@ -96,7 +96,7 @@ function createController(sharedStorage = new Map()) {
   const source = fs.readFileSync('apps-script/AdminClient.html','utf8');
   const begin = source.indexOf('  const pendingCreates =');
   const end = source.indexOf('  async function task(',begin);
-  const requests = [], ctx = vm.createContext({crypto:crypto.webcrypto, TextEncoder, Uint8Array,
+  const requests = [], ctx = vm.createContext({crypto:crypto.webcrypto, TextEncoder, Uint8Array, passwordUrl: "", sessionClosed: false,
     sessionStorage:{getItem:k=>sharedStorage.get(k),setItem:(k,v)=>sharedStorage.set(k,v),removeItem:k=>sharedStorage.delete(k)},
     rpc:async(action,p)=>{ requests.push({action,p}); if(ctx.failure) throw ctx.failure; return {saved:true}; }
   });

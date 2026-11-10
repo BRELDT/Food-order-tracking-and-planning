@@ -1,6 +1,9 @@
 "use strict";
 (() => {
   const $ = (id) => document.getElementById(id);
+  const passwordUrl = document.body.dataset.passwordUrl;
+  let sessionToken = "", sessionClosed = false;
+  let sessionIdleMs = 0, sessionIdleUntil = 0, sessionUntil = 0, sessionTimer;
   let events = [],
     dashboard = null,
     route = null,
@@ -41,40 +44,58 @@
     dashboard.event.Archived === true ||
     dashboard.event.Status === "Completed";
   function rpc(action, p = {}) {
-    return new Promise((resolve, reject) =>
-      google.script.run
-        .withSuccessHandler((r) =>
-          r.ok
-            ? resolve(r.data)
-            : reject(
-                Object.assign(new Error(
-                  r.error?.message ||
-                    "Your changes were not saved. Please try again.",
-                ), { code: r.error?.code }),
-              ),
-        )
+    return new Promise((resolve, reject) => {
+      if (passwordUrl) checkPasswordExpiry();
+      const token = sessionToken;
+      if (passwordUrl && (!token || sessionClosed)) {
+        reject(new Error("Sign in again."));
+        return;
+      }
+      const call = google.script.run
+        .withSuccessHandler((r) => {
+          if (passwordUrl && (token !== sessionToken || sessionClosed)) {
+            reject(new Error("Sign in again."));
+            return;
+          }
+          if (passwordUrl && r.error?.code === "AUTH") endPasswordSession(r.error.message);
+          if (r.ok) {
+            if (passwordUrl) schedulePasswordExpiry();
+            resolve(r.data);
+          } else {
+            reject(Object.assign(new Error(
+              r.error?.message || "Your changes were not saved. Please try again.",
+            ), { code: r.error?.code }));
+          }
+        })
         .withFailureHandler(() =>
           reject(
             new Error(
               "The service could not be reached. Refresh and try again.",
             ),
           ),
-        )
-        .adminCall(action, p),
-    );
+        );
+      if (passwordUrl) call.passwordAdminCall(token, action, p);
+      else call.adminCall(action, p);
+    });
   }
   const pendingCreates = new Map();
-  for (const action of ["createReferral", "saveEvent"]) {
-    try {
-      const pending = JSON.parse(sessionStorage.getItem("community-meals-admin-" + action) || "null");
-      if (pending) pendingCreates.set(action, pending);
-    } catch (_) { /* Storage may be unavailable; this tab still deduplicates. */ }
+  let pendingCreatePrefix = "";
+  function loadPendingCreates(prefix) {
+    pendingCreatePrefix = prefix;
+    for (const action of ["createReferral", "saveEvent"]) {
+      try {
+        const pending = JSON.parse(sessionStorage.getItem(prefix + action) || "null");
+        if (pending) pendingCreates.set(action, pending);
+      } catch (_) { /* Storage may be unavailable; this tab still deduplicates. */ }
+    }
   }
+  if (!passwordUrl) loadPendingCreates("community-meals-admin-");
   function retainCreate(action, pending) {
     if (pending) pendingCreates.set(action, pending);
     else pendingCreates.delete(action);
+    if (!pendingCreatePrefix || sessionClosed) return;
     try {
-      const key = "community-meals-admin-" + action;
+      const key = pendingCreatePrefix + action;
       if (pending) sessionStorage.setItem(key, JSON.stringify(pending));
       else sessionStorage.removeItem(key);
     } catch (_) { /* No recipient details are stored in browser storage. */ }
@@ -116,14 +137,17 @@
     $("adminMessage").textContent = "Working…";
     try {
       await fn();
-      $("adminMessage").textContent = "";
+      if (!sessionClosed) $("adminMessage").textContent = "";
     } catch (e) {
+      if (sessionClosed) return;
       $("adminMessage").textContent = e.message;
     } finally {
       busy = false;
       finishFeedback();
-      $("adminEvents").disabled = false;
-      $("showArchived").disabled = false;
+      if (!sessionClosed) {
+        $("adminEvents").disabled = false;
+        $("showArchived").disabled = false;
+      }
     }
   }
   const dateLabel = (s) =>
@@ -1069,14 +1093,156 @@
       throw error;
     }
   }));
-  window.addEventListener("pagehide", clearDeliveryPdf);
+  window.addEventListener("pagehide", () => {
+    if (sessionToken) endPasswordSession("Sign in again.");
+    else if (!sessionClosed) clearDeliveryPdf();
+  });
   ["reportEvent", "reportYear"].forEach((id) =>
     $(id).addEventListener("change", () => task(reports)),
   );
-  task(async () => {
-    const identity = await rpc("identity");
-    $("adminIdentity").textContent =
-      identity.email + " · " + identity.environment;
-    await refreshEvents();
-  });
+  function startDashboard() {
+    $("passwordGate").hidden = true;
+    $("adminWorkspace").hidden = false;
+    task(async () => {
+      const identity = await rpc("identity");
+      if (passwordUrl) loadPendingCreates("community-meals-local-" + identity.email + "-");
+      $("adminIdentity").textContent =
+        identity.email + " · " + identity.environment;
+      await refreshEvents();
+    });
+  }
+
+  function passwordRpc(method, ...args) {
+    return new Promise((resolve, reject) => {
+      const call = google.script.run
+        .withSuccessHandler(r => r.ok ? resolve(r.data) : reject(new Error(r.error.message)))
+        .withFailureHandler(() => reject(new Error("The service could not be reached. Try again.")));
+      call[method](...args);
+    });
+  }
+
+  function endPasswordSession(message) {
+    if (sessionClosed) return;
+    sessionClosed = true;
+    sessionToken = "";
+    clearTimeout(sessionTimer);
+    clearDeliveryPdf();
+    for (const dialog of document.querySelectorAll("dialog.address-check"))
+      dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+    pendingCreates.clear();
+    events = [];
+    dashboard = route = editing = null;
+    referralAddressControls = [];
+    $("adminWorkspace").remove();
+    $("passwordGate").hidden = false;
+    $("passwordStatus").textContent = message;
+    $("passwordLoginForm").hidden = true;
+    $("passwordSetupForm").hidden = true;
+    $("passwordReturn").href = passwordUrl;
+    $("passwordReturn").hidden = false;
+    $("passwordReturn").focus();
+  }
+
+  function checkPasswordExpiry() {
+    if (sessionToken && Date.now() >= Math.min(sessionIdleUntil, sessionUntil))
+      endPasswordSession("Your session expired. Sign in again.");
+  }
+
+  function schedulePasswordExpiry() {
+    // The server persists activity at most once per minute.
+    sessionIdleUntil = Date.now() + sessionIdleMs - 60000;
+    clearTimeout(sessionTimer);
+    sessionTimer = setTimeout(checkPasswordExpiry,
+      Math.max(0, Math.min(sessionIdleUntil, sessionUntil) - Date.now()));
+  }
+
+  function passwordForm(id, statusId, submit) {
+    $(id).addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const buttons = [...form.querySelectorAll("button")];
+      if (buttons.some(button => button.disabled)) return;
+      buttons.forEach(button => { button.disabled = true; });
+      $(statusId).textContent = "Working…";
+      try {
+        $(statusId).textContent = await submit(event.submitter);
+      } catch (error) {
+        $(statusId).textContent = error.message;
+      } finally {
+        buttons.forEach(button => { button.disabled = false; });
+      }
+    });
+  }
+
+  if (passwordUrl) {
+    $("passwordGate").hidden = false;
+    const showSetup = (setup) => {
+      $("passwordLoginForm").hidden = setup;
+      $("passwordSetupForm").hidden = !setup;
+      $("passwordLoginValue").value = "";
+      $("passwordSetupCode").value = "";
+      $("passwordSetupValue").value = "";
+      $("passwordSetupConfirm").value = "";
+      $("passwordStatus").textContent = "";
+      $(setup ? "passwordSetupName" : "passwordLoginName").focus();
+    };
+    $("showPasswordSetup").addEventListener("click", () => showSetup(true));
+    $("showPasswordLogin").addEventListener("click", () => showSetup(false));
+    passwordForm("passwordLoginForm", "passwordStatus", async () => {
+      const secret = $("passwordLoginValue").value;
+      $("passwordLoginValue").value = "";
+      const data = await passwordRpc("passwordLogin", $("passwordLoginName").value, secret);
+      sessionToken = data.token;
+      sessionIdleMs = data.idleMs;
+      sessionUntil = Date.now() + data.maxMs;
+      schedulePasswordExpiry();
+      $("passwordLogout").hidden = false;
+      startDashboard();
+      return "";
+    });
+    passwordForm("passwordSetupForm", "passwordStatus", async () => {
+      const name = $("passwordSetupName").value;
+      const code = $("passwordSetupCode").value.trim();
+      const secret = $("passwordSetupValue").value;
+      const confirm = $("passwordSetupConfirm").value;
+      $("passwordSetupValue").value = $("passwordSetupConfirm").value = "";
+      if (secret !== confirm) throw new Error("Enter the same password in both fields.");
+      await passwordRpc("passwordSet", name, code, secret);
+      $("passwordLoginName").value = name;
+      showSetup(false);
+      return "Password saved. Sign in to continue.";
+    });
+    $("passwordLogout").addEventListener("click", async () => {
+      const token = sessionToken;
+      endPasswordSession("Signing out…");
+      try {
+        await passwordRpc("passwordLogout", token);
+        $("passwordStatus").textContent = "Signed out.";
+      } catch (_) {
+        $("passwordStatus").textContent = "Dashboard closed. The server could not confirm sign-out.";
+      }
+    });
+    document.addEventListener("visibilitychange", checkPasswordExpiry);
+  } else {
+    startDashboard();
+    passwordRpc("passwordAccountAccess")
+      .then(() => { $("passwordOwnerPanel").hidden = false; })
+      .catch(() => {});
+    passwordForm("passwordOwnerForm", "passwordOwnerStatus", async (button) => {
+      const action = button?.value || "setup";
+      const username = $("passwordOwnerName").value.trim();
+      if (!window.confirm(action === "disable"
+        ? "Disable this account and end its session?"
+        : "Issue a setup code and end any existing session for this username?"))
+        return "";
+      const result = await passwordRpc("passwordAccountAction", action, username);
+      return result.code
+        ? "Share privately with " + result.username + ": " + result.url + " — Setup code: " +
+          result.code + " (expires in one hour)."
+        : "Account disabled: " + result.username;
+    });
+    $("passwordOwnerPanel").addEventListener("toggle", () => {
+      if (!$("passwordOwnerPanel").open) $("passwordOwnerStatus").textContent = "";
+    });
+  }
 })();

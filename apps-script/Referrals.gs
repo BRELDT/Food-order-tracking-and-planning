@@ -4,13 +4,13 @@ function referralMeals_(s, id) {
     0,
   );
 }
-function submit_(p, adminEmail) {
+function submit_(p, adminEmail, recheck = admin_) {
   const canonical = canonicalSubmission_(p, Boolean(adminEmail)),
     submissionId = submissionId_(p.submissionId),
     hash = fingerprint_(canonical);
   return locked_((s) => {
     if (adminEmail) {
-      if (admin_(s) !== adminEmail)
+      if (recheck(s) !== adminEmail)
         fail_("AUTH", "Administrator identity changed.");
     }
     const prior = s.SUBMISSIONS.find((r) => r.SubmissionID === submissionId);

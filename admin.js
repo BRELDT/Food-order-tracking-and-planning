@@ -1,7 +1,12 @@
 "use strict";
 document.addEventListener("DOMContentLoaded", () => {
-  const link = document.getElementById("adminLink"),
-    url = window.MEALS_CONFIG?.adminAppUrl;
+  if (!setLink("adminLink", window.MEALS_CONFIG?.adminAppUrl, "admin"))
+    document.getElementById("adminStatus").textContent =
+      "The authenticated administrator application has not been configured yet.";
+  setLink("passwordAdminLink", window.MEALS_CONFIG?.passwordAdminAppUrl, "password");
+});
+function setLink(id, url, page) {
+  const link = document.getElementById(id);
   try {
     const parsed = new URL(url);
     if (
@@ -9,11 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
       !parsed.pathname.endsWith("/exec")
     )
       throw new Error();
-    parsed.searchParams.set("page", "admin");
+    parsed.searchParams.set("page", page);
     link.href = parsed.href;
     link.hidden = false;
+    return true;
   } catch (_) {
-    document.getElementById("adminStatus").textContent =
-      "The authenticated administrator application has not been configured yet.";
+    return false;
   }
-});
+}
