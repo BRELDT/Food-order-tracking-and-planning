@@ -164,12 +164,34 @@ function linkedRecipients_(s) {
 function relationshipIssues_(s, eventIds) {
   const ids = new Set(eventIds);
   const linked = new Set(linkedRecipients_(s).map(r => r.RecipientID));
-  const excluded = s.RECIPIENTS.filter(r => ids.has(r.EventID) && !linked.has(r.RecipientID));
-  const affected = new Set(excluded.map(r => r.ReferralID));
+  const orphans = s.RECIPIENTS.filter(r => ids.has(r.EventID) && !linked.has(r.RecipientID));
+  const affected = new Set(orphans.map(r => r.ReferralID));
+  const reviewedRecipients = new Set(), reviewedSubmissions = new Set();
+  // An audit entry suppresses only exact owner-confirmed historical test IDs.
+  // It does not affect records, referral accounting, or receipt validation.
+  (s.AUDITLOG || []).forEach(entry => {
+    if (entry.Action !== "Historical Test Orphans Reviewed" ||
+        entry.EntityType !== "Event" || !ids.has(entry.EntityID)) return;
+    let review;
+    try { review = JSON.parse(entry.NewValue); } catch (_) { return; }
+    if (!review || review.kind !== "historical-test-orphan-exclusion" ||
+        review.version !== 1 || review.eventId !== entry.EntityID ||
+        !Array.isArray(review.recipientIds) || !Array.isArray(review.submissionIds))
+      return;
+    const eligible = orphans.filter(r => r.EventID === entry.EntityID);
+    const eligibleIds = new Set(eligible.map(r => r.RecipientID));
+    const eligibleRefs = new Set(eligible.map(r => r.ReferralID));
+    const eligibleSubmissions = new Set(s.SUBMISSIONS.filter(r =>
+      eligibleRefs.has(r.ReferralID)).map(r => r.SubmissionID));
+    review.recipientIds.forEach(id => { if (eligibleIds.has(id)) reviewedRecipients.add(id); });
+    review.submissionIds.forEach(id => { if (eligibleSubmissions.has(id)) reviewedSubmissions.add(id); });
+  });
+  const outstanding = orphans.filter(r => !reviewedRecipients.has(r.RecipientID));
   return {
-    recipientRecords: excluded.length,
-    mealQuantities: excluded.reduce((n, r) => n + (Number(r.MealCount) || 0), 0),
-    submissionRecords: s.SUBMISSIONS.filter(r => affected.has(r.ReferralID)).length,
+    recipientRecords: outstanding.length,
+    mealQuantities: outstanding.reduce((n, r) => n + (Number(r.MealCount) || 0), 0),
+    submissionRecords: s.SUBMISSIONS.filter(r =>
+      affected.has(r.ReferralID) && !reviewedSubmissions.has(r.SubmissionID)).length,
   };
 }
 function submissionReferral_(s, record) {
