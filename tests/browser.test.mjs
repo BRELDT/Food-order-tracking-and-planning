@@ -142,7 +142,7 @@ try {
     async () => {
       await admin.goto("http://127.0.0.1:4174/preview-admin");
       await admin.waitForFunction(
-        () => document.querySelectorAll(".request-card").length === 2,
+        () => document.querySelectorAll(".request-card").length === 4,
       );
       assert.equal(await admin.evaluate(() => window.injected), undefined);
       await admin
@@ -154,7 +154,7 @@ try {
       await admin.waitForFunction(() =>
         document
           .getElementById("metrics")
-          .textContent.includes("Approved Referrals: 2"),
+          .textContent.includes("Approved Recipients: 4"),
       );
       assert.match(
         await admin.locator("#metrics").textContent(),
@@ -175,7 +175,7 @@ try {
         .first()
         .fill("DO_NOT_PRINT_INTERNAL_NOTE");
       await admin
-        .getByRole("button", { name: "Save Referral", exact: true })
+        .getByRole("button", { name: "Save Recipient", exact: true })
         .click();
       await admin.locator("#referralDialog").waitFor({ state: "hidden" });
       await admin.waitForFunction(() =>
@@ -400,7 +400,7 @@ try {
       });
       await phoneAdmin.goto("http://127.0.0.1:4174/preview-admin");
       await phoneAdmin.waitForFunction(
-        () => document.querySelectorAll(".request-card").length === 2,
+        () => document.querySelectorAll(".request-card").length === 4,
       );
       await phoneAdmin
         .getByRole("button", { name: "Delivery Route", exact: true })
@@ -434,6 +434,30 @@ try {
       });
     },
   );
+  await check("Phone recipient actions reject and restore only the selected delivery stop", async () => {
+    await phoneAdmin.getByRole("button", { name: "Requests", exact: true }).click();
+    const cards = phoneAdmin.locator(".request-card");
+    await cards.first().waitFor();
+    assert.ok(await phoneAdmin.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    assert.ok(await cards.first().locator(".check-label").evaluate(el => el.getBoundingClientRect().height >= 44));
+    const heading = await cards.first().locator("h3").textContent();
+    const target = cards.filter({ has: phoneAdmin.getByRole("heading", { name: heading, exact: true }) });
+    await target.getByRole("button", { name: "View", exact: true }).tap();
+    assert.equal(await phoneAdmin.locator("#editorRecipients fieldset").count(), 1);
+    await phoneAdmin.locator("#closeReferral").tap();
+    phoneAdmin.once("dialog", dialog => dialog.accept("Synthetic phone rejection"));
+    await target.getByRole("button", { name: "Reject", exact: true }).tap();
+    await target.getByText("Rejection reason: Synthetic phone rejection").waitFor();
+    assert.match(await phoneAdmin.locator("#metrics").textContent(), /Approved Recipients: 3/);
+    await phoneAdmin.getByRole("button", { name: "Delivery Route", exact: true }).tap();
+    await phoneAdmin.waitForFunction(() => document.querySelectorAll("#routeStops .stop").length === 3);
+    assert.equal(await phoneAdmin.locator("#routeStops").getByText(heading, { exact: false }).count(), 0);
+    await phoneAdmin.getByRole("button", { name: "Requests", exact: true }).tap();
+    await target.getByRole("button", { name: "Return to Pending", exact: true }).tap();
+    await target.getByRole("button", { name: "Approve", exact: true }).tap();
+    await phoneAdmin.waitForFunction(() => document.getElementById("metrics").textContent.includes("Approved Recipients: 4"));
+    await phoneAdmin.screenshot({ path: ".artifacts/recipient-cards-phone.png", fullPage: true });
+  });
   await check(
     "Multi-page print: all stops, checkbox, dietary/phone/instructions, no organization or notes",
     async () => {
@@ -645,7 +669,7 @@ try {
       await admin.waitForFunction(() =>
         document
           .getElementById("metrics")
-          .textContent.includes("Pending Referrals: 1"),
+          .textContent.includes("Pending Recipients: 1"),
       );
       assert.match(
         await admin.locator("#metrics").textContent(),

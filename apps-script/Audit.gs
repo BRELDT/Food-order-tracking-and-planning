@@ -4,7 +4,7 @@ function audit_(s, admin, action, type, id, oldValue, newValue) {
   const summary = value => {
     if (!value || typeof value !== "object" || Array.isArray(value)) return value;
     const keys = type === "Recipient"
-      ? ["MealCount", "AddressStatus", "DuplicateFlag", "RoutePosition", "Version"]
+      ? ["ReferralID", "Status", "RejectionReason", "MealCount", "AddressStatus", "DuplicateFlag", "RoutePosition", "Version"]
       : type === "Referral"
         ? ["Status", "meals", "recipients", "Version"]
         : type === "Event"

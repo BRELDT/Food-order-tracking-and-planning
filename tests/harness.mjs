@@ -167,6 +167,12 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
               const p = req.addSheet.properties;
               if (staged.has(p.title)) throw new Error("Sheet exists");
               staged.set(p.title, { name: p.title, id: p.sheetId, rows: [] });
+            } else if (req.deleteDimension) {
+              const { sheetId, dimension, startIndex, endIndex } = req.deleteDimension.range;
+              const t = [...staged.values()].find(x => x.id === sheetId);
+              if (!t || dimension !== "ROWS" || startIndex < 1 || endIndex > t.rows.length)
+                throw new Error("Invalid row deletion");
+              t.rows.splice(startIndex, endIndex - startIndex);
             } else {
               const u = req.updateCells || req.appendCells,
                 sid = u.range?.sheetId ?? u.start?.sheetId ?? u.sheetId,
@@ -216,7 +222,7 @@ export function harness({ bundle = process.env.MEALS_TEST_BUNDLE === "true" } = 
   ];
   for (const f of bundle ? ["CommunityMeals-OneFile"] : files)
     vm.runInContext(
-      fs.readFileSync(path.resolve("apps-script", f + ".gs"), "utf8"),
+      fs.readFileSync(path.resolve(bundle ? ".artifacts/apps-script" : "apps-script", f + ".gs"), "utf8"),
       ctx,
       { filename: f + ".gs" },
     );
@@ -287,37 +293,26 @@ export function createEvent(h, capacity = 20) {
   if (!r.ok) throw new Error(r.error.message);
   return r.data;
 }
+export function selection(r) {
+  return { recipientId: r.RecipientID, version: r.Version };
+}
 export function approve(h, ids) {
   return h.admin("statuses", {
     status: "Approved",
-    referrals: h
-      .get("REFERRALS")
-      .filter((r) => ids.includes(r.ReferralID))
-      .map((r) => ({ referralId: r.ReferralID, version: r.Version })),
+    recipients: h.get("RECIPIENTS").filter(r => ids.includes(r.ReferralID)).map(selection),
   });
 }
 export function editPayload(h, id) {
-  const r = h.get("REFERRALS").find((x) => x.ReferralID === id);
+  const r = h.get("RECIPIENTS").find(x => x.ReferralID === id);
   return {
-    referralId: id,
-    version: r.Version,
-    organizationName: r.OrganizationName,
-    organizationEmail: r.OrganizationEmail,
-    organizationPhone: r.OrganizationPhone,
-    recipients: h
-      .get("RECIPIENTS")
-      .filter((x) => x.ReferralID === id)
-      .map((x) => ({
-        recipientId: x.RecipientID,
-        version: x.Version,
-        recipientName: x.RecipientName,
-        address: x.Address,
-        phone: x.Phone,
-        mealCount: x.MealCount,
-        dietaryRestrictions: x.DietaryRestrictions,
-        doorPreference: x.DoorPreference,
-        deliveryInstructions: x.DeliveryInstructions,
-        notes: x.Notes,
-      })),
+    ...selection(r),
+    recipientName: r.RecipientName,
+    address: r.Address,
+    phone: r.Phone,
+    mealCount: r.MealCount,
+    dietaryRestrictions: r.DietaryRestrictions,
+    doorPreference: r.DoorPreference,
+    deliveryInstructions: r.DeliveryInstructions,
+    notes: r.Notes,
   };
 }

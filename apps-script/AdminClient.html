@@ -244,8 +244,11 @@
       ["Capacity", dashboard.capacity],
       ["Reserved", dashboard.reserved],
       ["Available", dashboard.available],
-      ["Pending Referrals", dashboard.pendingReferrals],
-      ["Approved Referrals", dashboard.approvedReferrals],
+      ["Submitted Recipients", dashboard.submittedRecipients],
+      ["Pending Recipients", dashboard.pendingRecipients],
+      ["Approved Recipients", dashboard.approvedRecipients],
+      ["Rejected Recipients", dashboard.rejectedRecipients],
+      ["Approved Meals", dashboard.approvedMeals],
       ["Delivery Stops", dashboard.deliveryStops],
     ]);
     const ro = readonly();
@@ -271,122 +274,86 @@
       " unlinked recipient records (" + issues.mealQuantities + " meal quantities) and " +
       issues.submissionRecords + " unlinked submission records. These records are preserved and excluded from referral totals; their delivery status must be reviewed before restoring them.";
   }
-  function selectedRefs() {
-    return [...$("requestCards").querySelectorAll("input:checked")].map(
-      (x) => ({
-        referralId: x.dataset.referralId,
-        version: Number(x.dataset.version),
-      }),
-    );
+  const statusActions = {
+    Pending: ["Approved", "Rejected"],
+    Approved: ["Rejected", "Pending"],
+    Rejected: ["Pending"],
+  };
+  const selectionFor = (r) => ({ recipientId: r.RecipientID, version: Number(r.Version) });
+  function selectedRecipients() {
+    return [...$("requestCards").querySelectorAll("input:checked")].map((x) => ({
+      recipientId: x.dataset.recipientId, version: Number(x.dataset.version),
+    }));
   }
-  async function changeStatus(referrals, status) {
-    if (!referrals.length) throw new Error("Select at least one referral.");
-    if (
-      status === "Rejected" &&
-      !confirm(
-        "Reject " +
-          referrals.length +
-          " referral(s) and release their reserved meals?",
-      )
-    )
-      return;
-    await rpc("statuses", { referrals, status });
+  async function changeStatus(recipients, status) {
+    if (!recipients.length) throw new Error("Select at least one recipient.");
+    const statuses = new Map(dashboard.recipients.map(r => [r.RecipientID, r.Status]));
+    if (recipients.some(r => !statusActions[statuses.get(r.recipientId)]?.includes(status)))
+      throw new Error("Some selected recipients cannot move to that status. Check the selection.");
+    let reason;
+    if (status === "Rejected") {
+      reason = window.prompt("Reject " + recipients.length +
+        " selected recipient(s) and release their reserved meals? Enter a reason (optional), then tap OK to reject.");
+      if (reason === null) return;
+    }
+    await rpc("statuses", { recipients, status, reason });
+    await refresh();
+  }
+  async function permanentlyDelete(r) {
+    if (!confirm("Permanently delete the rejected request for " + r.RecipientName +
+      "? This cannot be undone.")) return;
+    await rpc("deleteRejectedRecipient", { ...selectionFor(r), confirmed: true });
     await refresh();
   }
   function renderRequests() {
-    const refs = dashboard.referrals
-      .slice()
-      .sort(
-        (a, b) =>
-          (a.Status === "Pending" ? 0 : 1) - (b.Status === "Pending" ? 0 : 1) ||
-          a.SubmittedAt.localeCompare(b.SubmittedAt),
-      );
+    const rows = dashboard.recipients.slice().sort((a, b) =>
+      (a.Status === "Pending" ? 0 : 1) - (b.Status === "Pending" ? 0 : 1) ||
+      a.SubmittedAt.localeCompare(b.SubmittedAt),
+    );
     $("requestCards").replaceChildren();
-    if (!refs.length) $("requestCards").append(el("p", "No referrals yet."));
-    refs.forEach((r) => {
-      const card = el("article", null, "request-card"),
-        header = el("header");
+    if (!rows.length) $("requestCards").append(el("p", "No recipient requests yet."));
+    rows.forEach((r) => {
+      const card = el("article", null, "request-card"), header = el("header");
       const check = el("input");
       check.type = "checkbox";
-      check.dataset.referralId = r.ReferralID;
+      check.dataset.recipientId = r.RecipientID;
       check.dataset.version = r.Version;
+      check.dataset.status = r.Status;
       check.disabled = readonly();
       const label = el("label", null, "check-label");
-      label.append(check, el("span", "Select " + r.OrganizationName));
+      label.append(check, el("span", "Select " + r.RecipientName));
       header.append(label, el("span", r.Status, "badge"));
       card.append(
         header,
-        el(
-          "h3",
-          r.OrganizationName +
-            " — " +
-            r.recipients.length +
-            " Recipients — " +
-            r.meals +
-            " Meals",
-        ),
-        el(
-          "p",
-          "Submitted " + new Date(r.SubmittedAt).toLocaleString(),
-          "hint",
-        ),
+        el("h3", r.RecipientName),
+        el("p", r.MealCount + (Number(r.MealCount) === 1 ? " meal" : " meals") + " · " + r.OrganizationName),
+        el("p", "Submitted " + new Date(r.SubmittedAt).toLocaleString(), "hint"),
+        el("p", r.Address),
+        el("p", r.AddressStatus === "Confirmed" ? "Address Verified"
+          : r.AddressStatus === "Manually Reviewed" ? "Address Manually Reviewed"
+          : "Address Needs Review", addressReviewed(r.AddressStatus) ? "hint" : "badge"),
       );
-      const recipients = el("ol", null, "request-recipient-list");
-      r.recipients.forEach((recipient) => {
-        const item = el("li");
-        item.append(
-          el("strong", recipient.RecipientName),
-          el("p", recipient.Address),
-          el("p", recipient.MealCount + (Number(recipient.MealCount) === 1 ? " meal" : " meals")),
-        );
-        if (!addressReviewed(recipient.AddressStatus))
-          item.append(el("span", "Address Needs Review", "badge"));
-        else item.append(el("span", recipient.AddressStatus === "Confirmed"
-          ? "Address Verified" : "Address Manually Reviewed", "hint"));
-        if (recipient.DuplicateFlag)
-          item.append(el("span", "Possible Duplicate", "warning"));
-        recipients.append(item);
-      });
-      card.append(recipients);
-      if (r.recipients.some((x) => x.DuplicateFlag))
-        card.append(
-          el(
-            "p",
-            "Possible Duplicate — open View to see matching records.",
-            "warning",
-          ),
-        );
-      if (r.recipients.some((x) => !addressReviewed(x.AddressStatus)))
-        card.append(el("p", "Address Needs Review", "badge"));
+      if (r.RejectionReason && r.Status === "Rejected")
+        card.append(el("p", "Rejection reason: " + r.RejectionReason));
+      if (r.DuplicateFlag)
+        card.append(el("p", "Possible Duplicate — open View to see matching records.", "warning"));
       const actions = el("div", null, "actions");
       actions.append(button("View", () => openReferral(r, true), "secondary"));
       if (!readonly()) {
         actions.append(
           button("Edit", () => openReferral(r, false), "secondary"),
-          button("Review Addresses with Google", () =>
-            task(() => reviewReferralAddresses(r)), "secondary"),
+          button("Review Address with Google", () =>
+            task(() => reviewRecipientAddress(r)), "secondary"),
         );
-        ["Approved", "Rejected", "Pending"]
-          .filter((s) => s !== r.Status)
-          .forEach((status) =>
-            actions.append(
-              button(
-                status === "Approved"
-                  ? "Approve"
-                  : status === "Rejected"
-                    ? "Reject"
-                    : "Return to Pending",
-                () =>
-                  task(() =>
-                    changeStatus(
-                      [{ referralId: r.ReferralID, version: r.Version }],
-                      status,
-                    ),
-                  ),
-                status === "Rejected" ? "danger" : "secondary",
-              ),
-            ),
-          );
+        for (const status of statusActions[r.Status] || []) {
+          actions.append(button(
+            status === "Approved" ? "Approve" : status === "Rejected" ? "Reject" : "Return to Pending",
+            () => task(() => changeStatus([selectionFor(r)], status)),
+            status === "Rejected" ? "danger" : "secondary",
+          ));
+        }
+        if (r.Status === "Rejected" && dashboard.canDeleteRejectedRecipient)
+          actions.append(button("Permanently Delete", () => task(() => permanentlyDelete(r)), "danger"));
       }
       card.append(actions);
       $("requestCards").append(card);
@@ -557,48 +524,40 @@
     createId = r ? null : crypto.randomUUID();
     $("referralHeading").textContent = r
       ? viewOnly
-        ? "View Referral"
-        : "Edit Referral"
+        ? "View Recipient"
+        : "Edit Recipient"
       : "Add Referral";
     $("editorMessage").textContent = "";
     referralAddressControls = [];
-    $("saveReferral").textContent = "Save Referral";
+    $("saveReferral").textContent = r ? "Save Recipient" : "Save Referral";
     $("saveReferral").disabled = false;
     ["organizationName", "organizationEmail", "organizationPhone"].forEach(
       (n) => {
         const key = n[0].toUpperCase() + n.slice(1);
         $("referralEditor").elements[n].value = r?.[key] || "";
-        $("referralEditor").elements[n].disabled = viewOnly;
+        $("referralEditor").elements[n].disabled = Boolean(r) || viewOnly;
       },
     );
     $("editorRecipients").replaceChildren();
-    if (r) r.recipients.forEach(recipientEditor);
-    else recipientEditor();
+    recipientEditor(r);
     $("editorAddRecipient").hidden = !!r || viewOnly;
     $("saveReferral").hidden = viewOnly;
     $("referralDialog").showModal();
   }
-  async function reviewReferralAddresses(r) {
+  async function reviewRecipientAddress(r) {
     if (readonly()) return;
     openReferral(r, false);
-    $("referralHeading").textContent = "Review Addresses with Google";
-    $("saveReferral").textContent = "Save Reviewed Addresses";
+    $("referralHeading").textContent = "Review Address with Google";
+    $("saveReferral").textContent = "Save Reviewed Address";
     $("saveReferral").disabled = true;
-    const controls = referralAddressControls.slice();
-    const current = () => editing?.ReferralID === r.ReferralID && $("referralDialog").open;
+    const control = referralAddressControls[0];
+    const current = () => editing === r && $("referralDialog").open;
     try {
-      for (let i = 0; i < controls.length; i++) {
-        if (!current()) return;
-        $("editorMessage").textContent = "Checking address " + (i + 1) + " of " + controls.length + "…";
-        const ready = await controls[i].check();
-        if (!current()) return;
-        if (!ready) {
-          $("editorMessage").textContent = "Edit the address, then click Save Reviewed Addresses. Changes have not been saved yet.";
-          return;
-        }
-      }
-      if (current()) $("editorMessage").textContent =
-        "Address checks finished. Click Save Reviewed Addresses to save your choices. Any unconfirmed address remains Address Needs Review.";
+      $("editorMessage").textContent = "Checking address…";
+      const ready = await control.check();
+      if (current()) $("editorMessage").textContent = ready
+        ? "Click Save Reviewed Address to save your choice. An unconfirmed address still needs review."
+        : "Edit the address, then click Save Reviewed Address. Changes have not been saved yet.";
     } catch (error) {
       if (current()) $("editorMessage").textContent = error.message;
       throw error;
@@ -628,10 +587,8 @@
       }
       return x;
     });
-    if (editing) {
-      p.referralId = editing.ReferralID;
-      p.version = editing.Version;
-    } else p.submissionId = createId;
+    if (editing) return p.recipients[0];
+    p.submissionId = createId;
     return p;
   }
   function mapsUrl(address) {
@@ -830,14 +787,15 @@
       ["Currently Reserved Meals", r.totals.currentlyReservedMeals],
       ["Approved Meals", r.totals.approvedMeals],
       ["Rejected Meals", r.totals.rejectedMeals],
-      ["Recipient Records", r.totals.recipientRecords],
+      ["Submitted Recipients", r.totals.originallySubmittedRecipients],
+      ["Current Recipient Records", r.totals.recipientRecords],
       ["Approved Stops", r.totals.approvedStops],
       ["Organizations", r.totals.organizations],
       ["Capacity", r.totals.capacity],
       ["Remaining Capacity", r.totals.remainingCapacity],
-      ["Pending Referrals", r.totals.pendingReferrals],
-      ["Approved Referrals", r.totals.approvedReferrals],
-      ["Rejected Referrals", r.totals.rejectedReferrals],
+      ["Pending Recipients", r.totals.pendingRecipients],
+      ["Approved Recipients", r.totals.approvedRecipients],
+      ["Rejected Recipients", r.totals.rejectedRecipients],
     ]);
     $("organizationReports").replaceChildren(
       ...r.organizations.map((o) =>
@@ -849,8 +807,10 @@
             " Referrals · " +
             o.originallyRequestedMeals +
             " Originally Requested Meals · " +
-            o.currentMeals +
-            " Current Meals",
+            o.originallySubmittedRecipients + " Submitted Recipients · " +
+            o.pendingRecipients + " Pending · " + o.approvedRecipients + " Approved · " +
+            o.rejectedRecipients + " Rejected · " + o.reservedMeals + " Reserved Meals · " +
+            o.approvedMeals + " Approved Meals · " + o.rejectedMeals + " Rejected Meals",
           "report-row",
         ),
       ),
@@ -933,21 +893,15 @@
     if ($("editorRecipients").children.length < 100) recipientEditor();
   });
   $("selectAll").addEventListener("click", () => {
-    $("requestCards")
-      .querySelectorAll('input[type="checkbox"]')
-      .forEach(
-        (x) =>
-          (x.checked =
-            dashboard.referrals.find(
-              (r) => r.ReferralID === x.dataset.referralId,
-            )?.Status === "Pending"),
-      );
+    $("requestCards").querySelectorAll('input[type="checkbox"]').forEach(
+      (x) => (x.checked = !x.disabled && x.dataset.status === "Pending"),
+    );
   });
   $("approveSelected").addEventListener("click", () =>
-    task(() => changeStatus(selectedRefs(), "Approved")),
+    task(() => changeStatus(selectedRecipients(), "Approved")),
   );
   $("rejectSelected").addEventListener("click", () =>
-    task(() => changeStatus(selectedRefs(), "Rejected")),
+    task(() => changeStatus(selectedRecipients(), "Rejected")),
   );
   $("referralEditor").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -956,7 +910,7 @@
       if (!(await MealAddresses.prepareAll($("referralEditor")))) return;
       const payload = editorPayload();
       try {
-        if (editing) await rpc("editReferral", payload);
+        if (editing) await rpc("editRecipient", payload);
         else await createOnce("createReferral", payload);
         $("referralDialog").close();
         await refresh();

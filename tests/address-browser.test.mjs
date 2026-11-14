@@ -366,7 +366,7 @@ try {
         .getByRole("button", { name: "Keep What I Entered", exact: true })
         .click();
       await admin
-        .getByRole("button", { name: "Save Referral", exact: true })
+        .getByRole("button", { name: "Save Recipient", exact: true })
         .click();
       await admin.locator("#referralDialog").waitFor({ state: "hidden" });
       assert.match(await card.textContent(), /Address Needs Review/);

@@ -1,12 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import vm from "node:vm";
 import {
   harness,
   payload,
   createEvent,
   approve,
   editPayload,
+  selection,
 } from "./harness.mjs";
 const ok = (r) => {
   assert.equal(r.ok, true, JSON.stringify(r));
@@ -133,22 +135,22 @@ test("20-meal workflow: reservations, bulk approval, edit, reject, restore, repo
   ok(approve(h, [a.referralId, b.referralId]));
   assert.equal(h.ctx.publicEvents_()[0].remaining, 11);
   let p = editPayload(h, a.referralId);
-  p.recipients[0].mealCount = 5;
-  ok(h.admin("editReferral", p));
+  p.mealCount = 5;
+  ok(h.admin("editRecipient", p));
   assert.equal(h.ctx.publicEvents_()[0].remaining, 9);
-  let r = h.get("REFERRALS").find((x) => x.ReferralID === b.referralId);
+  let r = h.get("RECIPIENTS").find((x) => x.ReferralID === b.referralId);
   ok(
     h.admin("statuses", {
       status: "Rejected",
-      referrals: [{ referralId: r.ReferralID, version: r.Version }],
+      recipients: [selection(r)],
     }),
   );
   assert.equal(h.ctx.publicEvents_()[0].remaining, 13);
-  r = h.get("REFERRALS").find((x) => x.ReferralID === b.referralId);
+  r = h.get("RECIPIENTS").find((x) => x.ReferralID === b.referralId);
   ok(
     h.admin("statuses", {
       status: "Pending",
-      referrals: [{ referralId: r.ReferralID, version: r.Version }],
+      recipients: [selection(r)],
     }),
   );
   assert.equal(h.ctx.publicEvents_()[0].remaining, 9);
@@ -166,7 +168,7 @@ test("20-meal workflow: reservations, bulk approval, edit, reject, restore, repo
   );
   assert.equal(h.ctx.publicEvents_().length, 0);
   assert.equal(ok(h.admin("reports", {})).totals.originallyRequestedMeals, 9);
-  code(h.admin("editReferral", editPayload(h, a.referralId)), "READ_ONLY");
+  code(h.admin("editRecipient", editPayload(h, a.referralId)), "READ_ONLY");
   const archived = h.get("EVENTS")[0];
   code(
     h.admin("archive", {
@@ -214,16 +216,15 @@ test("atomic failure leaves no referral, recipient, receipt or audit; same ID ca
   assert.equal(h.get("RECIPIENTS").length, 2);
   assert.equal(h.get("SUBMISSIONS").length, 1);
 });
-test("failure in multi-entity edit leaves original organization, recipients and audit unchanged", () => {
+test("failure in recipient edit leaves the recipient, siblings, parent and audit unchanged", () => {
   const h = harness(),
     e = createEvent(h),
     r = ok(h.public(payload(e.EventID)));
   const p = editPayload(h, r.referralId);
-  p.organizationName = "Changed Synthetic";
-  p.recipients[0].mealCount = 4;
+  p.mealCount = 4;
   const before = h.snapshot();
   h.failNext();
-  code(h.admin("editReferral", p), "UNAVAILABLE");
+  code(h.admin("editRecipient", p), "UNAVAILABLE");
   assert.equal(h.snapshot(), before);
 });
 test("capacity reductions, quantity increases and restores cannot overbook", () => {
@@ -243,23 +244,21 @@ test("capacity reductions, quantity increases and restores cannot overbook", () 
     "CAPACITY",
   );
   const p = editPayload(h, a.referralId);
-  p.recipients[0].mealCount = 6;
-  code(h.admin("editReferral", p), "CAPACITY");
-  const ref = h.get("REFERRALS")[0];
+  p.mealCount = 6;
+  code(h.admin("editRecipient", p), "CAPACITY");
+  const ref = h.get("RECIPIENTS")[0];
   ok(
     h.admin("statuses", {
       status: "Rejected",
-      referrals: [{ referralId: ref.ReferralID, version: ref.Version }],
+      recipients: [selection(ref)],
     }),
   );
   ok(h.public(payload(e.EventID, [5])));
-  const rejected = h.get("REFERRALS")[0];
+  const rejected = h.get("RECIPIENTS")[0];
   code(
     h.admin("statuses", {
       status: "Pending",
-      referrals: [
-        { referralId: rejected.ReferralID, version: rejected.Version },
-      ],
+      recipients: [selection(rejected)],
     }),
     "CAPACITY",
   );
@@ -297,17 +296,17 @@ test("bulk approval/restoration validates the entire selection atomically", () =
     a = ok(h.public(payload(e.EventID, [3]))),
     b = ok(h.public(payload(e.EventID, [2])));
   const refs = h
-    .get("REFERRALS")
-    .map((r) => ({ referralId: r.ReferralID, version: r.Version }));
-  ok(h.admin("statuses", { status: "Rejected", referrals: refs }));
+    .get("RECIPIENTS")
+    .map(selection);
+  ok(h.admin("statuses", { status: "Rejected", recipients: refs }));
   ok(h.public(payload(e.EventID, [1])));
   const restored = h
-    .get("REFERRALS")
+    .get("RECIPIENTS")
     .filter((r) => r.Status === "Rejected")
-    .map((r) => ({ referralId: r.ReferralID, version: r.Version }));
+    .map(selection);
   const before = h.snapshot();
   code(
-    h.admin("statuses", { status: "Pending", referrals: restored }),
+    h.admin("statuses", { status: "Pending", recipients: restored }),
     "CAPACITY",
   );
   assert.equal(h.snapshot(), before);
@@ -364,7 +363,7 @@ test("unauthorized admin dispatch and public direct admin calls fail closed", ()
       "route",
       "saveEvent",
       "statuses",
-      "editReferral",
+      "editRecipient",
       "createReferral",
       "reorder",
       "archive",
@@ -397,14 +396,14 @@ test("both configured synthetic admin identities work, with no frontend email tr
   h.state.effective = h.state.active;
   code(h.admin("identity", { email: "admin-one@example.test" }), "FORBIDDEN");
 });
-test("stale referral and event edits are rejected without writes", () => {
+test("stale recipient and event edits are rejected without writes", () => {
   const h = harness(),
     e = createEvent(h),
     r = ok(h.public(payload(e.EventID)));
   const p = editPayload(h, r.referralId);
-  p.recipients[0].mealCount = 4;
-  ok(h.admin("editReferral", p));
-  code(h.admin("editReferral", p), "CONFLICT");
+  p.mealCount = 4;
+  ok(h.admin("editRecipient", p));
+  code(h.admin("editRecipient", p), "CONFLICT");
   ok(
     h.admin("saveEvent", {
       eventId: e.EventID,
@@ -491,8 +490,9 @@ test("Maps adapters disabled by default; live calls never happen accidentally", 
 test("simulated address and optimizer responses run outside lock and detect route conflicts", () => {
   const h = harness(),
     e = createEvent(h),
-    a = ok(h.public(payload(e.EventID, [1, 2])));
+    a = ok(h.public(payload(e.EventID, [1, 2, 4])));
   ok(approve(h, [a.referralId]));
+  ok(h.admin("statuses", { status: "Rejected", recipients: [selection(h.get("RECIPIENTS")[2])] }));
   h.props.MEALS_MAPS_LIVE_ENABLED = "true";
   h.props.MEALS_ADDRESS_API_KEY = "synthetic-only";
   h.props.MEALS_CLOUD_PROJECT_ID = "synthetic-only";
@@ -710,9 +710,9 @@ test("sorting sheet rows preserves durable-ID edits and relationships", () => {
   const t = h.tables.get("RECIPIENTS");
   t.rows = [t.rows[0], ...t.rows.slice(1).reverse()];
   const p = editPayload(h, a.referralId);
-  const id = p.recipients[0].recipientId;
-  p.recipients[0].mealCount = 4;
-  ok(h.admin("editReferral", p));
+  const id = p.recipientId;
+  p.mealCount = 4;
+  ok(h.admin("editRecipient", p));
   assert.equal(
     h.get("RECIPIENTS").find((r) => r.RecipientID === id).MealCount,
     4,
@@ -724,7 +724,11 @@ test("repeatable schema setup preserves legacy tabs; migration is blocked pendin
   h.ctx.setupDevelopmentSchema_();
   assert.equal(JSON.stringify(h.tables.get("Requests")), legacy);
   assert.equal(h.ctx.legacyMigrationPlan_().canMigrate, false);
-  h.props.MEALS_SPREADSHEET_ID = "1qqXeHVIi5WMqtXMSIYtB9iuV0gPfy_QdGUgLlv8BD2w";
+  h.props.MEALS_SPREADSHEET_ID = "synthetic-shared-sheet";
+  const fingerprint = h.ctx.fingerprint_;
+  const restrictedFingerprint = vm.runInContext("RESTRICTED_SHARED_SHEET_FINGERPRINT_", h.ctx);
+  h.ctx.fingerprint_ = id => id === h.props.MEALS_SPREADSHEET_ID
+    ? restrictedFingerprint : fingerprint(id);
   assert.throws(() => h.ctx.schemaPlan_(), /Shared-spreadsheet development/);
   h.props.MEALS_SHARED_SHEET_DEV_ID = h.props.MEALS_SPREADSHEET_ID;
   const settings = JSON.stringify(h.tables.get("Settings"));
@@ -849,7 +853,7 @@ test("address abbreviations and conservative similarity preserve unit distinctio
 
 test("precreated schema bootstraps only an empty ADMINUSERS tab and preserves all other tabs", () => {
   const h = harness();
-  h.props.MEALS_SPREADSHEET_ID = "1qqXeHVIi5WMqtXMSIYtB9iuV0gPfy_QdGUgLlv8BD2w";
+  h.props.MEALS_SPREADSHEET_ID = "synthetic-shared-sheet";
   h.props.MEALS_SHARED_SHEET_DEV_ID = h.props.MEALS_SPREADSHEET_ID;
   h.tables.get("ADMINUSERS").rows = [h.tables.get("ADMINUSERS").rows[0]];
   const legacy = JSON.stringify([
@@ -930,8 +934,8 @@ test("Maps-disabled manual review supports final saved routes with confirmation,
     3,
   );
   const p = editPayload(h, receipt.referralId);
-  p.recipients[0].address = "456 Synthetic Avenue";
-  ok(h.admin("editReferral", p));
+  p.address = "456 Synthetic Avenue";
+  ok(h.admin("editRecipient", p));
   const changed = ok(h.admin("route", { eventId: e.EventID }));
   assert.equal(changed.isFinal, false);
   assert.equal(changed.unresolved.length, 1);
@@ -978,4 +982,158 @@ test("routing diagnostic functions require an independently authorized administr
   assert.throws(() => h.ctx.checkRoutingConnection(), /approved administrator/);
   assert.throws(() => h.ctx.authorizeRouting(), /approved administrator/);
   assert.equal(h.state.apiCalls, 0);
+});
+
+test("four siblings can be managed independently across capacity, reports and delivery output", () => {
+  const h = harness(), event = createEvent(h, 8), eventId = event.EventID;
+  const form = payload(eventId, [2, 2, 2, 2]);
+  const receipt = ok(h.public(form));
+  const dashboard = () => ok(h.admin("dashboard", { eventId }));
+  const route = () => ok(h.admin("route", { eventId }));
+  const report = () => ok(h.admin("reports", { eventId }));
+  const ids = h.get("RECIPIENTS").map(r => r.RecipientID);
+  const recipient = i => dashboard().recipients.find(r => r.RecipientID === ids[i]);
+  const change = (status, indices, reason) => h.admin("statuses", {
+    status, recipients: indices.map(i => selection(recipient(i))), reason,
+  });
+  const assertCounts = (pending, approved, rejected, approvedMeals, available) => {
+    const d = dashboard(), r = report();
+    assert.deepEqual([d.pendingRecipients, d.approvedRecipients, d.rejectedRecipients, d.approvedMeals, d.available],
+      [pending, approved, rejected, approvedMeals, available]);
+    assert.deepEqual([r.totals.pendingRecipients, r.totals.approvedRecipients, r.totals.rejectedRecipients,
+      r.totals.approvedMeals, r.totals.remainingCapacity], [pending, approved, rejected, approvedMeals, available]);
+    assert.equal(d.submittedRecipients, 4);
+    assert.equal(r.totals.originallyRequestedMeals, 8);
+    assert.equal(d.deliveryStops, approved);
+    assert.equal(route().totalMeals, approvedMeals);
+    assert.equal(r.organizations[0].referrals, 1);
+    assert.equal(r.organizations[0].approvedMeals, approvedMeals);
+    assert.equal(r.organizations[0].reservedMeals, 8 - available);
+    assert.equal(h.ctx.publicEvents_()[0].remaining, available);
+  };
+  assertCounts(4, 0, 0, 0, 0);
+  const stale = selection(recipient(0));
+  ok(change("Approved", [0]));
+  assertCounts(3, 1, 0, 2, 0);
+  code(h.admin("statuses", { status: "Rejected", recipients: [stale] }), "CONFLICT");
+  code(change("Approved", [0]), "INVALID");
+  code(change("Approved", [1, 1]), "INVALID");
+  ok(change("Approved", [1, 2]));
+  assertCounts(1, 3, 0, 6, 0);
+  ok(change("Rejected", [0], "Synthetic reason"));
+  assertCounts(1, 2, 1, 4, 2);
+  assert.equal(recipient(0).RejectionReason, "Synthetic reason");
+  code(change("Approved", [0]), "INVALID");
+  ok(change("Pending", [0]));
+  assertCounts(2, 2, 0, 4, 0);
+  ok(change("Approved", [0, 3]));
+  assertCounts(0, 4, 0, 8, 0);
+  const savedSiblings = h.get("RECIPIENTS").slice(1).map(r => JSON.stringify(r));
+  ok(change("Rejected", [0], "Synthetic reason"));
+  assertCounts(0, 3, 1, 6, 2);
+  assert.deepEqual(h.get("RECIPIENTS").slice(1).map(r => JSON.stringify(r)), savedSiblings);
+  assert.ok(!route().stops.some(s => s.recipientId === ids[0]));
+
+  const second = recipient(1);
+  const oldRouteVersion = route().version;
+  const edit = { ...selection(second), ...form.recipients[1],
+    address: "900 Other Synthetic Road", recipientName: "Updated Synthetic Recipient" };
+  code(h.admin("editRecipient", { ...edit, mealCount: 5 }), "CAPACITY");
+  ok(h.admin("editRecipient", { ...edit, mealCount: 4 }));
+  assertCounts(0, 3, 1, 8, 0);
+  assert.equal(route().stops.find(r => r.recipientId === ids[1]).address, edit.address);
+  code(change("Pending", [0]), "CAPACITY");
+  code(h.admin("deliveryPdf", { eventId, routeVersion: oldRouteVersion }), "CONFLICT");
+  ok(h.admin("editRecipient", { ...edit, ...selection(recipient(1)), mealCount: 2 }));
+  assertCounts(0, 3, 1, 6, 2);
+  const audit = h.get("AUDITLOG");
+  assert.ok(audit.some(a => a.EntityID === ids[0] && a.Action === "Recipient Returned to Pending" &&
+    JSON.parse(a.OldValue).RejectionReason === "Synthetic reason"));
+  for (const s of route().stops) ok(h.admin("manualAddressReview", {
+    entity: "recipient", confirmed: true, ...selection(dashboard().recipients.find(r => r.RecipientID === s.recipientId)),
+  }));
+  ok(h.admin("manualAddressReview", { entity: "event", eventId, confirmed: true, version: event.Version }));
+  const final = ok(h.admin("reorder", { eventId, routeVersion: route().version, recipientIds: ids.slice(1).reverse() }));
+  assert.equal(final.totalMeals, 6);
+  h.state.convertPdf = html => {
+    assert.match(html, /Updated Synthetic Recipient/);
+    assert.match(html, /900 Other Synthetic Road/);
+    assert.doesNotMatch(html, /Synthetic Recipient 1\b/);
+    return Buffer.from("%PDF-1.7\nSynthetic conversion");
+  };
+  ok(h.admin("deliveryPdf", { eventId, routeVersion: final.version }));
+  assert.deepEqual(ok(h.public(form)), receipt);
+});
+
+test("legacy decisions and route order survive the additive headers and first recipient change", () => {
+  const h = harness(), e = createEvent(h);
+  const receipt = ok(h.public(payload(e.EventID, [2, 3])));
+  const refs = h.tables.get("REFERRALS"), rows = h.tables.get("RECIPIENTS");
+  refs.rows[1][refs.rows[0].indexOf("Status")] = "Approved";
+  rows.rows[1][rows.rows[0].indexOf("RoutePosition")] = 2;
+  rows.rows[2][rows.rows[0].indexOf("RoutePosition")] = 1;
+  for (const r of rows.rows) r.splice(19);
+  const legacy = rows.rows.slice(1).map(r => [...r]);
+  code(h.admin("dashboard", { eventId: e.EventID }), "SCHEMA");
+  rows.rows[0].push("Status", "RejectionReason"); // same cells as the documented upgrade
+  const db = () => ok(h.admin("dashboard", { eventId: e.EventID }));
+  const d = db();
+  assert.deepEqual(rows.rows.slice(1), legacy);
+  assert.equal(d.approvedRecipients, 2);
+  assert.equal(d.approvedMeals, 5);
+  assert.equal(d.recipients[0].ReferralID, receipt.referralId);
+  assert.equal(d.recipients[0].SubmittedAt, h.get("REFERRALS")[0].SubmittedAt);
+  const route = () => ok(h.admin("route", { eventId: e.EventID }));
+  assert.deepEqual(route().stops.map(r => r.recipientId), d.recipients.map(r => r.RecipientID).reverse());
+  ok(h.admin("statuses", { status: "Rejected", recipients: [selection(d.recipients[0])] }));
+  assert.equal(db().approvedRecipients, 1);
+  assert.equal(db().reserved, 3);
+  assert.equal(h.get("RECIPIENTS")[1].Status, "");
+  assert.equal(h.get("REFERRALS")[0].Status, "Approved");
+});
+
+test("permanent deletion checks opt-in, admin, confirmation, version and rejection and preserves receipts and audit", () => {
+  const h = harness(), e = createEvent(h);
+  const form = payload(e.EventID, [2, 2, 2, 2]);
+  const receipt = ok(h.public(form));
+  const only = payload(e.EventID, [1], { organizationName: "Second Synthetic Organization" });
+  const onlyReceipt = ok(h.public(only));
+  const rows = h.get("RECIPIENTS"), target = rows[1];
+  const action = "deleteRejectedRecipient";
+  const deletion = { ...selection(target), confirmed: true };
+  code(h.admin(action, deletion), "FORBIDDEN");
+  h.props.MEALS_RECIPIENT_DELETION_ENABLED = "true";
+  code(h.admin(action, deletion), "INVALID");
+  h.state.active = h.state.effective = "other@example.test";
+  code(h.admin(action, deletion), "FORBIDDEN");
+  h.state.active = h.state.effective = "admin-one@example.test";
+  ok(h.admin("statuses", { status: "Rejected", reason: "Synthetic test", recipients: [selection(target), selection(rows[4])] }));
+  code(h.admin(action, deletion), "CONFLICT");
+  const current = h.get("RECIPIENTS")[1], audit = JSON.stringify(h.get("AUDITLOG"));
+  deletion.version = current.Version;
+  code(h.admin(action, { ...deletion, confirmed: false }), "CONFIRM");
+  const before = h.snapshot();
+  h.failNext();
+  code(h.admin(action, deletion), "UNAVAILABLE");
+  assert.equal(h.snapshot(), before);
+  const remaining = h.get("RECIPIENTS").filter(r => r.RecipientID !== current.RecipientID);
+  const parents = JSON.stringify(h.get("REFERRALS")), receipts = JSON.stringify(h.get("SUBMISSIONS"));
+  ok(h.admin(action, deletion));
+  assert.deepEqual(h.get("RECIPIENTS"), remaining);
+  assert.equal(JSON.stringify(h.get("AUDITLOG").slice(0, -1)), audit);
+  const last = h.get("AUDITLOG").at(-1);
+  assert.equal(last.EntityID, target.RecipientID);
+  assert.equal(JSON.parse(last.OldValue).RejectionReason, "Synthetic test");
+  assert.ok(!last.OldValue.includes(target.Address));
+  assert.equal(JSON.stringify(h.get("REFERRALS")), parents);
+  assert.equal(JSON.stringify(h.get("SUBMISSIONS")), receipts);
+  assert.deepEqual(ok(h.public(form)), receipt);
+  ok(h.admin(action, { ...selection(remaining.at(-1)), confirmed: true }));
+  assert.deepEqual(ok(h.public(only)), onlyReceipt);
+  const recovered = JSON.parse(h.ctx.doGet({ parameter: { action: "submissionReceipt", submissionId: only.submissionId } }).text);
+  assert.deepEqual(ok(recovered).receipt, onlyReceipt);
+  const d = ok(h.admin("dashboard", { eventId: e.EventID }));
+  assert.equal(d.submittedRecipients, 5);
+  assert.equal(d.recipients.length, 3);
+  assert.equal(d.reserved, 6);
 });

@@ -1,9 +1,3 @@
-function referralMeals_(s, id) {
-  return linkedRecipients_(s).filter((r) => r.ReferralID === id).reduce(
-    (n, r) => n + Number(r.MealCount),
-    0,
-  );
-}
 function submit_(p, adminEmail, recheck = admin_) {
   const canonical = canonicalSubmission_(p, Boolean(adminEmail)),
     submissionId = submissionId_(p.submissionId),
@@ -53,6 +47,7 @@ function submit_(p, adminEmail, recheck = admin_) {
           RecipientID: uuid_(),
           ReferralID: referral.ReferralID,
           EventID: e.EventID,
+          Status: "Pending",
           DuplicateFlag: false,
           RoutePosition: "",
           CreatedAt: now_(),
@@ -98,122 +93,100 @@ function submit_(p, adminEmail, recheck = admin_) {
     return receipt;
   });
 }
-function statuses_(s, p, admin) {
-  if (!["Pending", "Approved", "Rejected"].includes(p.status))
-    fail_("INVALID", "Please check referral status.");
-  if (
-    !Array.isArray(p.referrals) ||
-    !p.referrals.length ||
-    p.referrals.length > 200
-  )
-    fail_("INVALID", "Select up to 200 referrals.");
-  const seen = new Set();
-  const rows = p.referrals.map((x) => {
-    const id = id_(x.referralId);
-    if (seen.has(id)) fail_("INVALID", "Select each referral once.");
-    seen.add(id);
-    const r = byId_(s, "REFERRALS", id);
-    version_(r, x.version);
-    editable_(byId_(s, "EVENTS", r.EventID));
-    return r;
-  });
-  const needed = {};
-  rows.forEach((r) => {
-    if (r.Status === "Rejected" && p.status !== "Rejected")
-      needed[r.EventID] =
-        (needed[r.EventID] || 0) + referralMeals_(s, r.ReferralID);
-  });
-  Object.keys(needed).forEach((id) => {
-    if (needed[id] > available_(s, byId_(s, "EVENTS", id)))
-      fail_(
-        "CAPACITY",
-        "There are not enough meals available to restore the selected referrals.",
-      );
-  });
-  rows.forEach((r) => {
-    const old = r.Status;
-    if (old === p.status) return;
-    r.Status = p.status;
-    touch_(r);
-    const e = byId_(s, "EVENTS", r.EventID);
-    if (old === "Approved" || p.status === "Approved") routeDirty_(e);
-    audit_(
-      s,
-      admin,
-      "Referral " + (p.status === "Pending" ? "Returned to Pending" : p.status),
-      "Referral",
-      r.ReferralID,
-      old,
-      p.status,
-    );
-  });
-  return { updated: rows.length };
+const RECIPIENT_TRANSITIONS_ = Object.freeze({
+  Pending: ["Approved", "Rejected"],
+  Approved: ["Pending", "Rejected"],
+  Rejected: ["Pending"],
+});
+function recipientRequest_(s, id) {
+  const row = byId_(s, "RECIPIENTS", id_(id));
+  const parent = byId_(s, "REFERRALS", row.ReferralID);
+  if (parent.EventID !== row.EventID)
+    fail_("INTEGRITY", "This recipient is not linked to the correct event.");
+  return { row, parent, status: row.Status || parent.Status };
 }
-function editReferral_(s, p, admin) {
-  const r = byId_(s, "REFERRALS", p.referralId),
-    e = byId_(s, "EVENTS", r.EventID);
+function recipientStatuses_(s, p, admin) {
+  if (!["Pending", "Approved", "Rejected"].includes(p.status) ||
+      !Array.isArray(p.recipients) || !p.recipients.length || p.recipients.length > 200)
+    fail_("INVALID", "Select up to 200 recipients and a valid status.");
+  const reason = p.status === "Rejected" ? text_(p.reason, "rejection reason", 500, false) : "";
+  const seen = new Set();
+  const requests = p.recipients.map((item) => {
+    const request = recipientRequest_(s, item?.recipientId);
+    const { row, status } = request;
+    if (seen.has(row.RecipientID)) fail_("INVALID", "Select each recipient once.");
+    seen.add(row.RecipientID);
+    version_(row, item.version);
+    request.event = byId_(s, "EVENTS", row.EventID);
+    editable_(request.event);
+    if (!RECIPIENT_TRANSITIONS_[status]?.includes(p.status))
+      fail_("INVALID", "Some selected recipients cannot move to that status. Refresh and check the selection.");
+    return request;
+  });
+  const needed = new Map();
+  requests.forEach(({ row, status, event }) => {
+    if (!reservedStatus_(status) && reservedStatus_(p.status))
+      needed.set(event, (needed.get(event) || 0) + Number(row.MealCount));
+  });
+  for (const [event, meals] of needed)
+    if (meals > available_(s, event))
+      fail_("CAPACITY", "There are not enough meals available to restore the selected recipients.");
+  const dirty = new Set();
+  requests.forEach(({ row, status, event }) => {
+    const old = { ...row, Status: status };
+    row.Status = p.status;
+    row.RejectionReason = reason;
+    touch_(row);
+    if (status === "Approved" || p.status === "Approved") dirty.add(event);
+    audit_(s, admin, "Recipient " + (p.status === "Pending" ? "Returned to Pending" : p.status),
+      "Recipient", row.RecipientID, old, row);
+  });
+  dirty.forEach(routeDirty_);
+  return { updated: requests.length };
+}
+function editRecipient_(s, p, admin) {
+  const { row, status } = recipientRequest_(s, p.recipientId);
+  const e = byId_(s, "EVENTS", row.EventID);
   editable_(e);
-  version_(r, p.version);
-  const org = organization_(p),
-    input = recipients_(p.recipients, true),
-    existing = s.RECIPIENTS.filter((x) => x.ReferralID === r.ReferralID);
-  if (p.recipients.length !== existing.length)
-    fail_(
-      "INVALID",
-      "Use Add Referral to create additional recipient records. Existing recipients cannot be removed.",
-    );
-  const unique = new Set();
-  p.recipients.forEach((x) => {
-    const old = existing.find((y) => y.RecipientID === x.recipientId);
-    if (!old || unique.has(x.recipientId))
-      fail_("INVALID", "Recipient IDs do not match this referral.");
-    unique.add(x.recipientId);
-    version_(old, x.version);
-  });
-  const oldMeals = referralMeals_(s, r.ReferralID),
-    newMeals = input.reduce((n, x) => n + x.MealCount, 0);
-  if (
-    ["Pending", "Approved"].includes(r.Status) &&
-    newMeals - oldMeals > available_(s, e)
-  )
+  version_(row, p.version);
+  const [input] = recipients_([p], true);
+  if (reservedStatus_(status) && input.MealCount - Number(row.MealCount) > available_(s, e))
     fail_("CAPACITY", "There are not enough meals available for this edit.");
-  const oldOrg = {
-    OrganizationName: r.OrganizationName,
-    OrganizationEmail: r.OrganizationEmail,
-    OrganizationPhone: r.OrganizationPhone,
-  };
-  Object.assign(r, org);
-  touch_(r);
-  audit_(s, admin, "Referral Edited", "Referral", r.ReferralID, oldOrg, org);
-  input.forEach((x, i) => {
-    const old = existing.find(
-      (y) => y.RecipientID === p.recipients[i].recipientId,
-    );
-    const previous = Object.assign({}, old);
-    if (old.Address !== x.Address) {
-      old.AddressStatus = "Needs Review";
-      old.VerifiedAt = "";
-    }
-    if (p.recipients[i].addressReceipt) {
-      old.AddressStatus = addressProofStatus_(
-        x.Address,
-        p.recipients[i].addressReceipt,
-      );
-      old.VerifiedAt = old.AddressStatus === "Confirmed" ? now_() : "";
-    }
-    Object.assign(old, x);
-    touch_(old);
-    audit_(
-      s,
-      admin,
-      "Recipient Edited",
-      "Recipient",
-      old.RecipientID,
-      previous,
-      old,
-    );
-  });
-  if (r.Status === "Approved") routeDirty_(e);
+  const old = { ...row };
+  if (row.Address !== input.Address) {
+    row.AddressStatus = "Needs Review";
+    row.VerifiedAt = "";
+  }
+  if (p.addressReceipt) {
+    row.AddressStatus = addressProofStatus_(input.Address, p.addressReceipt);
+    row.VerifiedAt = row.AddressStatus === "Confirmed" ? now_() : "";
+  }
+  Object.assign(row, input);
+  touch_(row);
+  // Name, address and delivery details also appear in the saved manifest.
+  if (status === "Approved") routeDirty_(e);
   refreshDuplicates_(s, e.EventID);
-  return { referralId: r.ReferralID };
+  audit_(s, admin, "Recipient Edited", "Recipient", row.RecipientID, old, row);
+  return { recipientId: row.RecipientID };
+}
+function deleteRejectedRecipient_(s, p, admin) {
+  if (!recipientDeletionEnabled_())
+    fail_("FORBIDDEN", "Permanent recipient deletion is disabled.");
+
+  if (p.confirmed !== true)
+    fail_("CONFIRM", "Confirm permanent deletion of this recipient.");
+  const { row, status } = recipientRequest_(s, p.recipientId);
+  editable_(byId_(s, "EVENTS", row.EventID));
+  version_(row, p.version);
+  if (status !== "Rejected")
+    fail_("INVALID", "Only rejected recipients can be permanently deleted.");
+  s.RECIPIENTS.splice(s.RECIPIENTS.indexOf(row), 1);
+  refreshDuplicates_(s, row.EventID);
+  audit_(s, admin, "Recipient Permanently Deleted", "Recipient", row.RecipientID,
+    { ...row, Status: status }, null);
+  return { recipientId: row.RecipientID };
+}
+
+function recipientDeletionEnabled_() {
+  return properties_().getProperty("MEALS_RECIPIENT_DELETION_ENABLED") === "true";
 }

@@ -1,12 +1,7 @@
 function approvedStops_(s, eventId) {
-  const ids = new Set(
-    s.REFERRALS.filter(
-      (r) => r.EventID === eventId && r.Status === "Approved",
-    ).map((r) => r.ReferralID),
-  );
-  return s.RECIPIENTS.filter(
-    (r) => r.EventID === eventId && ids.has(r.ReferralID),
-  );
+  return recipientRequests_(s, eventId)
+    .filter(({ status }) => status === "Approved")
+    .map(({ row }) => row);
 }
 function route_(s, eventId) {
   const e = byId_(s, "EVENTS", eventId);

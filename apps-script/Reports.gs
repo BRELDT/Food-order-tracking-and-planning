@@ -1,88 +1,98 @@
 function reports_(s, p) {
   const events = s.EVENTS.filter(
-    (e) =>
-      (!p.eventId || e.EventID === p.eventId) &&
+    (e) => (!p.eventId || e.EventID === p.eventId) &&
       (!p.year || e.DeliveryDate.slice(0, 4) === String(p.year)),
   );
-  const ids = new Set(events.map((e) => e.EventID)),
-    refs = s.REFERRALS.filter((r) => ids.has(r.EventID));
-  const rows = linkedRecipients_(s).filter((r) => ids.has(r.EventID));
+  const ids = new Set(events.map(e => e.EventID));
+  const refs = s.REFERRALS.filter(r => ids.has(r.EventID));
+  const requests = recipientRequests_(s).filter(({ row }) => ids.has(row.EventID));
   const totals = {
     events: events.length,
-    originallyRequestedMeals: refs.reduce(
-      (n, r) => n + Number(r.OriginalRequestedMeals),
-      0,
-    ),
+    originallyRequestedMeals: 0,
+    originallySubmittedRecipients: 0,
     currentlyReservedMeals: 0,
     approvedMeals: 0,
     rejectedMeals: 0,
-    recipientRecords: rows.length,
+    recipientRecords: requests.length,
     approvedStops: 0,
     organizations: 0,
     capacity: events.reduce((n, e) => n + Number(e.Capacity), 0),
-    pendingReferrals: refs.filter(r => r.Status === "Pending").length,
-    approvedReferrals: refs.filter(r => r.Status === "Approved").length,
-    rejectedReferrals: refs.filter(r => r.Status === "Rejected").length,
+    pendingRecipients: 0,
+    approvedRecipients: 0,
+    rejectedRecipients: 0,
   };
-  const organizations = Object.create(null);
+  const organizations = new Map(), reservedByEvent = new Map();
   refs.forEach((r) => {
-    const meals = referralMeals_(s, r.ReferralID);
-    if (["Pending", "Approved"].includes(r.Status)) totals.currentlyReservedMeals += meals;
-    if (r.Status === "Approved") {
-      totals.approvedMeals += meals;
-      totals.approvedStops += rows.filter(
-        (x) => x.ReferralID === r.ReferralID,
-      ).length;
-    }
-    if (r.Status === "Rejected") totals.rejectedMeals += meals;
     const key = r.OrganizationKey;
-    if (!organizations[key])
-      organizations[key] = {
-        name: r.OrganizationName,
-        referrals: 0,
-        originallyRequestedMeals: 0,
-        currentMeals: 0,
-      };
-    organizations[key].referrals++;
-    organizations[key].originallyRequestedMeals += Number(
-      r.OriginalRequestedMeals,
-    );
-    organizations[key].currentMeals += meals;
+    if (!organizations.has(key)) organizations.set(key, {
+      name: r.OrganizationName, referrals: 0, originallySubmittedRecipients: 0,
+      originallyRequestedMeals: 0, pendingRecipients: 0, approvedRecipients: 0,
+      rejectedRecipients: 0, reservedMeals: 0, approvedMeals: 0, rejectedMeals: 0,
+    });
+    const o = organizations.get(key);
+    o.referrals++;
+    o.originallySubmittedRecipients += Number(r.OriginalRecipientCount);
+    o.originallyRequestedMeals += Number(r.OriginalRequestedMeals);
+    totals.originallySubmittedRecipients += Number(r.OriginalRecipientCount);
+    totals.originallyRequestedMeals += Number(r.OriginalRequestedMeals);
   });
-  totals.organizations = Object.keys(organizations).length;
-  totals.remainingCapacity = totals.capacity - totals.currentlyReservedMeals;
+  requests.forEach(({ row, parent, status }) => {
+    const meals = Number(row.MealCount), o = organizations.get(parent.OrganizationKey);
+    if (reservedStatus_(status)) {
+      totals.currentlyReservedMeals += meals;
+      o.reservedMeals += meals;
+      reservedByEvent.set(row.EventID, (reservedByEvent.get(row.EventID) || 0) + meals);
+    }
+    if (status === "Pending") {
+      totals.pendingRecipients++;
+      o.pendingRecipients++;
+    } else if (status === "Approved") {
+      totals.approvedRecipients++;
+      totals.approvedStops++;
+      totals.approvedMeals += meals;
+      o.approvedRecipients++;
+      o.approvedMeals += meals;
+    } else if (status === "Rejected") {
+      totals.rejectedRecipients++;
+      totals.rejectedMeals += meals;
+      o.rejectedRecipients++;
+      o.rejectedMeals += meals;
+    }
+  });
+  totals.organizations = organizations.size;
+  totals.remainingCapacity = events.reduce((n, e) =>
+    n + Math.max(0, Number(e.Capacity) - (reservedByEvent.get(e.EventID) || 0)), 0);
   return {
     totals,
     integrity: relationshipIssues_(s, [...ids]),
-    organizations: Object.values(organizations).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    ),
+    organizations: [...organizations.values()].sort((a, b) => a.name.localeCompare(b.name)),
   };
 }
 function dashboard_(s, p) {
-  const e = byId_(s, "EVENTS", p.eventId),
-    refs = s.REFERRALS.filter((r) => r.EventID === e.EventID),
-    recipients = s.RECIPIENTS.filter((r) => r.EventID === e.EventID);
+  const e = byId_(s, "EVENTS", p.eventId);
+  const requests = recipientRequests_(s, e.EventID);
+  const rows = requests.map(({ row }) => row);
+  const totals = reports_(s, { eventId: e.EventID }).totals;
   return {
     event: e,
+    canDeleteRejectedRecipient: recipientDeletionEnabled_(),
     integrity: relationshipIssues_(s, [e.EventID]),
-    capacity: Number(e.Capacity),
-    reserved: reserved_(s, e.EventID),
-    available: available_(s, e),
-    pendingReferrals: refs.filter((r) => r.Status === "Pending").length,
-    approvedReferrals: refs.filter((r) => r.Status === "Approved").length,
-    deliveryStops: recipients.filter((x) =>
-      refs.some(
-        (r) => r.ReferralID === x.ReferralID && r.Status === "Approved",
-      ),
-    ).length,
-    referrals: refs.map((r) =>
-      Object.assign({}, r, {
-        meals: referralMeals_(s, r.ReferralID),
-        recipients: recipients
-          .filter((x) => x.ReferralID === r.ReferralID)
-          .map((x) => Object.assign({}, x, { matches: matchesFor_(s, x) })),
-      }),
-    ),
+    capacity: totals.capacity,
+    reserved: totals.currentlyReservedMeals,
+    available: totals.remainingCapacity,
+    submittedRecipients: totals.originallySubmittedRecipients,
+    pendingRecipients: totals.pendingRecipients,
+    approvedRecipients: totals.approvedRecipients,
+    rejectedRecipients: totals.rejectedRecipients,
+    approvedMeals: totals.approvedMeals,
+    deliveryStops: totals.approvedStops,
+    recipients: requests.map(({ row, parent, status }) => ({
+      ...row, Status: status,
+      OrganizationName: parent.OrganizationName,
+      OrganizationEmail: parent.OrganizationEmail,
+      OrganizationPhone: parent.OrganizationPhone,
+      SubmittedAt: parent.SubmittedAt,
+      matches: matchesFor_(row, rows),
+    })),
   };
 }

@@ -35,8 +35,8 @@ function refreshDuplicates_(s, eventId) {
     (a) => (a.DuplicateFlag = rows.some((b) => duplicateMatches_(a, b))),
   );
 }
-function matchesFor_(s, r) {
-  return linkedRecipients_(s).filter((b) => duplicateMatches_(r, b)).map((b) => ({
+function matchesFor_(r, candidates) {
+  return candidates.filter((b) => duplicateMatches_(r, b)).map((b) => ({
     recipientId: b.RecipientID,
     referralId: b.ReferralID,
     recipientName: b.RecipientName,
