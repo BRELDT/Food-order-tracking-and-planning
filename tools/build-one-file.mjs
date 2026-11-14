@@ -33,13 +33,14 @@ const modules = names
     return `// ===== ${name}.gs =====\n${code}`;
   })
   .join("\n");
-const bundle = `// Build marker: COMMUNITY-MEALS-PASSWORD-ADMIN\n/* Community Meals V1 — generated from the modular files in this commit.\n   Install the ENTIRE file as Code.gs. No other .gs/.html files required.\n   Preserve existing Script Properties and deployment settings.\n   No setup or migration function needs to run. */\nconst ADMIN_PAGE_HTML_ = ${JSON.stringify(html)};\n\n${modules}`;
-const target = "apps-script/CommunityMeals-OneFile.gs";
+const bundle = `// Build marker: COMMUNITY-MEALS-PASSWORD-ADMIN\n/* Community Meals V1 — generated from the modular files in this commit.\n   Install the ENTIRE file as Code.gs. No other .gs/.html files required.\n   Preserve existing Script Properties and deployment settings.\n   Before upgrading a V1 workbook, follow docs/recipient-management-release.md. */\nconst ADMIN_PAGE_HTML_ = ${JSON.stringify(html)};\n\n${modules}`;
+const target = ".artifacts/apps-script/CommunityMeals-OneFile.gs";
 if (process.argv.includes("--check")) {
   if (fs.readFileSync(target, "utf8") !== bundle)
     throw new Error("One-file bundle differs from modular source");
 } else {
+  fs.mkdirSync(".artifacts/apps-script", { recursive: true });
   fs.writeFileSync(target, bundle);
-  fs.writeFileSync("docs/community-meals-one-file-copy-paste.md", "# Complete Code.gs replacement\n\nCopy the entire contents of this single code box into Code.gs. This includes the backend and complete admin interface. No setup or migration function should be run. Address services and routing remain disabled until separately configured.\n\n```javascript\n" + bundle + "\n```\n");
+  fs.writeFileSync(".artifacts/apps-script/community-meals-one-file-copy-paste.md", "# Complete Code.gs replacement\n\nCopy the entire contents of this single code box into Code.gs. This includes the backend and complete admin interface. Before upgrading a V1 workbook, follow [the recipient management release guide](recipient-management-release.md) to add the two required header cells. No migration function should be run. Address services and routing remain disabled until separately configured.\n\n```javascript\n" + bundle + "\n```\n");
 }
 console.log("One-file bundle matches modular source.");

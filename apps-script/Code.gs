@@ -1,4 +1,4 @@
-const MEALS_BACKEND_VERSION = "2026-11-10-password-admin-v1";
+const MEALS_BACKEND_VERSION = "2026-11-14-recipient-management-v1";
 function include_(name) {
   return HtmlService.createHtmlOutputFromFile(name).getContent();
 }
@@ -133,6 +133,10 @@ function adminDispatch_(action, p, auth) {
   }
   if (action === "verifyAddress") return verifyAddress_(p, auth);
   if (action === "optimize") return optimize_(p, auth);
+  if (action === "deleteRejectedRecipient") {
+    const id = id_(p.recipientId);
+    return locked_((s) => deleteRejectedRecipient_(s, p, auth.recheck(s)), id);
+  }
   return locked_((s) => {
     const admin = auth.recheck(s);
     switch (action) {
@@ -143,9 +147,9 @@ function adminDispatch_(action, p, auth) {
       case "archive":
         return archiveWrite_(s, p, admin);
       case "statuses":
-        return statuses_(s, p, admin);
-      case "editReferral":
-        return editReferral_(s, p, admin);
+        return recipientStatuses_(s, p, admin);
+      case "editRecipient":
+        return editRecipient_(s, p, admin);
       case "reorder":
         return routeOrder_(s, p, admin, false);
       default:

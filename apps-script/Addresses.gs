@@ -41,12 +41,10 @@ function addressLookup_(address) {
   };
 }
 function verifyAddress_(p, a) {
+  if (!["event", "recipient"].includes(p.entity))
+    fail_("INVALID", "Please select an address to review.");
   const isStart = p.entity === "event",
-    r = byId_(
-      a.state,
-      isStart ? "EVENTS" : "RECIPIENTS",
-      isStart ? p.eventId : p.recipientId,
-    ),
+    r = isStart ? byId_(a.state, "EVENTS", p.eventId) : recipientRequest_(a.state, p.recipientId).row,
     e = isStart ? r : byId_(a.state, "EVENTS", r.EventID);
   editable_(e);
   version_(r, p.version);
@@ -54,11 +52,8 @@ function verifyAddress_(p, a) {
   const lookup = addressLookup_(address);
   return locked_((s) => {
     const admin = a.recheck(s),
-      row = byId_(
-        s,
-        isStart ? "EVENTS" : "RECIPIENTS",
-        isStart ? p.eventId : p.recipientId,
-      ),
+      request = isStart ? null : recipientRequest_(s, p.recipientId),
+      row = isStart ? byId_(s, "EVENTS", p.eventId) : request.row,
       event = isStart ? row : byId_(s, "EVENTS", row.EventID);
     editable_(event);
     version_(row, p.version);
@@ -70,7 +65,7 @@ function verifyAddress_(p, a) {
       row.VerifiedAt = now_();
     }
     touch_(row);
-    routeDirty_(event);
+    if (isStart || request.status === "Approved") routeDirty_(event);
     audit_(
       s,
       admin,
@@ -160,11 +155,8 @@ function manualAddressReview_(s, p, admin) {
   if (!["event", "recipient"].includes(p.entity))
     fail_("INVALID", "Please select an address to review.");
   const isStart = p.entity === "event",
-    row = byId_(
-      s,
-      isStart ? "EVENTS" : "RECIPIENTS",
-      isStart ? p.eventId : p.recipientId,
-    ),
+    request = isStart ? null : recipientRequest_(s, p.recipientId),
+    row = isStart ? byId_(s, "EVENTS", p.eventId) : request.row,
     event = isStart ? row : byId_(s, "EVENTS", row.EventID);
   editable_(event);
   version_(row, p.version);
@@ -175,7 +167,7 @@ function manualAddressReview_(s, p, admin) {
     row.VerifiedAt = now_();
   }
   touch_(row);
-  routeDirty_(event);
+  if (isStart || request.status === "Approved") routeDirty_(event);
   audit_(
     s,
     admin,

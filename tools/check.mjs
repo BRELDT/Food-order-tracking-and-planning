@@ -11,7 +11,7 @@ new vm.Script(fs.readFileSync("apps-script/AdminClient.html", "utf8"), {
 for (const f of ["app.js", "address-entry.js", "submission-confirmation.js", "admin.js", "config.js"])
   new vm.Script(fs.readFileSync(f, "utf8"), { filename: f });
 JSON.parse(fs.readFileSync("apps-script/appsscript.json", "utf8"));
-const install = fs.readFileSync("docs/apps-script-installation.md", "utf8");
+const install = fs.readFileSync(".artifacts/apps-script/apps-script-installation.md", "utf8");
 for (const f of [
   ...files,
   "Admin.html",
@@ -48,4 +48,4 @@ if (
   fs.readFileSync("apps-script/AddressClient.html", "utf8")
 )
   throw new Error("Shared address client differs");
-new vm.Script(fs.readFileSync("apps-script/CommunityMeals-OneFile.gs", "utf8"));
+new vm.Script(fs.readFileSync(".artifacts/apps-script/CommunityMeals-OneFile.gs", "utf8"));

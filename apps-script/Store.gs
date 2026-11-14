@@ -50,6 +50,8 @@ const MEAL_SCHEMA = Object.freeze({
     "Version",
     "AddressStatus",
     "VerifiedAt",
+    "Status",
+    "RejectionReason",
   ],
   AUDITLOG: [
     "AuditID",
@@ -81,6 +83,8 @@ const ID_FIELDS = {
 function properties_() {
   return PropertiesService.getScriptProperties();
 }
+// Identify the protected workbook without embedding its raw identifier in the source.
+const RESTRICTED_SHARED_SHEET_FINGERPRINT_ = "5bd31a8dd6f9ceaf970ee0eb4a45b2e3f2b4ab9d5779047f8a27ef4ce82761f4";
 function database_() {
   const p = properties_();
   const id = p.getProperty("MEALS_SPREADSHEET_ID");
@@ -95,7 +99,7 @@ function database_() {
     fail_("CONFIG", "Production writes have not been enabled.");
   if (
     env === "development" &&
-    id === "1qqXeHVIi5WMqtXMSIYtB9iuV0gPfy_QdGUgLlv8BD2w" &&
+    fingerprint_(id) === RESTRICTED_SHARED_SHEET_FINGERPRINT_ &&
     p.getProperty("MEALS_SHARED_SHEET_DEV_ID") !== id
   )
     fail_(
@@ -154,11 +158,18 @@ function cell_(v) {
 // Historical orphan rows are preserved. Only correctly linked recipients are
 // included in referral accounting; administrators see the excluded totals.
 function linkedRecipients_(s) {
+  return recipientRequests_(s).map(({ row }) => row);
+}
+// Blank status on pre-upgrade rows inherits the original submission decision.
+// Never roll child decisions back up into REFERRALS.Status.
+function recipientRequests_(s, eventId) {
   const events = new Set(s.EVENTS.map(e => e.EventID));
   const parents = new Map(s.REFERRALS.map(r => [r.ReferralID, r]));
-  return s.RECIPIENTS.filter(r => {
-    const parent = parents.get(r.ReferralID);
-    return parent && parent.EventID === r.EventID && events.has(r.EventID);
+  return s.RECIPIENTS.flatMap(row => {
+    const parent = parents.get(row.ReferralID);
+    if (!parent || parent.EventID !== row.EventID || !events.has(row.EventID) ||
+        (eventId && eventId !== row.EventID)) return [];
+    return [{ row, parent, status: row.Status || parent.Status }];
   });
 }
 function relationshipIssues_(s, eventIds) {
@@ -175,9 +186,20 @@ function relationshipIssues_(s, eventIds) {
 function submissionReferral_(s, record) {
   const parent = s.REFERRALS.find(r => r.ReferralID === record.ReferralID);
   const children = s.RECIPIENTS.filter(r => r.ReferralID === record.ReferralID);
+  // Keep the original receipt recoverable even after an authorized deletion.
+  // Count only distinct, missing IDs recorded for this referral in its audit log.
+  const knownIds = new Set(children.map(r => r.RecipientID));
+  if (parent && knownIds.size < Number(parent.OriginalRecipientCount)) {
+    for (const a of s.AUDITLOG) {
+      if (a.Action !== "Recipient Permanently Deleted" || a.EntityType !== "Recipient") continue;
+      let old;
+      try { old = JSON.parse(a.OldValue); } catch (_) { continue; }
+      if (old?.ReferralID === parent.ReferralID && old.Status === "Rejected") knownIds.add(a.EntityID);
+    }
+  }
   if (!parent || !s.EVENTS.some(e => e.EventID === parent.EventID) ||
       !["Pending", "Approved", "Rejected"].includes(parent.Status) ||
-      !children.length || children.length !== Number(parent.OriginalRecipientCount) ||
+      knownIds.size !== Number(parent.OriginalRecipientCount) ||
       children.some(r => r.EventID !== parent.EventID ||
         !Number.isSafeInteger(Number(r.MealCount)) || Number(r.MealCount) < 1))
     fail_("INTEGRITY", "This saved request needs administrator review. Please contact the meal program before submitting it again.");
@@ -194,7 +216,7 @@ function savedSubmissionReceipt_(s, record) {
     fail_("INTEGRITY", "This saved request needs administrator review. Please contact the meal program before submitting it again.");
   return receipt;
 }
-function commit_(s) {
+function commit_(s, deleteRecipientId) {
   const requests = [];
   Object.keys(MEAL_SCHEMA).forEach((name) => {
     const m = s._meta[name];
@@ -237,7 +259,15 @@ function commit_(s) {
           });
       }
     });
-    if (originals.size) fail_("INTEGRITY", "Record deletion is not supported.");
+    if (originals.size) {
+      if (name !== "RECIPIENTS" || originals.size !== 1 ||
+          !originals.has(deleteRecipientId))
+        fail_("INTEGRITY", "Record deletion is not supported.");
+      const index = m.positions[deleteRecipientId];
+      requests.push({ deleteDimension: { range: {
+        sheetId: m.sheetId, dimension: "ROWS", startIndex: index, endIndex: index + 1,
+      } } });
+    }
     if (added.length)
       requests.push({
         appendCells: {
@@ -251,7 +281,7 @@ function commit_(s) {
   });
   if (requests.length) Sheets.Spreadsheets.batchUpdate({ requests }, s._db);
 }
-function locked_(fn) {
+function locked_(fn, deleteRecipientId) {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000))
     fail_(
@@ -261,7 +291,7 @@ function locked_(fn) {
   try {
     const s = load_();
     const value = fn(s);
-    commit_(s);
+    commit_(s, deleteRecipientId);
     return value;
   } finally {
     lock.releaseLock();

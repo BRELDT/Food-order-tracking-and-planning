@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
-import { createEvent, harness, payload } from "./harness.mjs";
+import { createEvent, harness, payload, selection } from "./harness.mjs";
 
 const secret = "synthetic multiword password";
 const endpoint = "https://script.google.com/macros/s/synthetic-deployment/exec";
@@ -74,6 +74,13 @@ test("signed-out account setup, event and referral writes, expiration, reset and
   assert.equal(event.Status, "Draft");
   ok(ctx.passwordAdminCall(token, "createReferral", payload(event.EventID)));
   assert.equal(h.get("AUDITLOG").at(-1).Admin, "local:paramedic");
+  const recipient = selection(h.get("RECIPIENTS")[0]);
+  ok(ctx.passwordAdminCall(token, "statuses", { status: "Approved", recipients: [recipient] }));
+  const d = ok(ctx.passwordAdminCall(token, "dashboard", { eventId: event.EventID }));
+  assert.equal(d.approvedRecipients, 1);
+  assert.equal(d.pendingRecipients, 1);
+  assert.equal(d.approvedMeals, 3);
+  assert.equal(h.get("AUDITLOG").at(-1).Admin, "local:paramedic");
   assert.equal(ctx.passwordAdminCall(token, "optimize", {}).error.code, "API_DISABLED");
   assert.equal(JSON.parse(ctx.doGet({ parameter: { action: "events" } }).text).data.length, 0);
   assert.equal(h.public(payload(event.EventID)).error.code, "CLOSED");
@@ -108,7 +115,7 @@ test("every password RPC rejects before dispatch without a session, including fo
     "identity", "events", "dashboard", "route", "deliveryPdf", "reports", "publicFormLink",
     "addressConfig", "addressSuggestions", "addressPreview", "verifyAddress", "optimize",
     "createReferral", "submissionReceipt", "manualAddressReview", "saveEvent", "archive",
-    "statuses", "editReferral", "reorder",
+    "statuses", "editRecipient", "deleteRejectedRecipient", "reorder",
   ];
   for (const action of actions) {
     const p = { ...eventInput, eventId: event.EventID };

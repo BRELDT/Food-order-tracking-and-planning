@@ -6,6 +6,8 @@ const files = [
   "Validation.gs",
   "Store.gs",
   "Auth.gs",
+  "PasswordCrypto.gs",
+  "PasswordAuth.gs",
   "Audit.gs",
   "Events.gs",
   "Referrals.gs",
@@ -36,8 +38,9 @@ const blocks = files.map((name, i) => {
           : "html";
   return `## File ${i + 1}: ${name}\n\nSHA-256: ${hash}\n\nCopy only the contents of this code box into the matching Apps Script file.\n\n\`\`\`${kind}\n${source}\`\`\`\n`;
 });
+fs.mkdirSync(".artifacts/apps-script", { recursive: true });
 fs.writeFileSync(
-  "docs/apps-script-installation.md",
+  ".artifacts/apps-script/apps-script-installation.md",
   guide + "\n\n# Complete file contents\n\n" + blocks.join("\n"),
 );
 console.log(

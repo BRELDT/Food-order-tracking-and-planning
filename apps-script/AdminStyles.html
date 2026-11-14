@@ -467,10 +467,6 @@ dialog::backdrop {
   }
 }
 
-.request-recipient-list { padding-left: 1.5rem; margin: 1rem 0; }
-.request-recipient-list li { padding: .65rem .25rem; border-bottom: 1px solid #dbe2e8; overflow-wrap: anywhere; }
-.request-recipient-list li:last-child { border-bottom: 0; }
-.request-recipient-list p { margin: .25rem 0; }
 
 button[data-click-feedback="true"] { outline: 3px solid #78a9da; outline-offset: 2px; }
 button[aria-busy="true"] { cursor: wait; opacity: .8; }
@@ -489,3 +485,5 @@ button[aria-busy="true"]::after { content: " — Loading…"; }
   body:not(.route-print-ready) #routeView > :not(.print-verification-warning) { display: none !important; }
   body:not(.route-print-ready) .print-verification-warning { display: block !important; }
 }
+
+.request-card .check-label { min-height: 44px; }

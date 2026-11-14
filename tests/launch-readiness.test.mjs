@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {harness, createEvent, payload, approve, editPayload} from './harness.mjs';
+import {harness, createEvent, payload, approve, editPayload, selection} from './harness.mjs';
 const ok = r => { assert.equal(r.ok, true, JSON.stringify(r)); return r.data; };
 
 test('a closed Thanksgiving placeholder needs no invented pickup address or capacity; opening requires both', () => {
@@ -34,7 +34,7 @@ test('organization names matching Object properties produce independent accurate
   const report = ok(h.admin('reports', {eventId:event.EventID}));
   assert.equal(report.organizations.length, 3);
   assert.equal(report.totals.currentlyReservedMeals, 6);
-  assert.ok(report.organizations.every(o => o.referrals === 1 && o.currentMeals === 2));
+  assert.ok(report.organizations.every(o => o.referrals === 1 && o.reservedMeals === 2));
 });
 
 test('event-specific report capacity and status counts follow approval, rejection and edits', () => {
@@ -42,13 +42,13 @@ test('event-specific report capacity and status counts follow approval, rejectio
   const a = ok(h.public(payload(event.EventID,[2,3]))), b = ok(h.public(payload(event.EventID,[4])));
   ok(approve(h,[a.referralId]));
   let r = ok(h.admin('reports',{eventId:event.EventID})).totals;
-  assert.equal(r.pendingReferrals,1); assert.equal(r.approvedReferrals,1); assert.equal(r.rejectedReferrals,0);
+  assert.equal(r.pendingRecipients,1); assert.equal(r.approvedRecipients,2); assert.equal(r.rejectedRecipients,0);
   assert.equal(r.capacity,30); assert.equal(r.currentlyReservedMeals,9); assert.equal(r.remainingCapacity,21);
-  const ref = h.get('REFERRALS').find(x => x.ReferralID === b.referralId);
-  ok(h.admin('statuses',{status:'Rejected', referrals:[{referralId:ref.ReferralID, version:ref.Version}]}));
-  const edit = editPayload(h,a.referralId); edit.recipients[0].mealCount = 3; ok(h.admin('editReferral',edit));
+  const ref = h.get('RECIPIENTS').find(x => x.ReferralID === b.referralId);
+  ok(h.admin('statuses',{status:'Rejected', recipients:[selection(ref)]}));
+  const edit = editPayload(h,a.referralId); edit.mealCount = 3; ok(h.admin('editRecipient',edit));
   r = ok(h.admin('reports',{eventId:event.EventID})).totals;
-  assert.equal(r.pendingReferrals,0); assert.equal(r.rejectedReferrals,1);
+  assert.equal(r.pendingRecipients,0); assert.equal(r.rejectedRecipients,1);
   assert.equal(r.currentlyReservedMeals,6); assert.equal(r.remainingCapacity,24);
   assert.equal(r.rejectedMeals,4); assert.equal(r.originallyRequestedMeals,9);
 });
@@ -61,17 +61,15 @@ test('server rejects email autofill and malformed recipients without reserving m
   assert.equal(h.snapshot(), before);
 });
 
-test('future audit entries omit private recipient and organization values while preserving quantities and versions', () => {
+test('future audit entries omit private recipient values while preserving quantities and versions', () => {
   const h = harness(), event = createEvent(h);
   const receipt = ok(h.admin('createReferral', payload(event.EventID,[2])));
   const p = editPayload(h,receipt.referralId);
-  p.recipients[0].notes = 'PRIVATE_INTERNAL_SENTINEL';
-  p.recipients[0].dietaryRestrictions = 'PRIVATE_DIETARY_SENTINEL';
-  p.recipients[0].address = 'PRIVATE_ADDRESS_SENTINEL';
-  p.organizationName = 'PRIVATE_ORGANIZATION_SENTINEL';
-  p.organizationEmail = 'private-contact@example.test';
-  p.recipients[0].mealCount = 3;
-  ok(h.admin('editReferral',p));
+  p.notes = 'PRIVATE_INTERNAL_SENTINEL';
+  p.dietaryRestrictions = 'PRIVATE_DIETARY_SENTINEL';
+  p.address = 'PRIVATE_ADDRESS_SENTINEL';
+  p.mealCount = 3;
+  ok(h.admin('editRecipient',p));
   const audit = JSON.stringify(h.get('AUDITLOG'));
   for (const marker of ['PRIVATE_', 'private-contact@example.test', '202-555-0101']) assert.ok(!audit.includes(marker));
   const entry = h.get('AUDITLOG').findLast(x => x.Action === 'Recipient Edited');
@@ -160,7 +158,7 @@ test('delivery PDF requires an approved identity and a current finalized route',
   const before = h.snapshot();
   assert.equal(h.admin('deliveryPdf', {...current, routeVersion: current.routeVersion - 1}).error.code, 'CONFLICT');
   h.state.active = h.state.effective = 'unapproved@example.test';
-  for (const action of ['dashboard', 'reports', 'route', 'deliveryPdf', 'saveEvent', 'editReferral']) {
+  for (const action of ['dashboard', 'reports', 'route', 'deliveryPdf', 'saveEvent', 'editRecipient']) {
     assert.equal(h.admin(action, current).error.code, 'FORBIDDEN');
   }
   h.state.active = '';

@@ -265,14 +265,14 @@ test("admin edits and pickup saves persist selected verified address and retain 
     e = createEvent(h),
     r = h.public(payload(e.EventID, [2])).data;
   const p = editPayload(h, r.referralId);
-  p.recipients[0].address = "200 Synthetic Lane, Example City, VA 00000";
-  provider(h, p.recipients[0].address);
-  p.recipients[0].addressReceipt = h.admin("addressPreview", {
-    address: p.recipients[0].address,
+  p.address = "200 Synthetic Lane, Example City, VA 00000";
+  provider(h, p.address);
+  p.addressReceipt = h.admin("addressPreview", {
+    address: p.address,
   }).data.originalReceipt;
-  assert.equal(h.admin("editReferral", p).ok, true);
+  assert.equal(h.admin("editRecipient", p).ok, true);
   assert.equal(h.get("RECIPIENTS")[0].AddressStatus, "Confirmed");
-  assert.equal(h.admin("editReferral", p).error.code, "CONFLICT");
+  assert.equal(h.admin("editRecipient", p).error.code, "CONFLICT");
   provider(h, e.StartAddress);
   const addressReceipt = h.admin("addressPreview", { address: e.StartAddress })
     .data.originalReceipt;

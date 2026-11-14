@@ -1,17 +1,12 @@
+function reservedStatus_(status) {
+  return status === "Pending" || status === "Approved";
+}
 function reserved_(s, eventId) {
-  const active = new Set(
-    s.REFERRALS.filter(
-      (r) =>
-        r.EventID === eventId && ["Pending", "Approved"].includes(r.Status),
-    ).map((r) => r.ReferralID),
-  );
-  return linkedRecipients_(s).filter((r) => r.EventID === eventId && active.has(r.ReferralID)).reduce(
-    (n, r) => n + Number(r.MealCount),
-    0,
-  );
+  return recipientRequests_(s, eventId)
+    .reduce((n, { row, status }) => n + (reservedStatus_(status) ? Number(row.MealCount) : 0), 0);
 }
 function available_(s, e) {
-  return Number(e.Capacity) - reserved_(s, e.EventID);
+  return Math.max(0, Number(e.Capacity) - reserved_(s, e.EventID));
 }
 function editable_(e) {
   if (e.Archived === true || e.Status === "Completed")
