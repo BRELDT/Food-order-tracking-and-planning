@@ -2,8 +2,20 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const passwordUrl = document.body.dataset.passwordUrl;
+  const passwordSessionStorageKey = "community-meals-password-session-v1";
   let sessionToken = "", sessionClosed = false;
-  let sessionIdleMs = 0, sessionIdleUntil = 0, sessionUntil = 0, sessionTimer;
+  function storedPasswordSession() {
+    try { return localStorage.getItem(passwordSessionStorageKey) || ""; }
+    catch (_) { return ""; }
+  }
+  function savePasswordSession(token) {
+    try { localStorage.setItem(passwordSessionStorageKey, token); }
+    catch (_) { /* Private or restricted browsers may prevent remembering login. */ }
+  }
+  function forgetPasswordSession() {
+    try { localStorage.removeItem(passwordSessionStorageKey); }
+    catch (_) { /* The in-memory session is still cleared. */ }
+  }
   let events = [],
     dashboard = null,
     route = null,
@@ -45,7 +57,6 @@
     dashboard.event.Status === "Completed";
   function rpc(action, p = {}) {
     return new Promise((resolve, reject) => {
-      if (passwordUrl) checkPasswordExpiry();
       const token = sessionToken;
       if (passwordUrl && (!token || sessionClosed)) {
         reject(new Error("Sign in again."));
@@ -59,7 +70,6 @@
           }
           if (passwordUrl && r.error?.code === "AUTH") endPasswordSession(r.error.message);
           if (r.ok) {
-            if (passwordUrl) schedulePasswordExpiry();
             resolve(r.data);
           } else {
             reject(Object.assign(new Error(
@@ -1047,10 +1057,7 @@
       throw error;
     }
   }));
-  window.addEventListener("pagehide", () => {
-    if (sessionToken) endPasswordSession("Sign in again.");
-    else if (!sessionClosed) clearDeliveryPdf();
-  });
+  window.addEventListener("pagehide", clearDeliveryPdf);
   ["reportEvent", "reportYear"].forEach((id) =>
     $(id).addEventListener("change", () => task(reports)),
   );
@@ -1079,7 +1086,7 @@
     if (sessionClosed) return;
     sessionClosed = true;
     sessionToken = "";
-    clearTimeout(sessionTimer);
+    forgetPasswordSession();
     clearDeliveryPdf();
     for (const dialog of document.querySelectorAll("dialog.address-check"))
       dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
@@ -1095,19 +1102,6 @@
     $("passwordReturn").href = passwordUrl;
     $("passwordReturn").hidden = false;
     $("passwordReturn").focus();
-  }
-
-  function checkPasswordExpiry() {
-    if (sessionToken && Date.now() >= Math.min(sessionIdleUntil, sessionUntil))
-      endPasswordSession("Your session expired. Sign in again.");
-  }
-
-  function schedulePasswordExpiry() {
-    // The server persists activity at most once per minute.
-    sessionIdleUntil = Date.now() + sessionIdleMs - 60000;
-    clearTimeout(sessionTimer);
-    sessionTimer = setTimeout(checkPasswordExpiry,
-      Math.max(0, Math.min(sessionIdleUntil, sessionUntil) - Date.now()));
   }
 
   function passwordForm(id, statusId, submit) {
@@ -1147,9 +1141,7 @@
       $("passwordLoginValue").value = "";
       const data = await passwordRpc("passwordLogin", $("passwordLoginName").value, secret);
       sessionToken = data.token;
-      sessionIdleMs = data.idleMs;
-      sessionUntil = Date.now() + data.maxMs;
-      schedulePasswordExpiry();
+      savePasswordSession(sessionToken);
       $("passwordLogout").hidden = false;
       startDashboard();
       return "";
@@ -1176,7 +1168,17 @@
         $("passwordStatus").textContent = "Dashboard closed. The server could not confirm sign-out.";
       }
     });
-    document.addEventListener("visibilitychange", checkPasswordExpiry);
+    window.addEventListener("storage", (event) => {
+      if (event.key === passwordSessionStorageKey && sessionToken &&
+          event.newValue !== sessionToken)
+        endPasswordSession("This account was signed out in another tab. Sign in again.");
+    });
+    const remembered = storedPasswordSession();
+    if (remembered) {
+      sessionToken = remembered;
+      $("passwordLogout").hidden = false;
+      startDashboard(); // The server validates the saved token before revealing data.
+    }
   } else {
     startDashboard();
     passwordRpc("passwordAccountAccess")

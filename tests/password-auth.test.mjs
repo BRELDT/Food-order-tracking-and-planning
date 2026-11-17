@@ -38,7 +38,7 @@ test("server-side PBKDF2 matches Node's native implementation at the production 
   assert.equal(h.ctx.passwordDerive_(password, salt), expected.toString("hex"));
 });
 
-test("signed-out account setup, event and referral writes, expiration, reset and logout", () => {
+test("signed-out account setup, event and referral writes, persistent session, reset and logout", () => {
   const h = harness();
   const { ctx, state, props, tables } = h;
   assert.equal(ctx.passwordLogin("paramedic", secret).error.code, "AUTH");
@@ -68,6 +68,7 @@ test("signed-out account setup, event and referral writes, expiration, reset and
   const { token } = ok(ctx.passwordLogin("PARAMEDIC", secret));
   const key = "MEALS_PASSWORD_SESSION:paramedic";
   assert.equal(props[key].includes(token), false);
+  assert.deepEqual(Object.keys(JSON.parse(props[key])).sort(), ["digest", "version"]);
   assert.equal(ok(ctx.passwordAdminCall(token, "identity")).email, "paramedic");
   assert.equal(JSON.stringify(ctx.passwordAdminCall(token, "identity")).includes(registry.at(-1)[3]), false);
   const event = ok(ctx.passwordAdminCall(token, "saveEvent", eventInput));
@@ -86,11 +87,14 @@ test("signed-out account setup, event and referral writes, expiration, reset and
   assert.equal(h.public(payload(event.EventID)).error.code, "CLOSED");
 
   const original = JSON.parse(props[key]);
-  props[key] = JSON.stringify({ ...original, seen: Date.now() - 31 * 60000 });
-  assert.equal(ctx.passwordAdminCall(token, "dashboard", { eventId: event.EventID }).error.code, "AUTH");
-  props[key] = JSON.stringify({ ...original, expires: Date.now() - 1 });
+  // No idle or absolute deadline, even if the admin returns days later.
+  ctx.Date = class extends Date { static now() { return super.now() + 31 * 86400000; } };
+  assert.equal(ok(ctx.passwordAdminCall(token, "dashboard", { eventId: event.EventID })).approvedMeals, 3);
+  // Old tokens cannot become permanent sessions during a deployment upgrade.
+  props[key] = JSON.stringify({ ...original, seen: Date.now() - 31 * 60000, expires: Date.now() - 1 });
   assert.equal(ctx.passwordAdminCall(token, "reports").error.code, "AUTH");
   props[key] = JSON.stringify(original);
+  assert.equal(ok(ctx.passwordAdminCall(token, "identity")).email, "paramedic");
   assert.equal(ok(ctx.passwordLogout(token)).signedOut, true);
   assert.equal(ctx.passwordAdminCall(token, "events").error.code, "AUTH");
 
@@ -130,6 +134,22 @@ test("every password RPC rejects before dispatch without a session, including fo
   assert.equal(h.state.apiCalls, 0);
 });
 
+test("persistent sessions apply independently to every username account", () => {
+  const h = harness();
+  configure(h);
+  for (const name of ["paramedic", "dispatcher"]) {
+    const { code } = ok(h.ctx.passwordAccountAction("setup", name));
+    ok(h.ctx.passwordSet(name, code, secret));
+  }
+  const first = ok(h.ctx.passwordLogin("paramedic", secret)).token;
+  const second = ok(h.ctx.passwordLogin("dispatcher", secret)).token;
+  assert.equal(ok(h.ctx.passwordAdminCall(first, "identity")).email, "paramedic");
+  assert.equal(ok(h.ctx.passwordAdminCall(second, "identity")).email, "dispatcher");
+  ok(h.ctx.passwordLogout(first));
+  assert.equal(h.ctx.passwordAdminCall(first, "identity").error.code, "AUTH");
+  assert.equal(ok(h.ctx.passwordAdminCall(second, "identity")).email, "dispatcher");
+});
+
 test("persistent rate limits apply before verification to known and unknown usernames", () => {
   const h = harness();
   configure(h);
@@ -156,7 +176,6 @@ test("local browser RPC sends its in-memory session explicitly and discards a la
   };
   const ctx = vm.createContext({
     passwordUrl: endpoint, sessionToken: "synthetic-token", sessionClosed: false,
-    checkPasswordExpiry() {}, schedulePasswordExpiry() {},
     google: { script: { run: call } },
   });
   vm.runInContext(source.slice(source.indexOf("  function rpc("),
@@ -169,4 +188,40 @@ test("local browser RPC sends its in-memory session explicitly and discards a la
   await assert.rejects(result, /Sign in again/);
   await assert.rejects(ctx.rpc("events"), /Sign in again/);
   assert.equal(seen.length, 1);
+});
+
+test("password browser remembers only the session token and can recover it after restart", () => {
+  const source = fs.readFileSync("apps-script/AdminClient.html", "utf8");
+  const storage = new Map();
+  const localStorage = {
+    getItem: key => storage.get(key) || null,
+    setItem: (key, value) => storage.set(key, value),
+    removeItem: key => storage.delete(key),
+  };
+  const prefix = source.slice(source.indexOf("  const passwordSessionStorageKey"),
+    source.indexOf("  let events ="));
+  const first = vm.createContext({ localStorage });
+  vm.runInContext(prefix, first);
+  first.savePasswordSession("paramedic." + "a".repeat(64));
+  assert.equal(storage.size, 1);
+  assert.ok(![...storage.values()].join("").includes(secret));
+
+  // Simulate opening the app in a fresh browser page with the same storage.
+  const restarted = vm.createContext({ localStorage });
+  vm.runInContext(prefix, restarted);
+  assert.equal(restarted.storedPasswordSession(), "paramedic." + "a".repeat(64));
+  restarted.forgetPasswordSession();
+  assert.equal(storage.size, 0);
+  assert.equal(first.storedPasswordSession(), "");
+
+  // Browsers that block storage can still sign in for the current tab.
+  const unavailable = vm.createContext({ localStorage: {
+    getItem() { throw new Error("Storage unavailable"); },
+    setItem() { throw new Error("Storage unavailable"); },
+    removeItem() { throw new Error("Storage unavailable"); },
+  } });
+  vm.runInContext(prefix, unavailable);
+  assert.doesNotThrow(() => unavailable.savePasswordSession("token"));
+  assert.equal(unavailable.storedPasswordSession(), "");
+  assert.doesNotThrow(() => unavailable.forgetPasswordSession());
 });
