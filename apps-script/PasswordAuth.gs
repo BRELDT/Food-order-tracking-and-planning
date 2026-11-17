@@ -1,7 +1,5 @@
 const PASSWORD_ROUNDS_ = 600000;
 const PASSWORD_COLUMNS_ = ["PasswordVerifier", "CredentialVersion", "SetupVerifier", "SetupExpiresAt"];
-const PASSWORD_IDLE_MS_ = 30 * 60 * 1000;
-const PASSWORD_MAX_MS_ = 8 * 60 * 60 * 1000;
 
 function passwordEnabled_() {
   return properties_().getProperty("MEALS_PASSWORD_LOGIN") === "true";
@@ -181,25 +179,13 @@ function passwordSession_(token) {
   const record = passwordSessionRecord_(token);
   if (!record) passwordReject_();
   const { name, key, session } = record;
-  const now = Date.now();
-  if (now >= session.expires || now >= session.seen + PASSWORD_IDLE_MS_)
-    passwordReject_();
+  // Legacy sessions carried an 8-hour deadline. Require a fresh sign-in after
+  // upgrading rather than accidentally reviving an expired legacy token.
+  if (session.expires !== undefined) passwordReject_();
   const row = passwordRow_(passwordRegistry_(), name);
   if (!row || !row.active || !row.verifier || row.version !== session.version)
     passwordReject_();
   return { id: row.id, name, key, session };
-}
-
-function passwordRefreshSession_(token) {
-  const auth = passwordSession_(token);
-  if (Date.now() >= auth.session.seen + 60000) {
-    passwordLocked_(() => {
-      const { key, session } = passwordSession_(token);
-      session.seen = Date.now();
-      properties_().setProperty(key, JSON.stringify(session));
-    });
-  }
-  return auth;
 }
 
 function passwordAccountAction(action, username) {
@@ -275,14 +261,11 @@ function passwordLogin(username, password) {
       if (!current || !current.active || current.version !== row.version ||
           current.verifier !== row.verifier) reject();
       const token = name + "." + passwordRandom_(cfg, "session token");
-      const now = Date.now();
       properties_().setProperty(passwordSessionKey_(name), JSON.stringify({
         digest: passwordMac_(cfg, "session", token),
         version: current.version,
-        seen: now,
-        expires: now + PASSWORD_MAX_MS_,
       }));
-      return { token, idleMs: PASSWORD_IDLE_MS_, maxMs: PASSWORD_MAX_MS_ };
+      return { token };
     });
   });
 }
@@ -297,7 +280,7 @@ function passwordLogout(token) {
 
 function passwordAdminCall(token, action, p) {
   return safeBoundary_(() => {
-    const session = passwordRefreshSession_(token);
+    const session = passwordSession_(token);
     const maps = properties_().getProperty("MEALS_PASSWORD_MAPS") === "true";
     if (["addressSuggestions", "addressPreview", "verifyAddress", "optimize"].includes(action) &&
         !maps)
